@@ -1,0 +1,16 @@
+version(1);
+
+project_name = "noname";
+intent_width = "2";
+default_tab_width = "2";
+
+patterns = { "*.c", "*.cpp", "*.h", "*.bat", "*.4coder", };
+blacklist_patterns = { ".*" };
+
+load_paths = {
+	{
+		{ .path = ".",   .recursive = false, .relative = true },
+		{ .path = "src", .recursive = true,  .relative = true },
+		.os = "win"
+	}
+};
