@@ -6,29 +6,64 @@
 #include <glad/glad.c>
 #include <GLFW/glfw3.h>
 
-//////////////////////////////////////////////
-// Libc includes. Ideally, should all be removed.
-#include <stdio.h>
 
 //////////////////////////////////////////////
 // My includes. NOTE: Order matters
 
-// *.glsl
+// Only thing that I want to allow that is not written by me. For obv reasons.
+#include <windows.h>
 
 // *.h
-#include <windows.h>
 #include <stdlib.h> // TODO: REMOVE THIS
+#include <stdio.h>  // TODO: REMOVE THIS
 #include "main.h"
 #include "shader.h"
 
 // *.c
 #include "shader.c"
-#include "shader/fragment.glsl.c"
-#include "shader/vertex.glsl.c"
 
 //////////////////////////////////////////////
 // Actual Program... Finally.
 
+
+//////////////////////////////////////////////
+// Vertex Shader
+const char* GET_VERTEX_SHADER() {
+  
+  return SHADER_SOURCE(//////////////////////////////////////////////
+                       // Vertex Shader start
+                       
+                       layout (location = 0) in vec3 Pos;
+                       
+                       void main() {
+                         gl_Position = vec4(Pos.x, Pos.y, Pos.z, 1.0);
+                       }
+                       
+                       // Vertex Shader end
+                       //////////////////////////////////////////////
+                       );
+}
+
+//////////////////////////////////////////////
+// Fragment Shader
+const char* GET_FRAGMENT_SHADER() {
+  
+  return SHADER_SOURCE(//////////////////////////////////////////////
+                       // Fragment  Shader start
+                       
+                       out vec4 FragColor;
+                       
+                       void main() {
+                         FragColor = vec4(0.9f, 1.0f, 0.9f, 1.0);
+                       }
+                       
+                       // Fragment Shader End
+                       //////////////////////////////////////////////
+                       );
+}
+
+//////////////////////////////////////////////
+// Forward declares
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);  
 void process_input(GLFWwindow *window);
 
