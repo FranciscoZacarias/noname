@@ -20,7 +20,7 @@ Francisco Zacarias
 
 // *.h
 #include <stdio.h>
-#include "core.h"
+#include "main.h"
 
 // *.c
 
