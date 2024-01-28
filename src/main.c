@@ -12,8 +12,8 @@ Francisco Zacarias
 //////////////////////////////////////////////
 // Opengl(Glad) and GLFW Includes
 #include <glad/glad.h>
+#include <glad/glad.c>
 #include <GLFW/glfw3.h>
-#include "glad.c"
 
 //////////////////////////////////////////////
 // My includes. NOTE: Order matters
