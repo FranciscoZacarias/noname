@@ -1,15 +1,19 @@
 /* date = January 28th 2024 11:04 am */
 
-#ifndef TYPES_H
-#define TYPES_H
+#ifndef MAIN_H
+#define MAIN_H
 
 #define APP_NAME "noname"
 
-#define VERTEX_SHADER(code)   "#version 330 core\n" #code
-#define FRAGMENT_SHADER(code) "#version 330 core\n" #code
+#define SHADER_SOURCE(code)   "#version 330 core\n" #code
 
-#define global_variable static
 #define local_persist   static
+#define global_variable static
+// NOTE: The way I'm organizing the code, we should have only
+// one translation unit, meaning static functions can actually be seen
+// for all files after the include. Using internal here is more for 
+// about being explicit about intention, rather than actually meaning something to the compiler
+#define internal        static
 
 typedef unsigned char      u8;
 typedef unsigned short     u16;
@@ -27,4 +31,4 @@ typedef double f64;
 typedef s32 b32;
 typedef s8  b8;
 
-#endif //TYPES_H
+#endif //MAIN_H
