@@ -16,10 +16,13 @@
 // *.h
 #include <stdlib.h> // TODO: REMOVE THIS
 #include <stdio.h>  // TODO: REMOVE THIS
-#include "main.h"
+
+#include "main.h"   // Keep on top
+#include "fmath.h"
 #include "shader.h"
 
 // *.c
+#include "fmath.c"
 #include "shader.c"
 
 //////////////////////////////////////////////

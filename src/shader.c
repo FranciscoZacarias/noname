@@ -33,7 +33,6 @@ internal void shader_check_errors(u32 shader, ShaderCompileType shader_type) {
 }
 
 void shader_create(Shader* shader, const char* vertex_path, const char* fragment_path) {
-  
   u32 vertex_shader = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(vertex_shader, 1, &vertex_path, NULL);
   glCompileShader(vertex_shader);
@@ -44,17 +43,12 @@ void shader_create(Shader* shader, const char* vertex_path, const char* fragment
   glCompileShader(fragment_shader);
   shader_check_errors(fragment_shader, ShaderCompileType_Fragment);
   
-  //////////////////////////////////////////////
-  // Compile shader program
-  
   shader->id = glCreateProgram();
   glAttachShader(shader->id, vertex_shader);
   glAttachShader(shader->id, fragment_shader);
   glLinkProgram(shader->id);
   shader_check_errors(shader->id, ShaderCompileType_Program);
   
-  //////////////////////////////////////////////
-  // Cleanup
   glDeleteShader(vertex_shader);
   glDeleteShader(fragment_shader);
 }
