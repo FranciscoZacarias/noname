@@ -16,6 +16,7 @@
 // *.h
 #include <stdlib.h> // TODO: REMOVE THIS
 #include <stdio.h>  // TODO: REMOVE THIS
+#include <math.h>   // TODO: REMOVE THIS. THIS IS BORDERLINE HEARSAY
 
 #include "main.h"   // Keep on top
 #include "fmath.h"
