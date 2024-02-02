@@ -15,6 +15,6 @@ set executable=/Fe"%project_name%.exe"
 
 if not exist build mkdir build
 pushd build
-del /q *.*
+if "%1" == "-d" (del /q *.*)
 %compiler% %main_file% %cl_default_flags% %external_include% %static_include% %linker_flags% %executable%
 popd

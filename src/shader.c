@@ -1,17 +1,61 @@
 /* date = January 28th 2024 8:00 pm */
 
-typedef enum ShaderCompileType {
-  ShaderCompileType_Program,
-  ShaderCompileType_Vertex,
-  ShaderCompileType_Fragment
-} ShaderCompileType;
+//////////////////////////////////////////////
+// Vertex Shader
+const char* GET_VERTEX_SHADER() {
+  return SHADER_SOURCE(
+      //////////////////////////////////////////////
+      // Vertex Shader start
 
-internal void shader_check_errors(u32 shader, ShaderCompileType shader_type) {
+      layout (location = 0) in vec3 aPos;
+
+      uniform vec4 in_color;
+      out vec4 cube_color;
+
+      uniform mat4 model;
+      uniform mat4 view;
+      uniform mat4 projection;
+
+      void main() {
+        gl_Position = projection * view * model * vec4(aPos, 1.0);
+        cube_color = in_color;
+      }
+
+      // Vertex Shader end
+      //////////////////////////////////////////////
+    );
+}
+
+//////////////////////////////////////////////
+// Fragment Shader
+const char* GET_FRAGMENT_SHADER() {
+  return SHADER_SOURCE(
+      //////////////////////////////////////////////
+      // Fragment  Shader start
+
+      in vec4 cube_color;
+      out vec4 FragColor;
+
+      void main() {
+        FragColor = cube_color;
+      }
+
+      // Fragment Shader End
+      //////////////////////////////////////////////
+    );
+}
+
+typedef enum ShaderErrorType {
+  ShaderErrorType_LinkProgram,
+  ShaderErrorType_CompileVertex,
+  ShaderErrorType_CompileFragment
+} ShaderErrorType;
+
+void _shader_check_errors(u32 shader, ShaderErrorType shader_type) {
   int  success;
   char infoLog[1024];
-  
   switch(shader_type) {
-    case ShaderCompileType_Program: {
+    case ShaderErrorType_LinkProgram: {
       glGetProgramiv(shader, GL_LINK_STATUS, &success);
       if(!success) {
         glGetProgramInfoLog(shader, 1024, NULL, infoLog);
@@ -19,38 +63,39 @@ internal void shader_check_errors(u32 shader, ShaderCompileType shader_type) {
         return;
       }
     } break;
-    
-    case ShaderCompileType_Vertex:
-    case ShaderCompileType_Fragment: {
+    case ShaderErrorType_CompileVertex:
+    case ShaderErrorType_CompileFragment: {
       glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
       if (!success) {
         glGetShaderInfoLog(shader, 1024, NULL, infoLog);
         printf("Error %d compiling vertex shader. Log: %s", success, infoLog);
         return;
       }   
-    } break;    
+    } break;
   }
 }
 
-void shader_create(Shader* shader, const char* vertex_path, const char* fragment_path) {
+Shader shader_create(const char* vertex_path, const char* fragment_path) {
   u32 vertex_shader = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(vertex_shader, 1, &vertex_path, NULL);
   glCompileShader(vertex_shader);
-  shader_check_errors(vertex_shader, ShaderCompileType_Vertex);
+  _shader_check_errors(vertex_shader, ShaderErrorType_CompileVertex);
   
   u32 fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
   glShaderSource(fragment_shader, 1, &fragment_path, NULL);
   glCompileShader(fragment_shader);
-  shader_check_errors(fragment_shader, ShaderCompileType_Fragment);
+  _shader_check_errors(fragment_shader, ShaderErrorType_CompileFragment);
   
-  shader->id = glCreateProgram();
-  glAttachShader(shader->id, vertex_shader);
-  glAttachShader(shader->id, fragment_shader);
-  glLinkProgram(shader->id);
-  shader_check_errors(shader->id, ShaderCompileType_Program);
+  Shader result = { 0 };
+  result.id = glCreateProgram();
+  glAttachShader(result.id, vertex_shader);
+  glAttachShader(result.id, fragment_shader);
+  glLinkProgram(result.id);
+  _shader_check_errors(result.id, ShaderErrorType_LinkProgram);
   
   glDeleteShader(vertex_shader);
   glDeleteShader(fragment_shader);
+  return result;
 }
 
 void shader_use(Shader shader) {
@@ -58,6 +103,17 @@ void shader_use(Shader shader) {
 }
 
 void shader_set_uniform_mat4fv(Shader shader, const char* uniform, Mat4 mat) {
-  u32 uniform_location = glGetUniformLocation(shader.id, uniform);
-  glUniformMatrix4fv(uniform_location, 1, 0, mat.raw);
+  s32 uniform_location = glGetUniformLocation(shader.id, uniform);
+  if (uniform_location == -1) {
+    printf("Uniform %s not found\n", uniform);
+  }
+  glUniformMatrix4fv(uniform_location, 1, 1, mat.raw);
+}
+
+void shader_set_uniform_vec4fv(Shader shader, const char* uniform, Vec4 vec) {
+  s32 uniform_location = glGetUniformLocation(shader.id, uniform);
+  if (uniform_location == -1) {
+    printf("Uniform %s not found\n", uniform);
+  }
+  glUniform4fv(uniform_location, 1, vec.raw);
 }

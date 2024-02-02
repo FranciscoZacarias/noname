@@ -4,16 +4,13 @@
 #define MAIN_H
 
 #define APP_NAME "noname"
+#define WINDOW_WIDTH  800
+#define WINDOW_HEIGHT 600
 
-#define SHADER_SOURCE(code)   "#version 330 core\n" #code
+#define SHADER_SOURCE(code) "#version 330 core\n" #code
 
 #define local_persist   static
 #define global_variable static
-// NOTE: The way I'm organizing the code, we should have only
-// one translation unit, meaning static functions can actually be seen
-// for all files after the include. Using internal here is more for 
-// about being explicit about intention, rather than actually meaning something to the compiler
-#define internal        static
 
 typedef unsigned char      u8;
 typedef unsigned short     u16;

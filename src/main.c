@@ -11,7 +11,6 @@ TODO:
 #include <glad/glad.c>
 #include <GLFW/glfw3.h>
 
-
 //////////////////////////////////////////////
 // My includes. NOTE: Order matters
 
@@ -32,43 +31,6 @@ TODO:
 #include "shader.c"
 
 //////////////////////////////////////////////
-// Vertex Shader
-const char* GET_VERTEX_SHADER() {
-  
-  return SHADER_SOURCE(//////////////////////////////////////////////
-                       // Vertex Shader start
-                       
-                       layout (location = 0) in vec3 aPos;
-                       uniform mat4 transform;
-                       
-                       void main() {
-                         gl_Position = transform * vec4(aPos.x, aPos.y, aPos.z, 1.0);
-                       }
-                       
-                       // Vertex Shader end
-                       //////////////////////////////////////////////
-                       );
-}
-
-//////////////////////////////////////////////
-// Fragment Shader
-const char* GET_FRAGMENT_SHADER() {
-  
-  return SHADER_SOURCE(//////////////////////////////////////////////
-                       // Fragment  Shader start
-                       
-                       out vec4 FragColor;
-                       
-                       void main() {
-                         FragColor = vec4(0.8f, 1.0f, 0.8f, 1.0);
-                       }
-                       
-                       // Fragment Shader End
-                       //////////////////////////////////////////////
-                       );
-}
-
-//////////////////////////////////////////////
 // Forward declares
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);  
 void process_input(GLFWwindow *window);
@@ -80,7 +42,7 @@ int main() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	
-	GLFWwindow* window = glfwCreateWindow(800, 600, APP_NAME, NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, APP_NAME, NULL, NULL);
 	if (window == NULL) {
 		printf("Failed to create GLFW window");
 		glfwTerminate();
@@ -93,20 +55,43 @@ int main() {
 		printf("Failed to initialize GLAD");
 		return -1;
 	}
-  
-  Shader shader;
-  shader_create(&shader, GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());
+
+  glEnable(GL_DEPTH_TEST);  
+
+  Shader shader = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());
   
   f32 vertices[] = {
-     0.25f,  0.25f, 0.0f,
-     0.25f, -0.25f, 0.0f,
-    -0.25f, -0.25f, 0.0f,
-    -0.25f,  0.25f, 0.0f
+    // Front
+     0.5f,  0.5f, 0.5f,
+     0.5f, -0.5f, 0.5f,
+    -0.5f, -0.5f, 0.5f,
+    -0.5f,  0.5f, 0.5f,
+    // Back
+     0.5f,  0.5f, -0.5f,
+     0.5f, -0.5f, -0.5f,
+    -0.5f, -0.5f, -0.5f,
+    -0.5f,  0.5f, -0.5f,
   };
   
   u32 indices[] = {
+    // Front
     0, 1, 3,
-    1, 2, 3
+    1, 2, 3,
+    // Back
+    4, 5, 7, 
+    5, 6, 7,
+    // Right
+    0, 4, 5,
+    0, 1, 5,
+    // Left
+    2, 6, 7,
+    2, 3, 7,
+    // Top
+    0, 3, 4,
+    3, 4, 7,
+    // Bot
+    1, 2, 5,
+    2, 5, 6
   };
   
   u32 VAO;
@@ -129,23 +114,58 @@ int main() {
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
   
+  Vec4 cubes[10] = {
+    vec4_make( 0.0f,  0.0f, -4.0f),
+    vec4_make( 2.0f,  5.0f, -15.0f),
+    vec4_make(-1.5f, -2.2f, -2.5f),
+    vec4_make(-3.8f, -2.0f, -12.3f),
+    vec4_make( 2.4f, -0.4f, -3.5f),
+    vec4_make(-1.7f,  3.0f, -7.5f),
+    vec4_make( 1.3f, -2.0f, -2.5f),
+    vec4_make( 1.5f,  2.0f, -2.5f),
+    vec4_make( 1.5f,  0.2f, -1.5f),
+    vec4_make(-1.3f,  1.0f, -1.5f)
+  };
+
+  Vec4 colors[10] = {
+    vec4_makew(0.0f, 0.0f, 0.0f, 0.5f),
+    vec4_makew(1.0f, 0.5f, 0.0f, 1.0f),
+    vec4_makew(0.0f, 0.5f, 1.0f, 1.0f),
+    vec4_makew(0.5f, 0.0f, 1.0f, 1.0f),
+    vec4_makew(1.0f, 0.0f, 0.5f, 1.0f),
+    vec4_makew(0.5f, 1.0f, 0.0f, 1.0f),
+    vec4_makew(0.0f, 1.0f, 0.5f, 1.0f),
+    vec4_makew(0.5f, 0.5f, 0.5f, 1.0f),
+    vec4_makew(1.0f, 1.0f, 1.0f, 1.0f),
+    vec4_makew(0.0f, 0.0f, 1.0f, 1.0f)
+  };
+
 	while(!glfwWindowShouldClose(window)) {
     process_input(window);
-    
+
 		glClearColor(0.3f, 0.8f, 0.8f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-    
-    Mat4 transform = mat4_make_identity();
-    transform = mat4_translate(transform, vec4_new(0.5f, -0.5f, 0.0f));
-    transform = mat4_rotate(transform, vec4_new(0.0f, 0.0f, 1.0f), (f32)glfwGetTime());
-    transform = mat4_scale(transform, vec4_new(1.2f, 1.2f, 1.0f));
-    
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     shader_use(shader);
-    shader_set_uniform_mat4fv(shader, "transform", transform);
-    
+
+    // Mat4 model      = mat4_make_rotate(vec4_make(0.0f, 1.0f, 0.0f), glfwGetTime());
+    Mat4 view       = mat4_make_translate(vec4_make(0.0f, 0.0f, -3.0f));
+    Mat4 projection = mat4_make_perspective(radians(45), (f32)WINDOW_WIDTH/(f32)WINDOW_HEIGHT, 0.1f, 100.0f);
+
+    shader_set_uniform_mat4fv(shader, "view",       view);
+    shader_set_uniform_mat4fv(shader, "projection", projection);
+
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    
+    for(u32 i = 0; i < 10; i++) {
+      Mat4 model = mat4_make_translate(cubes[i]);
+      f32 angle  = 16.0f*i;
+      Mat4 rotation = mat4_make_rotate(vec4_make(1.0f, 0.3f, 0.5f), glfwGetTime()*((i+0.1)*1.2));
+      model = mul_mat4_mat4(model, rotation);
+      shader_set_uniform_mat4fv(shader, "model", model);
+      shader_set_uniform_vec4fv(shader, "in_color", colors[i]);
+      glDrawElements(GL_TRIANGLES, sizeof(indices), GL_UNSIGNED_INT, 0);
+    }
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}

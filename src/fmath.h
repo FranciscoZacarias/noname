@@ -23,33 +23,39 @@ typedef struct Vec4 {
   };
 } Vec4;
 
-#define vec4_magnitude(vec4) {sqrt(vec4.x*vec4.x+ vec4.y*vec4.y+vec4.z*vec4.z)}
-
-Vec4 vec4_new(f32 x, f32 y, f32 z);
-Vec4 vec4_normalize(Vec4 vec);
+Vec4 vec4_make(f32 x, f32 y, f32 z);
+Vec4 vec4_makew(f32 x, f32 y, f32 z, f32 w);
+Vec4 vec4_normalize(Vec4 v);
+f32  vec4_magnitude(Vec4 v);
 
 //////////////////////////////////////////////
 // Matrix
 
 typedef struct Mat4 {
   union {
-    // NOTE: data[col][row]
-    // OpenGL wants column major matrices
     f32 data[4][4];
     f32 raw[16];
+    struct {
+      f32 r0c0, r0c1, r0c2, r0c3,
+          r1c0, r1c1, r1c2, r1c3,
+          r2c0, r2c1, r2c2, r2c3,
+          r3c0, r3c1, r3c2, r3c3;
+    };
   };
 } Mat4;
 
-#define mat4_make_identity() {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f}
 
-Mat4 mat4_translate(Mat4 mat, Vec4 vec);
-Mat4 mat4_scaling(Mat4 mat, Vec4 scale);
-Mat4 mat4_rotate(Mat4 mat, Vec4 axis, f32 degrees);
+#define mat4_make_identity() { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f }
+
+Mat4 mat4_make_translate(Vec4 v);
+Mat4 mat4_make_scale(Vec4 s);
+Mat4 mat4_make_rotate(Vec4 axis, f32 degrees);
+Mat4 mat4_make_perspective(f32 fov, f32 aspect_ratio, f32 near_plane, f32 far_plane);
 
 //////////////////////////////////////////////
 // Operations
 
-Mat4 mul_mat4_mat4(Mat4 matA, Mat4 matB);
-Vec4 mul_mat4_vec4(Mat4 mat,  Vec4 vec);
+Mat4 mul_mat4_mat4(Mat4 a, Mat4 b);
+Vec4 mul_mat4_vec4(Mat4 m, Vec4 v);
 
 #endif //FMATH_H
