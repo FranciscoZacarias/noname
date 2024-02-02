@@ -1,5 +1,10 @@
 /* date = January 28th 2024 11:04 am */
 
+/*
+TODO:
+- Implement sin, cos, tan, sqrt
+*/
+
 //////////////////////////////////////////////
 // Opengl(Glad) and GLFW Includes
 #include <glad/glad.h>
@@ -33,10 +38,11 @@ const char* GET_VERTEX_SHADER() {
   return SHADER_SOURCE(//////////////////////////////////////////////
                        // Vertex Shader start
                        
-                       layout (location = 0) in vec3 Pos;
+                       layout (location = 0) in vec3 aPos;
+                       uniform mat4 transform;
                        
                        void main() {
-                         gl_Position = vec4(Pos.x, Pos.y, Pos.z, 1.0);
+                         gl_Position = transform * vec4(aPos.x, aPos.y, aPos.z, 1.0);
                        }
                        
                        // Vertex Shader end
@@ -54,7 +60,7 @@ const char* GET_FRAGMENT_SHADER() {
                        out vec4 FragColor;
                        
                        void main() {
-                         FragColor = vec4(0.9f, 1.0f, 0.9f, 1.0);
+                         FragColor = vec4(0.8f, 1.0f, 0.8f, 1.0);
                        }
                        
                        // Fragment Shader End
@@ -92,10 +98,10 @@ int main() {
   shader_create(&shader, GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());
   
   f32 vertices[] = {
-    0.5f,  0.5f, 0.0f,
-    0.5f, -0.5f, 0.0f,
-    -0.5f, -0.5f, 0.0f,
-    -0.5f,  0.5f, 0.0f
+     0.25f,  0.25f, 0.0f,
+     0.25f, -0.25f, 0.0f,
+    -0.25f, -0.25f, 0.0f,
+    -0.25f,  0.25f, 0.0f
   };
   
   u32 indices[] = {
@@ -129,12 +135,19 @@ int main() {
 		glClearColor(0.3f, 0.8f, 0.8f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
     
+    Mat4 transform = mat4_make_identity();
+    transform = mat4_translate(transform, vec4_new(0.5f, -0.5f, 0.0f));
+    transform = mat4_rotate(transform, vec4_new(0.0f, 0.0f, 1.0f), (f32)glfwGetTime());
+    transform = mat4_scale(transform, vec4_new(1.2f, 1.2f, 1.0f));
+    
     shader_use(shader);
+    shader_set_uniform_mat4fv(shader, "transform", transform);
+    
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     
 		glfwSwapBuffers(window);
-		glfwPollEvents();    
+		glfwPollEvents();
 	}
   
 	glfwTerminate();

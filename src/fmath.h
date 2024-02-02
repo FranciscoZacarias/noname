@@ -5,8 +5,8 @@
 
 #define PI 3.14159265359
 
-#define degrees_from_radians(r) {r * (180 / PI)}
-#define radians_from_degrees(d) {d * (PI / 180)}
+#define degrees(r) (r * (180 / PI))
+#define radians(d) (d * (PI / 180))
 
 //////////////////////////////////////////////
 // Vector
@@ -33,19 +33,21 @@ Vec4 vec4_normalize(Vec4 vec);
 
 typedef struct Mat4 {
   union {
+    // NOTE: data[col][row]
+    // OpenGL wants column major matrices
     f32 data[4][4];
     f32 raw[16];
   };
 } Mat4;
 
-Mat4 mat4_identity();
+#define mat4_make_identity() {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f}
+
 Mat4 mat4_translate(Mat4 mat, Vec4 vec);
-Mat4 mat4_scale(Mat4 mat, Vec4 scale);
+Mat4 mat4_scaling(Mat4 mat, Vec4 scale);
 Mat4 mat4_rotate(Mat4 mat, Vec4 axis, f32 degrees);
 
 //////////////////////////////////////////////
 // Operations
-
 
 Mat4 mul_mat4_mat4(Mat4 matA, Mat4 matB);
 Vec4 mul_mat4_vec4(Mat4 mat,  Vec4 vec);

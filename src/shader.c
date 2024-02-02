@@ -56,3 +56,8 @@ void shader_create(Shader* shader, const char* vertex_path, const char* fragment
 void shader_use(Shader shader) {
   glUseProgram(shader.id);
 }
+
+void shader_set_uniform_mat4fv(Shader shader, const char* uniform, Mat4 mat) {
+  u32 uniform_location = glGetUniformLocation(shader.id, uniform);
+  glUniformMatrix4fv(uniform_location, 1, 0, mat.raw);
+}

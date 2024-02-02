@@ -13,4 +13,6 @@ typedef struct Shader {
 void shader_create(Shader* shader, const char* vertex_path, const char* fragment_path);
 void shader_use(Shader shader);
 
+void shader_set_uniform_mat4fv(Shader shader, const char* uniform, Mat4 mat);
+
 #endif //SHADER_H
