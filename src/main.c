@@ -35,6 +35,13 @@ TODO:
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);  
 void process_input(GLFWwindow *window);
 
+Vec4 cameraPos   = {0.0f, 0.0f, -5.0f, 1.0f};
+Vec4 cameraFront = {0.0f, 0.0f, -1.0f, 1.0f};
+Vec4 cameraUp    = {0.0f, 1.0f,  0.0f, 1.0f};
+
+f32 deltaTime = 0.0f;
+f32 lastFrame = 0.0f;
+
 int main() {
   
   glfwInit();
@@ -128,39 +135,43 @@ int main() {
   };
 
   Vec4 colors[10] = {
-    vec4_makew(0.0f, 0.0f, 0.0f, 0.5f),
-    vec4_makew(1.0f, 0.5f, 0.0f, 1.0f),
-    vec4_makew(0.0f, 0.5f, 1.0f, 1.0f),
-    vec4_makew(0.5f, 0.0f, 1.0f, 1.0f),
-    vec4_makew(1.0f, 0.0f, 0.5f, 1.0f),
-    vec4_makew(0.5f, 1.0f, 0.0f, 1.0f),
-    vec4_makew(0.0f, 1.0f, 0.5f, 1.0f),
-    vec4_makew(0.5f, 0.5f, 0.5f, 1.0f),
-    vec4_makew(1.0f, 1.0f, 1.0f, 1.0f),
-    vec4_makew(0.0f, 0.0f, 1.0f, 1.0f)
+    vec4_make(0.0f, 0.0f, 0.0f),
+    vec4_make(1.0f, 0.5f, 0.0f),
+    vec4_make(0.0f, 0.5f, 1.0f),
+    vec4_make(0.5f, 0.0f, 1.0f),
+    vec4_make(1.0f, 0.0f, 0.5f),
+    vec4_make(0.5f, 1.0f, 0.0f),
+    vec4_make(0.0f, 1.0f, 0.5f),
+    vec4_make(0.5f, 0.5f, 0.5f),
+    vec4_make(1.0f, 1.0f, 1.0f),
+    vec4_make(0.0f, 0.0f, 1.0f)
   };
 
+  shader_use(shader);
+  Mat4 projection = mat4_make_perspective(radians(45), (f32)WINDOW_WIDTH/(f32)WINDOW_HEIGHT, 0.1f, 100.0f);
+  shader_set_uniform_mat4fv(shader, "projection", projection);
+
 	while(!glfwWindowShouldClose(window)) {
+
+    f32 currentFrame = (f32)glfwGetTime();
+    deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
+
     process_input(window);
 
 		glClearColor(0.3f, 0.8f, 0.8f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    shader_use(shader);
-
-    // Mat4 model      = mat4_make_rotate(vec4_make(0.0f, 1.0f, 0.0f), glfwGetTime());
-    Mat4 view       = mat4_make_translate(vec4_make(0.0f, 0.0f, -3.0f));
-    Mat4 projection = mat4_make_perspective(radians(45), (f32)WINDOW_WIDTH/(f32)WINDOW_HEIGHT, 0.1f, 100.0f);
-
-    shader_set_uniform_mat4fv(shader, "view",       view);
-    shader_set_uniform_mat4fv(shader, "projection", projection);
+    const float radius = 10.0f;
+    float camX = sin(glfwGetTime()) * radius;
+    float camZ = cos(glfwGetTime()) * radius;
+    Mat4 view = mat4_look_at(vec4_make(camX, 0.0, camZ), vec4_make(0.0, 0.0, 0.0), vec4_make(0.0, 1.0, 0.0));
+    shader_set_uniform_mat4fv(shader, "view", view);
 
     glBindVertexArray(VAO);
     for(u32 i = 0; i < 10; i++) {
-      Mat4 model = mat4_make_translate(cubes[i]);
-      f32 angle  = 16.0f*i;
       Mat4 rotation = mat4_make_rotate(vec4_make(1.0f, 0.3f, 0.5f), glfwGetTime()*((i+0.1)*1.2));
-      model = mul_mat4_mat4(model, rotation);
+      Mat4 model    = mul_mat4_mat4(mat4_make_translate(cubes[i]), rotation);
       shader_set_uniform_mat4fv(shader, "model", model);
       shader_set_uniform_vec4fv(shader, "in_color", colors[i]);
       glDrawElements(GL_TRIANGLES, sizeof(indices), GL_UNSIGNED_INT, 0);
@@ -179,12 +190,38 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 }
 
 void process_input(GLFWwindow *window) {
-  local_persist GLenum polygon_mode = GL_FILL;
-  
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, 1);
-	} else if (glfwGetKey(window, GLFW_KEY_F1)) {
+	}
+
+  local_persist GLenum polygon_mode = GL_FILL;
+  if (glfwGetKey(window, GLFW_KEY_F1)) {
     polygon_mode = (polygon_mode == GL_FILL) ? GL_LINE : GL_FILL;
     glPolygonMode(GL_FRONT_AND_BACK, polygon_mode);
   }
+
+  f32 cameraSpeed = (f32)(2.5 * deltaTime);
+  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+    printf("W");
+    Vec4 delta = mul_vec4_f32(cameraFront, cameraSpeed);
+    cameraPos = add_vec4_vec4(cameraPos, delta); 
+  }
+  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+    printf("S");
+    Vec4 delta = mul_vec4_f32(cameraFront, cameraSpeed);
+    cameraPos = sub_vec4_vec4(cameraPos, delta); 
+  }
+  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+    printf("A");
+    Vec4 left = cross(cameraFront, cameraUp);
+    Vec4 delta = mul_vec4_f32(left, cameraSpeed);
+    cameraPos = sub_vec4_vec4(cameraPos, delta);
+  }
+  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+    printf("D");
+    Vec4 right = cross(cameraFront, cameraUp);
+    Vec4 delta = mul_vec4_f32(right, cameraSpeed);
+    cameraPos = add_vec4_vec4(cameraPos, delta);
+  }
+  printf("Camera pos: x:%f, y:%f, z:%f\n", cameraPos.x, cameraPos.y, cameraPos.z);
 }
