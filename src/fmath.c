@@ -52,6 +52,7 @@ Mat4 mat4_make_scale(Vec4 s) {
 }
 
 Mat4 mat4_make_rotate(Vec4 axis, f32 radians) {
+  axis = vec4_normalize(axis);
   f32 sin_theta = sin(radians);
   f32 cos_theta = cos(radians);
   f32 not_cos   = 1-cos_theta;
