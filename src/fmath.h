@@ -50,7 +50,7 @@ Mat4 mat4_make_translate(Vec4 v);
 Mat4 mat4_make_scale(Vec4 s);
 Mat4 mat4_make_rotate(Vec4 axis, f32 degrees);
 Mat4 mat4_make_perspective(f32 fov, f32 aspect_ratio, f32 near_plane, f32 far_plane);
-Mat4 mat4_look_at(Vec4 eye, Vec4 center, Vec4 up);
+Mat4 mat4_look_at(Vec4 eye, Vec4 target, Vec4 up);
 
 //////////////////////////////////////////////
 // Operations

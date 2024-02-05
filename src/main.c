@@ -35,12 +35,12 @@ TODO:
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);  
 void process_input(GLFWwindow *window);
 
-Vec4 cameraPos   = {0.0f, 0.0f, -5.0f, 1.0f};
-Vec4 cameraFront = {0.0f, 0.0f, -1.0f, 1.0f};
+Vec4 cameraPos   = {0.0f, 0.0f,  3.0f, 1.0f};
+Vec4 cameraFront = {0.0f, 0.0f,  -3.0f, 1.0f};
 Vec4 cameraUp    = {0.0f, 1.0f,  0.0f, 1.0f};
 
-f32 deltaTime = 0.0f;
-f32 lastFrame = 0.0f;
+float delta_time = 0.0f;// Time between current frame and last frame
+float last_frame = 0.0f; // Time of last frame
 
 int main() {
   
@@ -122,7 +122,7 @@ int main() {
   glBindVertexArray(0);
   
   Vec4 cubes[10] = {
-    vec4_make( 0.0f,  0.0f, -4.0f),
+    vec4_make( 0.0f,  0.0f,  0.0f),
     vec4_make( 2.0f,  5.0f, -15.0f),
     vec4_make(-1.5f, -2.2f, -2.5f),
     vec4_make(-3.8f, -2.0f, -12.3f),
@@ -147,31 +147,30 @@ int main() {
     vec4_make(0.0f, 0.0f, 1.0f)
   };
 
+  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   shader_use(shader);
-  Mat4 projection = mat4_make_perspective(radians(45), (f32)WINDOW_WIDTH/(f32)WINDOW_HEIGHT, 0.1f, 100.0f);
-  shader_set_uniform_mat4fv(shader, "projection", projection);
 
 	while(!glfwWindowShouldClose(window)) {
-
-    f32 currentFrame = (f32)glfwGetTime();
-    deltaTime = currentFrame - lastFrame;
-    lastFrame = currentFrame;
+    float currentFrame = glfwGetTime();
+    delta_time = currentFrame - last_frame;
+    last_frame = currentFrame;  
 
     process_input(window);
 
 		glClearColor(0.3f, 0.8f, 0.8f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    const float radius = 10.0f;
-    float camX = sin(glfwGetTime()) * radius;
-    float camZ = cos(glfwGetTime()) * radius;
-    Mat4 view = mat4_look_at(vec4_make(camX, 0.0, camZ), vec4_make(0.0, 0.0, 0.0), vec4_make(0.0, 1.0, 0.0));
+    Vec4 target = add_vec4_vec4(cameraPos, cameraFront);
+    Mat4 view   = mat4_look_at(cameraPos, target, cameraUp);
+    
     shader_set_uniform_mat4fv(shader, "view", view);
+
+    Mat4 projection = mat4_make_perspective(radians(45), (f32)WINDOW_WIDTH/(f32)WINDOW_HEIGHT, 0.1f, 100.0f);
+    shader_set_uniform_mat4fv(shader, "projection", projection);
 
     glBindVertexArray(VAO);
     for(u32 i = 0; i < 10; i++) {
-      Mat4 rotation = mat4_make_rotate(vec4_make(1.0f, 0.3f, 0.5f), glfwGetTime()*((i+0.1)*1.2));
-      Mat4 model    = mul_mat4_mat4(mat4_make_translate(cubes[i]), rotation);
+      Mat4 model    = mat4_make_translate(cubes[i]);
       shader_set_uniform_mat4fv(shader, "model", model);
       shader_set_uniform_vec4fv(shader, "in_color", colors[i]);
       glDrawElements(GL_TRIANGLES, sizeof(indices), GL_UNSIGNED_INT, 0);
@@ -200,28 +199,23 @@ void process_input(GLFWwindow *window) {
     glPolygonMode(GL_FRONT_AND_BACK, polygon_mode);
   }
 
-  f32 cameraSpeed = (f32)(2.5 * deltaTime);
+  const float cameraSpeed = 2.5f * delta_time;
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-    printf("W");
-    Vec4 delta = mul_vec4_f32(cameraFront, cameraSpeed);
-    cameraPos = add_vec4_vec4(cameraPos, delta); 
+    Vec4 delta = vec4_scale(cameraFront, cameraSpeed);
+    cameraPos  = add_vec4_vec4(cameraPos, delta);
   }
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-    printf("S");
-    Vec4 delta = mul_vec4_f32(cameraFront, cameraSpeed);
-    cameraPos = sub_vec4_vec4(cameraPos, delta); 
+    Vec4 delta = vec4_scale(cameraFront, cameraSpeed);
+    cameraPos  = sub_vec4_vec4(cameraPos, delta);
   }
   if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-    printf("A");
-    Vec4 left = cross(cameraFront, cameraUp);
-    Vec4 delta = mul_vec4_f32(left, cameraSpeed);
-    cameraPos = sub_vec4_vec4(cameraPos, delta);
-  }
-  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-    printf("D");
-    Vec4 right = cross(cameraFront, cameraUp);
-    Vec4 delta = mul_vec4_f32(right, cameraSpeed);
+    Vec4 x = cross(cameraFront, cameraUp);
+    Vec4 delta = vec4_scale(x, cameraSpeed);
     cameraPos = add_vec4_vec4(cameraPos, delta);
   }
-  printf("Camera pos: x:%f, y:%f, z:%f\n", cameraPos.x, cameraPos.y, cameraPos.z);
+  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+    Vec4 x = cross(cameraFront, cameraUp);
+    Vec4 delta = vec4_scale(x, cameraSpeed);
+    cameraPos = sub_vec4_vec4(cameraPos, delta);
+  }
 }

@@ -107,7 +107,7 @@ void shader_set_uniform_mat4fv(Shader shader, const char* uniform, Mat4 mat) {
   if (uniform_location == -1) {
     printf("Uniform %s not found\n", uniform);
   }
-  glUniformMatrix4fv(uniform_location, 1, 1, mat.raw);
+  glUniformMatrix4fv(uniform_location, 1, 0, mat.raw);
 }
 
 void shader_set_uniform_vec4fv(Shader shader, const char* uniform, Vec4 vec) {
