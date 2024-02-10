@@ -1,69 +1,76 @@
-/* date = January 29th 2024 6:29 pm */
-
 #ifndef FMATH_H
 #define FMATH_H
 
-#define PI 3.14159265359
-
-#define degrees(r) (r * (180 / PI))
-#define radians(d) (d * (PI / 180))
+#define PI 3.1415926535897f
+#define degrees_from_radians(r) (r * (180 / PI))
+#define radians_from_degrees(d) (d * (PI / 180))
 
 //////////////////////////////////////////////
-// Vector
+// Vector 3
 
-typedef struct Vec4 {
+typedef struct Vec3f32 {
   union {
-    f32 raw[4];
+    f32 v[3];
+    struct {
+      f32 x;
+      f32 y;
+      f32 z;
+    };
+	};
+} Vec3f32;
+
+#define vec3f32(x,y,z) _v3f32((x),(y),(z))
+function Vec3f32 _v3f32(f32 x, f32 y, f32 z);
+function Vec3f32 add_v3f32_v3f32(Vec3f32 a, Vec3f32 b);
+function Vec3f32 sub_v3f32_v3f32(Vec3f32 a, Vec3f32 b);
+function Vec3f32 mul_v3f32_v3f32(Vec3f32 a, Vec3f32 b);
+function Vec3f32 div_v3f32_v3f32(Vec3f32 a, Vec3f32 b);
+function Vec3f32 scale_v3f32(Vec3f32 a, f32 s);
+function Vec3f32 normalize_v3f32(Vec3f32 v);
+function Vec3f32 cross_v3f32(Vec3f32 a, Vec3f32 b);
+function f32     len_v3f32(Vec3f32 v);
+function f32     dot_v3f32(Vec3f32 a, Vec3f32 b);
+
+//////////////////////////////////////////////
+// Vector 4
+
+typedef struct Vec4f32 {
+  union {
+    f32 v[4];
     struct {
       f32 x;
       f32 y;
       f32 z;
       f32 w;
     };
-  };
-} Vec4;
+	};
+} Vec4f32;
 
-Vec4 vec4_make(f32 x, f32 y, f32 z);
-Vec4 vec4w(f32 x, f32 y, f32 z, f32 w);
-Vec4 vec4_normalize(Vec4 v);
-f32  vec4_magnitude(Vec4 v);
-
-//////////////////////////////////////////////
-// Matrix
-
-typedef struct Mat4 {
-  union {
-    f32 data[4][4];
-    f32 raw[16];
-    struct {
-      f32 r0c0, r0c1, r0c2, r0c3,
-          r1c0, r1c1, r1c2, r1c3,
-          r2c0, r2c1, r2c2, r2c3,
-          r3c0, r3c1, r3c2, r3c3;
-    };
-  };
-} Mat4;
-
-#define mat4_make_identity() { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f }
-
-Mat4 mat4_make_translate(Vec4 v);
-Mat4 mat4_make_scale(Vec4 s);
-Mat4 mat4_make_rotate(Vec4 axis, f32 degrees);
-Mat4 mat4_make_perspective(f32 fov, f32 aspect_ratio, f32 near_plane, f32 far_plane);
-Mat4 mat4_look_at(Vec4 eye, Vec4 target, Vec4 up);
+#define vec4f32(x,y,z)    _v4f32((x),(y),(z),1)
+#define vec4f32w(x,y,z,w) _v4f32((x),(y),(z),(w))
+function Vec4f32 _v4f32(f32 x, f32 y, f32 z, f32 w);
+function Vec4f32 add_v4f32_v4f32(Vec4f32 a, Vec4f32 b);
+function Vec4f32 sub_v4f32_v4f32(Vec4f32 a, Vec4f32 b);
+function Vec4f32 mul_v4f32_v4f32(Vec4f32 a, Vec4f32 b);
+function Vec4f32 div_v4f32_v4f32(Vec4f32 a, Vec4f32 b);
+function Vec4f32 scale_v4f32(Vec4f32 a, f32 s);
+function Vec4f32 normalize_v4f32(Vec4f32 v);
+function f32     len_v4f32(Vec4f32 v);
+function f32     dot_v4f32(Vec4f32 a, Vec4f32 b);
 
 //////////////////////////////////////////////
-// Operations
+// Matrix 4
 
-f32  dot(Vec4 a, Vec4 b);
-Vec4 cross(Vec4 a, Vec4 b);
+typedef struct Mat4f32 {
+    f32 v[4][4];
+} Mat4f32;
 
-Vec4 add_vec4_vec4(Vec4 a, Vec4 b);
+function Mat4f32 mat4f32(f32 diagonal);
+function Mat4f32 mat4f32_make_translate(Vec3f32 v);
+function Mat4f32 mat4f32_make_scale(Vec3f32 v);
+function Mat4f32 mat4f32_make_perspective(f32 fov, f32 asp_ratio, f32 near_z, f32 far_z);
+function Mat4f32 mat4f32_make_look_at(Vec3f32 eye, Vec3f32 target, Vec3f32 up);
+function Mat4f32 mat4f32_make_rotate(Vec3f32 axis, f32 degrees);
+function Mat4f32 mul_mat4f32_mat4f32(Mat4f32 a, Mat4f32 b);
 
-Vec4 sub_vec4_vec4(Vec4 a, Vec4 b);
-
-Mat4 mul_mat4_mat4(Mat4 a, Mat4 b);
-Vec4 mul_mat4_vec4_make(Mat4 m, Vec4 v);
-Vec4 mul_vec4_f32(Vec4 v, f32 f);
-
-#endif //FMATH_H
+#endif // FMATH_H

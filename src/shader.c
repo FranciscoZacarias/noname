@@ -102,18 +102,18 @@ void shader_use(Shader shader) {
   glUseProgram(shader.id);
 }
 
-void shader_set_uniform_mat4fv(Shader shader, const char* uniform, Mat4 mat) {
+void shader_set_uniform_mat4fv(Shader shader, const char* uniform, Mat4f32 mat) {
   s32 uniform_location = glGetUniformLocation(shader.id, uniform);
   if (uniform_location == -1) {
     printf("Uniform %s not found\n", uniform);
   }
-  glUniformMatrix4fv(uniform_location, 1, 0, mat.raw);
+  glUniformMatrix4fv(uniform_location, 1, 0, &mat.v[0][0]);
 }
 
-void shader_set_uniform_vec4fv(Shader shader, const char* uniform, Vec4 vec) {
+void shader_set_uniform_vec4fv(Shader shader, const char* uniform, Vec4f32 vec) {
   s32 uniform_location = glGetUniformLocation(shader.id, uniform);
   if (uniform_location == -1) {
     printf("Uniform %s not found\n", uniform);
   }
-  glUniform4fv(uniform_location, 1, vec.raw);
+  glUniform4fv(uniform_location, 1, &vec.v[0]);
 }
