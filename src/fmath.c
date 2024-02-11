@@ -53,11 +53,11 @@ function Mat4f32 mat4f32_make_scale(Vec3f32 v) {
   return m;
 }
 
-function Mat4f32 mat4f32_make_perspective(f32 fov, f32 asp_ratio, f32 near_z, f32 far_z) {
+function Mat4f32 mat4f32_make_perspective(f32 fov_degrees, f32 aspect, f32 near_z, f32 far_z) {
   Mat4f32 m = mat4f32(1.f);
-  f32 tan_theta_over_2 = tan(fov / 2);
+  f32 tan_theta_over_2 = tanf(radians_from_degrees(fov_degrees) / 2);
   m.v[0][0] = 1.f / tan_theta_over_2;
-  m.v[1][1] = asp_ratio / tan_theta_over_2;
+  m.v[1][1] = aspect / tan_theta_over_2;
   m.v[2][3] = 1.f;
   m.v[2][2] = -(near_z + far_z) / (near_z - far_z);
   m.v[3][2] = (2.f * near_z * far_z) / (near_z - far_z);

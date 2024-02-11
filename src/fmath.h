@@ -68,7 +68,7 @@ typedef struct Mat4f32 {
 function Mat4f32 mat4f32(f32 diagonal);
 function Mat4f32 mat4f32_make_translate(Vec3f32 v);
 function Mat4f32 mat4f32_make_scale(Vec3f32 v);
-function Mat4f32 mat4f32_make_perspective(f32 fov, f32 asp_ratio, f32 near_z, f32 far_z);
+function Mat4f32 mat4f32_make_perspective(f32 fov_degrees, f32 asp_ratio, f32 near_z, f32 far_z);
 function Mat4f32 mat4f32_make_look_at(Vec3f32 eye, Vec3f32 target, Vec3f32 up);
 function Mat4f32 mat4f32_make_rotate(Vec3f32 axis, f32 degrees);
 function Mat4f32 mul_mat4f32_mat4f32(Mat4f32 a, Mat4f32 b);
