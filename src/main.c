@@ -67,29 +67,71 @@ int main() {
 
   Shader shader = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());	
 
-    float vertices[] = {
-        // positions       
-         0.5f,  0.5f, 0.0f,
-         0.5f, -0.5f, 0.0f,
-        -0.5f, -0.5f, 0.0f,
-        -0.5f,  0.5f, 0.0f,
-    };
-    unsigned int indices[] = {
-        0, 1, 3,
-        1, 2, 3 
-    };
-    unsigned int VBO, VAO, EBO;
+float vertices[] = {
+    -0.5f, -0.5f, -0.5f,
+     0.5f, -0.5f, -0.5f,
+     0.5f,  0.5f, -0.5f,
+     0.5f,  0.5f, -0.5f,
+    -0.5f,  0.5f, -0.5f,
+    -0.5f, -0.5f, -0.5f,
+
+    -0.5f, -0.5f,  0.5f,
+     0.5f, -0.5f,  0.5f,
+     0.5f,  0.5f,  0.5f,
+     0.5f,  0.5f,  0.5f,
+    -0.5f,  0.5f,  0.5f,
+    -0.5f, -0.5f,  0.5f,
+
+    -0.5f,  0.5f,  0.5f,
+    -0.5f,  0.5f, -0.5f,
+    -0.5f, -0.5f, -0.5f,
+    -0.5f, -0.5f, -0.5f,
+    -0.5f, -0.5f,  0.5f,
+    -0.5f,  0.5f,  0.5f,
+
+     0.5f,  0.5f,  0.5f,
+     0.5f,  0.5f, -0.5f,
+     0.5f, -0.5f, -0.5f,
+     0.5f, -0.5f, -0.5f,
+     0.5f, -0.5f,  0.5f,
+     0.5f,  0.5f,  0.5f,
+
+    -0.5f, -0.5f, -0.5f,
+     0.5f, -0.5f, -0.5f,
+     0.5f, -0.5f,  0.5f,
+     0.5f, -0.5f,  0.5f,
+    -0.5f, -0.5f,  0.5f,
+    -0.5f, -0.5f, -0.5f,
+
+    -0.5f,  0.5f, -0.5f,
+     0.5f,  0.5f, -0.5f,
+     0.5f,  0.5f,  0.5f,
+     0.5f,  0.5f,  0.5f,
+    -0.5f,  0.5f,  0.5f,
+    -0.5f,  0.5f, -0.5f,
+};
+
+	Vec3f32 cubePositions[] = {
+    vec3f32( 0.0f,  0.0f,  0.0f), 
+    vec3f32( 2.0f,  5.0f, -15.0f), 
+    vec3f32(-1.5f, -2.2f, -2.5f),  
+    vec3f32(-3.8f, -2.0f, -12.3f),  
+    vec3f32( 2.4f, -0.4f, -3.5f),  
+    vec3f32(-1.7f,  3.0f, -7.5f),  
+    vec3f32( 1.3f, -2.0f, -2.5f),  
+    vec3f32( 1.5f,  2.0f, -2.5f), 
+    vec3f32( 1.5f,  0.2f, -1.5f), 
+    vec3f32(-1.3f,  1.0f, -1.5f)  
+	};
+
+    unsigned int VBO, VAO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
 
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
@@ -102,23 +144,31 @@ int main() {
 
 		glClearColor(0.3f, 0.8f, 0.8f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
-		Mat4f32 model = mat4f32(1.0f);
-		model = mat4f32_make_rotate(1.0f, 0.0f, 0.0f, -55.0f);
-		
+
 		Mat4f32 view = mat4f32(1.0f);
-		view = mat4f32_translate(view, 0.0f, 0.0f, -3.0f);
-		
+		view = mat4f32_make_translate(0.0f, 0.0f, -3.0f);
+		shader_set_uniform_mat4fv(shader, "view", view);
 		Mat4f32 projection = mat4f32(1.0f);
 		projection = mat4f32_perspective(45.0f, aspect_ratio(), 0.1f, 100.0f);
-
-		shader_set_uniform_mat4fv(shader, "model", model);
-		shader_set_uniform_mat4fv(shader, "view", view);
 		shader_set_uniform_mat4fv(shader, "projection", projection);
 
-		// render container
+		Mat4f32 model = mat4f32(1.0f);
+
 		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		for(unsigned int i = 0; i < 10; i++)
+		{
+			Mat4f32 model = mat4f32(1.0f);
+			model = mat4f32_translate(model, cubePositions[i].x, cubePositions[i].y, cubePositions[i].z);
+			float angle = 20.0f * i; 
+			model = mat4f32_rotate(model, 1.0f, 0.3f, 0.5f, angle);
+	
+			shader_set_uniform_mat4fv(shader, "model", model);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+
+
+		glBindVertexArray(VAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 		
 		glfwSwapBuffers(window);
 		glfwPollEvents();
