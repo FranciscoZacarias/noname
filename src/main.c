@@ -95,19 +95,21 @@ int main() {
     glEnableVertexAttribArray(0);
 
 	shader_use(shader);
-	Mat4f32 model = mat4f32(1.0f);
-	Mat4f32 view = mat4f32(1.0f);
-	Mat4f32 projection = mat4f32(1.0f);
 	
+	static b32 toggle = 1;
 	while(!glfwWindowShouldClose(window)) {
     process_input(window);
 
 		glClearColor(0.3f, 0.8f, 0.8f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+	
+		Mat4f32 model = mat4f32(1.0f);
 		model = mat4f32_make_rotate(1.0f, 0.0f, 0.0f, -55.0f);
-		// multiply by hand a make_translate and a _translate fuction to see what is the view.
-		view  = mat4f32_make_translate(0.0f, 0.0f, -3.0f);
+		
+		Mat4f32 view = mat4f32(1.0f);
+		view = mat4f32_translate(view, 0.0f, 0.0f, -3.0f);
+		
+		Mat4f32 projection = mat4f32(1.0f);
 		projection = mat4f32_perspective(45.0f, aspect_ratio(), 0.1f, 100.0f);
 
 		shader_set_uniform_mat4fv(shader, "model", model);
