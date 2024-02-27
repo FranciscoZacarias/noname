@@ -9,16 +9,12 @@ const char* GET_VERTEX_SHADER() {
 
       layout (location = 0) in vec3 aPos;
 
-      uniform vec4 in_color;
-      out vec4 cube_color;
-
       uniform mat4 model;
       uniform mat4 view;
       uniform mat4 projection;
 
       void main() {
         gl_Position = projection * view * model * vec4(aPos, 1.0);
-        cube_color = in_color;
       }
 
       // Vertex Shader end
@@ -33,11 +29,9 @@ const char* GET_FRAGMENT_SHADER() {
       //////////////////////////////////////////////
       // Fragment  Shader start
 
-      in vec4 cube_color;
       out vec4 FragColor;
-
       void main() {
-        FragColor = cube_color;
+        FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
       }
 
       // Fragment Shader End

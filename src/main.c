@@ -31,8 +31,14 @@ TODO:
 #include "fmath.c"
 #include "shader.c"
 
-//////////////////////////////////////////////
-// Forward declares
+global_variable s32 window_width  = 800;
+global_variable s32 window_height = 600;
+#define aspect_ratio() (window_width/window_height)
+
+Vec3f32 cameraPos   = {0.0f, 0.0f,  3.0f};
+Vec3f32 cameraFront = {0.0f, 0.0f, -1.0f};
+Vec3f32 cameraUp    = {0.0f, 1.0f,  0.0f};
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);  
 void process_input(GLFWwindow *window);
 
@@ -43,7 +49,7 @@ int main() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	
-	GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, APP_NAME, NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(window_width, window_height, APP_NAME, NULL, NULL);
 	if (window == NULL) {
 		printf("Failed to create GLFW window");
 		glfwTerminate();
@@ -59,16 +65,20 @@ int main() {
 
   glEnable(GL_DEPTH_TEST);  
 
-  Shader shader = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());
+  Shader shader = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());	
 
-  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-  shader_use(shader);
+  // position attribute
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, 3 * sizeof(f32), (void*)0);
+  glEnableVertexAttribArray(0);
 
+	shader_use(shader);
+	
 	while(!glfwWindowShouldClose(window)) {
     process_input(window);
 
 		glClearColor(0.3f, 0.8f, 0.8f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -80,6 +90,8 @@ int main() {
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
+	window_width  = width;
+	window_height = height;
 }
 
 void process_input(GLFWwindow *window) {
