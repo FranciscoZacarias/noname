@@ -1,29 +1,86 @@
 //////////////////////////////////////////////
 // Vector 3
 
-function Vec3f32 vec3f32(f32 x, f32 y, f32 z)               {Vec3f32 v={x, y, z};                            return v;}
-function Vec3f32 add_vec3f32_vec3f32(Vec3f32 a, Vec3f32 b)  {Vec3f32 v={a.x+b.x, a.y+b.y, a.z+b.z};          return v;}
-function Vec3f32 sub_vec3f32_vec3f32(Vec3f32 a, Vec3f32 b)  {Vec3f32 v={a.x-b.x, a.y-b.y, a.z-b.z};          return v;}
-function Vec3f32 mul_vec3f32_vec3f32(Vec3f32 a, Vec3f32 b)  {Vec3f32 v={a.x*b.x, a.y*b.y, a.z*b.z};          return v;}
-function Vec3f32 div_vec3f32_vec3f32(Vec3f32 a, Vec3f32 b)  {Vec3f32 v={a.x/b.x, a.y/b.y, a.z/b.z};          return v;}
-function Vec3f32 scale_vec3f32(Vec3f32 a, f32 s)            {Vec3f32 v={a.x*s,   a.y*s,   a.z*s};            return v;}
-function Vec3f32 normalize_vec3f32(Vec3f32 a)               {Vec3f32 v=scale_vec3f32(a, 1.f/len_vec3f32(a)); return v;}
-function f32     len_vec3f32(Vec3f32 v)                     {f32 r=sqrt(v.x*v.x + v.y*v.y + v.z*v.z);        return r;}
-function f32     dot_vec3f32(Vec3f32 a, Vec3f32 b)          {f32 r=(a.x*b.x + a.y*b.y + a.z*b.z);            return r;}
-function Vec3f32 cross_vec3f32(Vec3f32 a, Vec3f32 b)        {Vec3f32 v={a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x}; return v;}
+function Vec3f32 vec3f32(f32 x, f32 y, f32 z) {
+  Vec3f32 v={x, y, z};
+  return v;
+}
+function Vec3f32 add_vec3f32_vec3f32(Vec3f32 a, Vec3f32 b) {
+  Vec3f32 v={a.x+b.x, a.y+b.y, a.z+b.z}; 
+  return v;
+}
+function Vec3f32 sub_vec3f32_vec3f32(Vec3f32 a, Vec3f32 b) {
+  Vec3f32 v={a.x-b.x, a.y-b.y, a.z-b.z}; 
+  return v;
+}
+function Vec3f32 mul_vec3f32_vec3f32(Vec3f32 a, Vec3f32 b) {
+  Vec3f32 v={a.x*b.x, a.y*b.y, a.z*b.z}; 
+  return v;
+}
+function Vec3f32 div_vec3f32_vec3f32(Vec3f32 a, Vec3f32 b) {
+  Vec3f32 v={a.x/b.x, a.y/b.y, a.z/b.z}; 
+  return v;
+}
+function Vec3f32 scale_vec3f32(Vec3f32 a, f32 s) {
+  Vec3f32 v={a.x*s, a.y*s, a.z*s};
+  return v;
+}
+function Vec3f32 normalize_vec3f32(Vec3f32 a) {
+  Vec3f32 v=scale_vec3f32(a, 1.f/len_vec3f32(a)); 
+  return v;
+}
+function f32 len_vec3f32(Vec3f32 v) {
+  f32 r=sqrt(v.x*v.x + v.y*v.y + v.z*v.z); 
+  return r;
+}
+function f32 dot_vec3f32(Vec3f32 a, Vec3f32 b) {
+  f32 r=(a.x*b.x + a.y*b.y + a.z*b.z); 
+  return r;
+}
+function Vec3f32 cross_vec3f32(Vec3f32 a, Vec3f32 b) {
+  Vec3f32 v={a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x}; 
+  return v;
+}
 
 //////////////////////////////////////////////
 // Vector 4
 
-function Vec4f32 vec4f32(f32 x, f32 y, f32 z, f32 w)        {Vec4f32 v={x, y, z, w};                            return v;}
-function Vec4f32 add_vec4f32_vec4f32(Vec4f32 a, Vec4f32 b)  {Vec4f32 v={a.x+b.x, a.y+b.y, a.z+b.z, a.w+b.w};    return v;}
-function Vec4f32 sub_vec4f32_vec4f32(Vec4f32 a, Vec4f32 b)  {Vec4f32 v={a.x-b.x, a.y-b.y, a.z-b.z, a.w-b.w};    return v;}
-function Vec4f32 mul_vec4f32_vec4f32(Vec4f32 a, Vec4f32 b)  {Vec4f32 v={a.x*b.x, a.y*b.y, a.z*b.z, a.w*b.w};    return v;}
-function Vec4f32 div_vec4f32_vec4f32(Vec4f32 a, Vec4f32 b)  {Vec4f32 v={a.x/b.x, a.y/b.y, a.z/b.z, a.w/b.w};    return v;}
-function Vec4f32 scale_vec4f32(Vec4f32 a, f32 s)            {Vec4f32 v={a.x*s,   a.y*s,   a.z*s,   a.w*s};      return v;}
-function Vec4f32 normalize_vec4f32(Vec4f32 v)               {Vec4f32 r=scale_vec4f32(v, 1.f/len_vec4f32(v));    return r;}
-function f32     len_vec4f32(Vec4f32 v)                     {f32 r=sqrt(v.x*v.x + v.y*v.y + v.z*v.z + v.w*v.w); return r;}
-function f32     dot_vec4f32(Vec4f32 a, Vec4f32 b)          {f32 r=(a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w);     return r;}
+function Vec4f32 vec4f32(f32 x, f32 y, f32 z, f32 w) {
+  Vec4f32 v={x, y, z, w};
+  return v;
+}
+function Vec4f32 add_vec4f32_vec4f32(Vec4f32 a, Vec4f32 b) {
+  Vec4f32 v={a.x+b.x, a.y+b.y, a.z+b.z, a.w+b.w};
+  return v;
+}
+function Vec4f32 sub_vec4f32_vec4f32(Vec4f32 a, Vec4f32 b) {
+  Vec4f32 v={a.x-b.x, a.y-b.y, a.z-b.z, a.w-b.w};
+  return v;
+}
+function Vec4f32 mul_vec4f32_vec4f32(Vec4f32 a, Vec4f32 b) {
+  Vec4f32 v={a.x*b.x, a.y*b.y, a.z*b.z, a.w*b.w};
+  return v;
+}
+function Vec4f32 div_vec4f32_vec4f32(Vec4f32 a, Vec4f32 b) {
+  Vec4f32 v={a.x/b.x, a.y/b.y, a.z/b.z, a.w/b.w};
+  return v;
+}
+function Vec4f32 scale_vec4f32(Vec4f32 a, f32 s) {
+  Vec4f32 v={a.x*s, a.y*s, a.z*s, a.w*s};
+  return v;
+}
+function Vec4f32 normalize_vec4f32(Vec4f32 v) {
+  Vec4f32 r=scale_vec4f32(v, 1.f/len_vec4f32(v));
+  return r;
+}
+function f32 len_vec4f32(Vec4f32 v) {
+  f32 r=sqrt(v.x*v.x + v.y*v.y + v.z*v.z + v.w*v.w);
+  return r;
+}
+function f32 dot_vec4f32(Vec4f32 a, Vec4f32 b) {
+  f32 r=(a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w);
+  return r;
+}
 
 //////////////////////////////////////////////
 // Matrix 4
@@ -157,7 +214,7 @@ function Mat4f32 mat4f32_look_at(Vec3f32 eye, Vec3f32 target, Vec3f32 up) {
 
   Vec3f32 f = sub_vec3f32_vec3f32(target, eye);
   f = normalize_vec3f32(f);
-  Vec3f32 s = mul_vec3f32_vec3f32(f, up);
+  Vec3f32 s = cross_vec3f32(f, up);
   s = normalize_vec3f32(s);
   Vec3f32 t = cross_vec3f32(s, f);
 
@@ -181,8 +238,8 @@ function Mat4f32 mat4f32_look_at(Vec3f32 eye, Vec3f32 target, Vec3f32 up) {
 	r.v[3][2] = 0.f;
 	r.v[3][3] = 1.f;
 
-  Mat4f32 trans = mat4f32_translate(r, -eye.x, -eye.y, -eye.z);
-  return r;
+  Mat4f32 trans = mat4f32_make_translate(-eye.x, -eye.y, -eye.z);
+  return mul_mat4f32_mat4f32(r, trans);
 }
 
 function Mat4f32 mat4f32_transpose(Mat4f32 m) {

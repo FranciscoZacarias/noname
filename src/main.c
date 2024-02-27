@@ -35,12 +35,23 @@ global_variable s32 window_width  = 800;
 global_variable s32 window_height = 600;
 #define aspect_ratio() (window_width/window_height)
 
-Vec3f32 cameraPos   = {0.0f, 0.0f,  3.0f};
-Vec3f32 cameraFront = {0.0f, 0.0f, -1.0f};
-Vec3f32 cameraUp    = {0.0f, 1.0f,  0.0f};
+global_variable Vec3f32 CameraPos   = {0.0f, 0.0f,  3.0f};
+global_variable Vec3f32 CameraFront = {0.0f, 0.0f, -1.0f};
+global_variable Vec3f32 CameraUp    = {0.0f, 1.0f,  0.0f};
+
+global_variable f32 DeltaTime = 0.0f;
+global_variable f32 LastFrame = 0.0f;
+
+b32 FirstMouse = 1;
+f32 yaw   = -90.0f;
+f32 pitch =  0.0f;
+f32 lastX =  800.0f / 2.0;
+f32 lastY =  6000 / 2.0;
+f32 fov   =  45.0f;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);  
 void process_input(GLFWwindow *window);
+void mouse_callback(GLFWwindow* window, f64 xpos, f64 ypos);
 
 int main() {
   
@@ -57,6 +68,8 @@ int main() {
 	}
   glfwMakeContextCurrent(window);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+  glfwSetCursorPosCallback(window, mouse_callback);
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		printf("Failed to initialize GLAD");
@@ -67,7 +80,7 @@ int main() {
 
   Shader shader = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());	
 
-float vertices[] = {
+f32 vertices[] = {
     -0.5f, -0.5f, -0.5f,
      0.5f, -0.5f, -0.5f,
      0.5f,  0.5f, -0.5f,
@@ -133,21 +146,33 @@ float vertices[] = {
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, 3 * sizeof(f32), (void*)0);
     glEnableVertexAttribArray(0);
 
 	shader_use(shader);
 	
 	static b32 toggle = 1;
 	while(!glfwWindowShouldClose(window)) {
+    f32 currentFrame = (f32)(glfwGetTime());
+    DeltaTime = currentFrame - LastFrame;
+    LastFrame = currentFrame;
+
     process_input(window);
 
 		glClearColor(0.3f, 0.8f, 0.8f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    Mat4f32 view = mat4f32(1.0f); // make sure to initialize matrix to identity matrix first
+    f32 radius = 10.0f;
+    f32 camX = (f32)(sin(glfwGetTime()) * radius);
+    f32 camZ = (f32)(cos(glfwGetTime()) * radius);
+    view = mat4f32_look_at(vec3f32(camX, 0.0f, camZ), vec3f32(0.0f, 0.0f, 0.0f), vec3f32(0.0f, 1.0f, 0.0f));
+    
+    Vec3f32 target = add_vec3f32_vec3f32(CameraPos, CameraFront);
+    view = mat4f32_look_at(CameraPos, target, CameraUp);
 
-		Mat4f32 view = mat4f32(1.0f);
-		view = mat4f32_make_translate(0.0f, 0.0f, -3.0f);
-		shader_set_uniform_mat4fv(shader, "view", view);
+    shader_set_uniform_mat4fv(shader, "view", view);
+
 		Mat4f32 projection = mat4f32(1.0f);
 		projection = mat4f32_perspective(45.0f, aspect_ratio(), 0.1f, 100.0f);
 		shader_set_uniform_mat4fv(shader, "projection", projection);
@@ -155,17 +180,16 @@ float vertices[] = {
 		Mat4f32 model = mat4f32(1.0f);
 
 		glBindVertexArray(VAO);
-		for(unsigned int i = 0; i < 10; i++)
+		for(u32 i = 0; i < 10; i++)
 		{
 			Mat4f32 model = mat4f32(1.0f);
 			model = mat4f32_translate(model, cubePositions[i].x, cubePositions[i].y, cubePositions[i].z);
-			float angle = 20.0f * i; 
-			model = mat4f32_rotate(model, 1.0f, 0.3f, 0.5f, angle);
+			f32 angle = 20.0f * i; 
+			model = mat4f32_rotate(model, 1.0f, 0.3f, 0.5f, (f32)glfwGetTime() * angle);
 	
 			shader_set_uniform_mat4fv(shader, "model", model);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
-
 
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -189,9 +213,72 @@ void process_input(GLFWwindow *window) {
 		glfwSetWindowShouldClose(window, 1);
 	}
 
+  f32 cameraSpeed = (f32)(10 * DeltaTime);
+  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+    Vec3f32 delta = scale_vec3f32(CameraFront, cameraSpeed);
+    CameraPos = add_vec3f32_vec3f32(CameraPos, delta);
+  }
+  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+    Vec3f32 delta = scale_vec3f32(CameraFront, cameraSpeed);
+    CameraPos = sub_vec3f32_vec3f32(CameraPos, delta);
+  }
+  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+    Vec3f32 cross = cross_vec3f32(CameraFront, CameraUp);
+    Vec3f32 delta = scale_vec3f32(cross, cameraSpeed);
+    CameraPos = sub_vec3f32_vec3f32(CameraPos, delta);
+  }
+  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+    Vec3f32 cross = cross_vec3f32(CameraFront, CameraUp);
+    Vec3f32 delta = scale_vec3f32(cross, cameraSpeed);
+    CameraPos = add_vec3f32_vec3f32(CameraPos, delta);
+  }
+  if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+    CameraPos.y -= cameraSpeed;
+  }
+  if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+    CameraPos.y += cameraSpeed;
+  }
+
   local_persist GLenum polygon_mode = GL_FILL;
   if (glfwGetKey(window, GLFW_KEY_F1)) {
     polygon_mode = (polygon_mode == GL_FILL) ? GL_LINE : GL_FILL;
     glPolygonMode(GL_FRONT_AND_BACK, polygon_mode);
   }
+}
+
+void mouse_callback(GLFWwindow* window, f64 xposIn, f64 yposIn) {
+    f32 xpos = (f32)(xposIn);
+    f32 ypos = (f32)(yposIn);
+
+    if (FirstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        FirstMouse = 0;
+    }
+
+    f32 xoffset = xpos - lastX;
+    f32 yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+    lastX = xpos;
+    lastY = ypos;
+
+    f32 sensitivity = 0.1f; // change this value to your liking
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    yaw += xoffset;
+    pitch += yoffset;
+
+    // make sure that when pitch is out of bounds, screen doesn't get flipped
+    if (pitch > 89.0f)
+        pitch = 89.0f;
+    if (pitch < -89.0f)
+        pitch = -89.0f;
+
+    Vec3f32 front;
+    front.x = cos(radians_from_degrees(yaw)) * cos(radians_from_degrees(pitch));
+    front.y = sin(radians_from_degrees(pitch));
+    front.z = sin(radians_from_degrees(yaw)) * cos(radians_from_degrees(pitch));
+
+    CameraFront = normalize_vec3f32(front);
 }
