@@ -67,7 +67,37 @@ int main() {
 
   Shader shader = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());	
 
+    float vertices[] = {
+        // positions       
+         0.5f,  0.5f, 0.0f,
+         0.5f, -0.5f, 0.0f,
+        -0.5f, -0.5f, 0.0f,
+        -0.5f,  0.5f, 0.0f,
+    };
+    unsigned int indices[] = {
+        0, 1, 3,
+        1, 2, 3 
+    };
+    unsigned int VBO, VAO, EBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
 	shader_use(shader);
+	Mat4f32 model = mat4f32(1.0f);
+	Mat4f32 view = mat4f32(1.0f);
+	Mat4f32 projection = mat4f32(1.0f);
 	
 	while(!glfwWindowShouldClose(window)) {
     process_input(window);
@@ -75,7 +105,19 @@ int main() {
 		glClearColor(0.3f, 0.8f, 0.8f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		model = mat4f32_make_rotate(1.0f, 0.0f, 0.0f, -55.0f);
+		// multiply by hand a make_translate and a _translate fuction to see what is the view.
+		view  = mat4f32_make_translate(0.0f, 0.0f, -3.0f);
+		projection = mat4f32_perspective(45.0f, aspect_ratio(), 0.1f, 100.0f);
 
+		shader_set_uniform_mat4fv(shader, "model", model);
+		shader_set_uniform_mat4fv(shader, "view", view);
+		shader_set_uniform_mat4fv(shader, "projection", projection);
+
+		// render container
+		glBindVertexArray(VAO);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
