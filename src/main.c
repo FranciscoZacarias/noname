@@ -67,10 +67,6 @@ int main() {
 
   Shader shader = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());	
 
-  // position attribute
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, 3 * sizeof(f32), (void*)0);
-  glEnableVertexAttribArray(0);
-
 	shader_use(shader);
 	
 	while(!glfwWindowShouldClose(window)) {
