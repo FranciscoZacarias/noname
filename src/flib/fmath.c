@@ -5,6 +5,26 @@ function Vec3f32 vec3f32(f32 x, f32 y, f32 z) {
   Vec3f32 v={x, y, z};
   return v;
 }
+function Vec3f32 vec3f32_scale(Vec3f32 a, f32 s) {
+  Vec3f32 v={a.x*s, a.y*s, a.z*s};
+  return v;
+}
+function Vec3f32 vec3f32_normalize(Vec3f32 a) {
+  Vec3f32 v=vec3f32_scale(a, 1.f/vec3f32_len(a)); 
+  return v;
+}
+function f32 vec3f32_len(Vec3f32 v) {
+  f32 r=sqrt(v.x*v.x + v.y*v.y + v.z*v.z); 
+  return r;
+}
+function f32 vec3f32_dot(Vec3f32 a, Vec3f32 b) {
+  f32 r=(a.x*b.x + a.y*b.y + a.z*b.z); 
+  return r;
+}
+function Vec3f32 cross_vec3f32(Vec3f32 a, Vec3f32 b) {
+  Vec3f32 v={a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x}; 
+  return v;
+}
 function Vec3f32 add_vec3f32_vec3f32(Vec3f32 a, Vec3f32 b) {
   Vec3f32 v={a.x+b.x, a.y+b.y, a.z+b.z}; 
   return v;
@@ -19,26 +39,6 @@ function Vec3f32 mul_vec3f32_vec3f32(Vec3f32 a, Vec3f32 b) {
 }
 function Vec3f32 div_vec3f32_vec3f32(Vec3f32 a, Vec3f32 b) {
   Vec3f32 v={a.x/b.x, a.y/b.y, a.z/b.z}; 
-  return v;
-}
-function Vec3f32 scale_vec3f32(Vec3f32 a, f32 s) {
-  Vec3f32 v={a.x*s, a.y*s, a.z*s};
-  return v;
-}
-function Vec3f32 normalize_vec3f32(Vec3f32 a) {
-  Vec3f32 v=scale_vec3f32(a, 1.f/len_vec3f32(a)); 
-  return v;
-}
-function f32 len_vec3f32(Vec3f32 v) {
-  f32 r=sqrt(v.x*v.x + v.y*v.y + v.z*v.z); 
-  return r;
-}
-function f32 dot_vec3f32(Vec3f32 a, Vec3f32 b) {
-  f32 r=(a.x*b.x + a.y*b.y + a.z*b.z); 
-  return r;
-}
-function Vec3f32 cross_vec3f32(Vec3f32 a, Vec3f32 b) {
-  Vec3f32 v={a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x}; 
   return v;
 }
 
@@ -65,19 +65,19 @@ function Vec4f32 div_vec4f32_vec4f32(Vec4f32 a, Vec4f32 b) {
   Vec4f32 v={a.x/b.x, a.y/b.y, a.z/b.z, a.w/b.w};
   return v;
 }
-function Vec4f32 scale_vec4f32(Vec4f32 a, f32 s) {
+function Vec4f32 vec4f32_scale(Vec4f32 a, f32 s) {
   Vec4f32 v={a.x*s, a.y*s, a.z*s, a.w*s};
   return v;
 }
-function Vec4f32 normalize_vec4f32(Vec4f32 v) {
-  Vec4f32 r=scale_vec4f32(v, 1.f/len_vec4f32(v));
+function Vec4f32 vec4f32_normalize(Vec4f32 v) {
+  Vec4f32 r=vec4f32_scale(v, 1.f/vec4f32_len(v));
   return r;
 }
-function f32 len_vec4f32(Vec4f32 v) {
+function f32 vec4f32_len(Vec4f32 v) {
   f32 r=sqrt(v.x*v.x + v.y*v.y + v.z*v.z + v.w*v.w);
   return r;
 }
-function f32 dot_vec4f32(Vec4f32 a, Vec4f32 b) {
+function f32 vec4f32_dot(Vec4f32 a, Vec4f32 b) {
   f32 r=(a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w);
   return r;
 }
@@ -127,14 +127,14 @@ function Mat4f32 mat4f32_translate(Mat4f32 m, f32 x, f32 y, f32 z) {
   Vec4f32 translate = vec4f32(x, y, z, 0);
   for (u32 i = 0; i < 4; i++) {
     Vec4f32 row = vec4f32(m.v[i][0], m.v[i][1], m.v[i][2], m.v[i][3]);
-    r.v[3][i] += dot_vec4f32(row, translate);
+    r.v[3][i] += vec4f32_dot(row, translate);
   }
   return r;
 }
 
 function Mat4f32 mat4f32_make_rotate(f32 x, f32 y, f32 z, f32 degrees) {
   Mat4f32 m     = mat4f32(1.f);
-  Vec3f32 axis  = normalize_vec3f32(vec3f32(x, y, z));
+  Vec3f32 axis  = vec3f32_normalize(vec3f32(x, y, z));
   f32 radians   = radians_from_degrees(degrees);
   f32 sin_theta = sin(radians);
   f32 cos_theta = cos(radians);
@@ -156,7 +156,7 @@ function Mat4f32 mat4f32_rotate(Mat4f32 m, f32 x, f32 y, f32 z, f32 degrees) {
   f32 radians = radians_from_degrees(degrees);
 
   Vec3f32 axis  = vec3f32(x, y, z);
-  axis = normalize_vec3f32(axis);
+  axis = vec3f32_normalize(axis);
 
   Mat4f32 T = outer_vec3f32(axis, axis);
 
@@ -213,9 +213,9 @@ function Mat4f32 mat4f32_look_at(Vec3f32 eye, Vec3f32 target, Vec3f32 up) {
   Mat4f32 r = mat4f32(0.f);
 
   Vec3f32 f = sub_vec3f32_vec3f32(target, eye);
-  f = normalize_vec3f32(f);
+  f = vec3f32_normalize(f);
   Vec3f32 s = cross_vec3f32(f, up);
-  s = normalize_vec3f32(s);
+  s = vec3f32_normalize(s);
   Vec3f32 t = cross_vec3f32(s, f);
 
 	r.v[0][0] =  s.x;

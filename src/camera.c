@@ -24,21 +24,21 @@ function void camera_keyboard_callback(Camera* camera, CameraMovement movement, 
 	f32 cameraSpeed = (f32)(CAMERA_SPEED * delta_time);
 
   if (movement == CameraMovement_Front) {
-    Vec3f32 delta = scale_vec3f32(camera->front, cameraSpeed);
+    Vec3f32 delta = vec3f32_scale(camera->front, cameraSpeed);
     camera->position = add_vec3f32_vec3f32(camera->position, delta);
   }
   if (movement == CameraMovement_Back) {
-    Vec3f32 delta = scale_vec3f32(camera->front, cameraSpeed);
+    Vec3f32 delta = vec3f32_scale(camera->front, cameraSpeed);
     camera->position = sub_vec3f32_vec3f32(camera->position, delta);
   }
   if (movement == CameraMovement_Left) {
     Vec3f32 cross = cross_vec3f32(camera->front, camera->up);
-    Vec3f32 delta = scale_vec3f32(cross, cameraSpeed);
+    Vec3f32 delta = vec3f32_scale(cross, cameraSpeed);
     camera->position = sub_vec3f32_vec3f32(camera->position, delta);
   }
   if (movement == CameraMovement_Right) {
     Vec3f32 cross = cross_vec3f32(camera->front, camera->up);
-    Vec3f32 delta = scale_vec3f32(cross, cameraSpeed);
+    Vec3f32 delta = vec3f32_scale(cross, cameraSpeed);
     camera->position = add_vec3f32_vec3f32(camera->position, delta);
   }
   if (movement == CameraMovement_Down) {
@@ -56,9 +56,9 @@ function void _camera_update(Camera* camera) {
 		sin(radians_from_degrees(camera->yaw)) * cos(radians_from_degrees(camera->pitch))
 	);
 	
-	camera->front = normalize_vec3f32(front);
+	camera->front = vec3f32_normalize(front);
 	Vec3f32 right = cross_vec3f32(camera->front, WORLD_UP);
-	camera->right = normalize_vec3f32(right);
+	camera->right = vec3f32_normalize(right);
 	Vec3f32 up    = cross_vec3f32(camera->right, camera->front);
-	camera->up    = normalize_vec3f32(up);
+	camera->up    = vec3f32_normalize(up);
 }
