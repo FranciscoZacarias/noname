@@ -1,8 +1,10 @@
 /* date = January 28th 2024 8:00 pm */
 
+#define SHADER_SOURCE(code) "#version 330 core\n" #code
+
 //////////////////////////////////////////////
 // Vertex Shader
-const char* GET_VERTEX_SHADER() {
+function const char* GET_VERTEX_SHADER() {
   return SHADER_SOURCE(
       //////////////////////////////////////////////
       // Vertex Shader start
@@ -24,7 +26,7 @@ const char* GET_VERTEX_SHADER() {
 
 //////////////////////////////////////////////
 // Fragment Shader
-const char* GET_FRAGMENT_SHADER() {
+function const char* GET_FRAGMENT_SHADER() {
   return SHADER_SOURCE(
       //////////////////////////////////////////////
       // Fragment  Shader start
@@ -39,17 +41,17 @@ const char* GET_FRAGMENT_SHADER() {
     );
 }
 
-typedef enum ShaderErrorType {
-  ShaderErrorType_LinkProgram,
-  ShaderErrorType_CompileVertex,
-  ShaderErrorType_CompileFragment
-} ShaderErrorType;
+typedef enum _ShaderErrorType {
+  _ShaderErrorType_LinkProgram,
+  _ShaderErrorType_CompileVertex,
+  _ShaderErrorType_CompileFragment
+} _ShaderErrorType;
 
-void _shader_check_errors(u32 shader, ShaderErrorType shader_type) {
+function void _shader_check_errors(u32 shader, _ShaderErrorType shader_type) {
   int  success;
   char infoLog[1024];
   switch(shader_type) {
-    case ShaderErrorType_LinkProgram: {
+    case _ShaderErrorType_LinkProgram: {
       glGetProgramiv(shader, GL_LINK_STATUS, &success);
       if(!success) {
         glGetProgramInfoLog(shader, 1024, NULL, infoLog);
@@ -57,8 +59,8 @@ void _shader_check_errors(u32 shader, ShaderErrorType shader_type) {
         return;
       }
     } break;
-    case ShaderErrorType_CompileVertex:
-    case ShaderErrorType_CompileFragment: {
+    case _ShaderErrorType_CompileVertex:
+    case _ShaderErrorType_CompileFragment: {
       glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
       if (!success) {
         glGetShaderInfoLog(shader, 1024, NULL, infoLog);
@@ -69,34 +71,34 @@ void _shader_check_errors(u32 shader, ShaderErrorType shader_type) {
   }
 }
 
-Shader shader_create(const char* vertex_path, const char* fragment_path) {
+function Shader shader_create(const char* vertex_path, const char* fragment_path) {
   u32 vertex_shader = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(vertex_shader, 1, &vertex_path, NULL);
   glCompileShader(vertex_shader);
-  _shader_check_errors(vertex_shader, ShaderErrorType_CompileVertex);
+  _shader_check_errors(vertex_shader, _ShaderErrorType_CompileVertex);
   
   u32 fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
   glShaderSource(fragment_shader, 1, &fragment_path, NULL);
   glCompileShader(fragment_shader);
-  _shader_check_errors(fragment_shader, ShaderErrorType_CompileFragment);
+  _shader_check_errors(fragment_shader, _ShaderErrorType_CompileFragment);
   
   Shader result = { 0 };
   result.id = glCreateProgram();
   glAttachShader(result.id, vertex_shader);
   glAttachShader(result.id, fragment_shader);
   glLinkProgram(result.id);
-  _shader_check_errors(result.id, ShaderErrorType_LinkProgram);
+  _shader_check_errors(result.id, _ShaderErrorType_LinkProgram);
   
   glDeleteShader(vertex_shader);
   glDeleteShader(fragment_shader);
   return result;
 }
 
-void shader_use(Shader shader) {
+function void shader_use(Shader shader) {
   glUseProgram(shader.id);
 }
 
-void shader_set_uniform_mat4fv(Shader shader, const char* uniform, Mat4f32 mat) {
+function void shader_set_uniform_mat4fv(Shader shader, const char* uniform, Mat4f32 mat) {
   s32 uniform_location = glGetUniformLocation(shader.id, uniform);
   if (uniform_location == -1) {
     printf("Uniform %s not found\n", uniform);
@@ -104,7 +106,7 @@ void shader_set_uniform_mat4fv(Shader shader, const char* uniform, Mat4f32 mat) 
   glUniformMatrix4fv(uniform_location, 1, 0, &mat.v[0][0]);
 }
 
-void shader_set_uniform_vec4fv(Shader shader, const char* uniform, Vec4f32 vec) {
+function void shader_set_uniform_vec4fv(Shader shader, const char* uniform, Vec4f32 vec) {
   s32 uniform_location = glGetUniformLocation(shader.id, uniform);
   if (uniform_location == -1) {
     printf("Uniform %s not found\n", uniform);

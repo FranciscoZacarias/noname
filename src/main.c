@@ -1,35 +1,29 @@
-/* date = January 28th 2024 11:04 am */
-
-/*
-TODO:
-- Implement sin, cos, tan, sqrt
-*/
-
 //////////////////////////////////////////////
 // Opengl(Glad) and GLFW Includes
 #include <glad/glad.h>
 #include <glad/glad.c>
 #include <GLFW/glfw3.h>
 
-//////////////////////////////////////////////
-// My includes. NOTE: Order matters
-
 // Only thing that I want to allow that is not written by me. For obv reasons.
 #include <windows.h>
 
-// *.h
 #include <stdlib.h> // TODO: REMOVE THIS
 #include <stdio.h>  // TODO: REMOVE THIS
 #include <math.h>   // TODO: REMOVE THIS. THIS IS BORDERLINE HEARSAY
 
+// Headers only
 #include "fdefines.h"
 #include "main.h"
+
+// *.h
 #include "fmath.h"
 #include "shader.h"
+#include "camera.h"
 
 // *.c
 #include "fmath.c"
 #include "shader.c"
+#include "camera.c"
 
 global_variable s32 window_width  = 800;
 global_variable s32 window_height = 600;

@@ -19,6 +19,12 @@ typedef struct Vec3f32 {
 	};
 } Vec3f32;
 
+/*
+TODO:
+add cross v4f32
+rename funs to be vec*f32_len.... for exmaple
+*/
+
 function Vec3f32 vec3f32(f32 x, f32 y, f32 z);
 function Vec3f32 add_vec3f32_vec3f32(Vec3f32 a, Vec3f32 b);
 function Vec3f32 sub_vec3f32_vec3f32(Vec3f32 a, Vec3f32 b);
