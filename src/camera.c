@@ -1,13 +1,14 @@
 
 function Camera camera_create(Vec3f32 position) {
-	Camera result;
-	result.position = position;
-	result.front    = vec3f32(0.0f, 0.0, -1.0f);
-	result.up       = WORLD_UP;
-	result.right    = vec3f32(1.0f, 0.0f, 0.0f);
-	result.yaw      = -90.0f;
-	result.pitch    =  0.0f;
-	return result;
+	Camera camera;
+	camera.position = position;
+	camera.front    = vec3f32(0.0f, 0.0, -1.0f);
+	camera.up       = WORLD_UP;
+	camera.right    = vec3f32(1.0f, 0.0f, 0.0f);
+	camera.yaw      = -90.0f;
+	camera.pitch    =  0.0f;
+	_camera_update(&camera);
+	return camera;
 }
 
 function void _camera_update(Camera* camera) {
