@@ -22,7 +22,7 @@ TODO:
 #include <stdio.h>  // TODO: REMOVE THIS
 #include <math.h>   // TODO: REMOVE THIS. THIS IS BORDERLINE HEARSAY
 
-#include "defines.h"
+#include "fdefines.h"
 #include "main.h"
 #include "fmath.h"
 #include "shader.h"
