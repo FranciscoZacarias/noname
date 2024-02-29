@@ -155,10 +155,6 @@ int main() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     Mat4f32 view = mat4f32(1.0f);
-    f32 radius = 10.0f;
-    f32 camX = (f32)(sin(glfwGetTime()) * radius);
-    f32 camZ = (f32)(cos(glfwGetTime()) * radius);
-    view = mat4f32_look_at(vec3f32(camX, 0.0f, camZ), vec3f32(0.0f, 0.0f, 0.0f), vec3f32(0.0f, 1.0f, 0.0f));
     
     Vec3f32 target = add_vec3f32_vec3f32(camera.position, camera.front);
     view = mat4f32_look_at(camera.position, target, camera.up);
