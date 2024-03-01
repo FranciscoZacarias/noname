@@ -11,12 +11,17 @@ function const char* GET_VERTEX_SHADER() {
 
       layout (location = 0) in vec3 aPos;
 
+      out vec3 vertex_color;
+
+      uniform vec3 color;
+
       uniform mat4 model;
       uniform mat4 view;
       uniform mat4 projection;
 
       void main() {
-        gl_Position = projection * view * model *  vec4(aPos, 1.0);
+        gl_Position = projection * view * model * vec4(aPos, 1.0);
+        vertex_color = color;
       }
 
       // Vertex Shader end
@@ -32,8 +37,11 @@ function const char* GET_FRAGMENT_SHADER() {
       // Fragment  Shader start
 
       out vec4 FragColor;
+
+      in vec3 vertex_color;
+
       void main() {
-        FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+        FragColor = vec4(vertex_color, 1.0f);
       }
 
       // Fragment Shader End
@@ -112,4 +120,12 @@ function void shader_set_uniform_vec4fv(Shader shader, const char* uniform, Vec4
     printf("Uniform %s not found\n", uniform);
   }
   glUniform4fv(uniform_location, 1, &vec.v[0]);
+}
+
+function void shader_set_uniform_vec3fv(Shader shader, const char* uniform, Vec3f32 vec) {
+  s32 uniform_location = glGetUniformLocation(shader.id, uniform);
+  if (uniform_location == -1) {
+    printf("Uniform %s not found\n", uniform);
+  }
+  glUniform3fv(uniform_location, 1, &vec.v[0]);
 }

@@ -6,6 +6,8 @@
 #define global_variable static
 #define function        static
 
+#define ArrayCount(a) (sizeof(a)/sizeof((a)[0]))
+
 typedef unsigned char      u8;
 typedef unsigned short     u16;
 typedef unsigned int       u32;

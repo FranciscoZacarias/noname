@@ -25,6 +25,10 @@
 #include "shader.c"
 #include "camera.c"
 
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);  
+void process_input(GLFWwindow *window);
+void mouse_callback(GLFWwindow* window, f64 xpos, f64 ypos);
+
 global_variable s32 WindowWidth  = 800;
 global_variable s32 WindowHeight = 600;
 #define aspect_ratio() (WindowWidth/WindowHeight)
@@ -39,10 +43,6 @@ global_variable mouse_mode = 0;
 
 global_variable f32 DeltaTime = 0.0f;
 global_variable f32 LastFrame = 0.0f;
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);  
-void process_input(GLFWwindow *window);
-void mouse_callback(GLFWwindow* window, f64 xpos, f64 ypos);
 
 int main() {
   
@@ -108,7 +108,7 @@ int main() {
     1, 0, 4
   };
 
-	Vec3f32 cubePositions[] = {
+	Vec3f32 positions[] = {
     vec3f32( 0.0f,  0.0f,  0.0f),
     vec3f32( 2.0f,  5.0f, -15.0f),
     vec3f32(-1.5f, -2.2f, -2.5f),
@@ -120,6 +120,19 @@ int main() {
     vec3f32( 1.5f,  0.2f, -1.5f),
     vec3f32(-1.3f,  1.0f, -1.5f)
 	};
+
+  Vec3f32 colors[] = {
+    vec3f32(1.0f, 0.0f, 0.0f),
+    vec3f32(0.0f, 0.0f, 1.0f),
+    vec3f32(0.0f, 1.0f, 0.0f),
+    vec3f32(1.0f, 1.0f, 0.0f),
+    vec3f32(1.0f, 0.0f, 1.0f),
+    vec3f32(1.0f, 0.5f, 0.0f),
+    vec3f32(0.0f, 1.0f, 0.5f),
+    vec3f32(0.5f, 0.5f, 1.0f),
+    vec3f32(0.5f, 1.0f, 0.0f),
+    vec3f32(0.0f, 1.0f, 1.0f)
+  };
 
   unsigned int VBO, VAO, EBO;
   glGenVertexArrays(1, &VAO);
@@ -150,31 +163,23 @@ int main() {
 		glClearColor(0.3f, 0.8f, 0.8f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
-    Mat4f32 view = mat4f32(1.0f);
-    
-    Vec3f32 target = add_vec3f32_vec3f32(camera.position, camera.front);
-    view = mat4f32_look_at(camera.position, target, camera.up);
-
+    Mat4f32 view = mat4f32_look_at(camera.position, add_vec3f32_vec3f32(camera.position, camera.front), camera.up);
     shader_set_uniform_mat4fv(shader, "view", view);
 
-		Mat4f32 projection = mat4f32(1.0f);
-		projection = mat4f32_perspective(45.0f, aspect_ratio(), 0.1f, 100.0f);
+		Mat4f32 projection = mat4f32_perspective(45.0f, aspect_ratio(), 0.1f, 100.0f);
 		shader_set_uniform_mat4fv(shader, "projection", projection);
 
-		Mat4f32 model = mat4f32(1.0f);
-
 		glBindVertexArray(VAO);
-		for(u32 i = 0; i < 10; i++)
-		{
-			Mat4f32 model = mat4f32(1.0f);
-			model = mat4f32_translate(model, cubePositions[i].x, cubePositions[i].y, cubePositions[i].z);
-			f32 angle = 20.0f * i; 
-			model = mat4f32_rotate(model, 1.0f, 0.3f, 0.5f, (f32)glfwGetTime() * angle);
+		for(u32 i = 0; i < 10; i++) {
+			Mat4f32 model = mat4f32_make_translate(positions[i].x, positions[i].y, positions[i].z);
+			model = mat4f32_rotate(model, 1.0f, 0.3f, 0.5f, (f32)glfwGetTime() * (20.0f * i));
 	
-			shader_set_uniform_mat4fv(shader, "model", model);
-		  glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-		}
+      shader_set_uniform_vec3fv(shader, "color", colors[i]);
 
+			shader_set_uniform_mat4fv(shader, "model", model);
+      glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+		}
+		
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
