@@ -25,14 +25,17 @@
 #include "shader.c"
 #include "camera.c"
 
-global_variable s32 window_width  = 800;
-global_variable s32 window_height = 600;
-#define aspect_ratio() (window_width/window_height)
+global_variable s32 WindowWidth  = 800;
+global_variable s32 WindowHeight = 600;
+#define aspect_ratio() (WindowWidth/WindowHeight)
 
 global_variable Camera camera;
 global_variable f32 lastX;
 global_variable f32 lastY;
 global_variable b32 FirstMouse = 1;
+
+/* 0 for selecting, 1 for moving*/
+global_variable mouse_mode = 0;
 
 global_variable f32 DeltaTime = 0.0f;
 global_variable f32 LastFrame = 0.0f;
@@ -48,7 +51,7 @@ int main() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	
-	GLFWwindow* window = glfwCreateWindow(window_width, window_height, APP_NAME, NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(WindowWidth, WindowHeight, APP_NAME, NULL, NULL);
 	if (window == NULL) {
 		printf("Failed to create GLFW window");
 		glfwTerminate();
@@ -57,7 +60,6 @@ int main() {
   glfwMakeContextCurrent(window);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   glfwSetCursorPosCallback(window, mouse_callback);
-  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		printf("Failed to initialize GLAD");
@@ -67,76 +69,70 @@ int main() {
   glEnable(GL_DEPTH_TEST);  
 
   camera = camera_create();
-  lastX  = window_width / 2.0f;
-  lastY  = window_height / 2.0f;
+  lastX  = WindowWidth / 2.0f;
+  lastY  = WindowHeight / 2.0f;
 
   Shader shader = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());	
 
   f32 vertices[] = {
-    -0.5f, -0.5f, -0.5f,
-     0.5f, -0.5f, -0.5f,
-     0.5f,  0.5f, -0.5f,
-     0.5f,  0.5f, -0.5f,
-    -0.5f,  0.5f, -0.5f,
-    -0.5f, -0.5f, -0.5f,
+    // Front face
+    -0.5f, -0.5f,  0.5f,  // 0
+     0.5f, -0.5f,  0.5f,  // 1
+     0.5f,  0.5f,  0.5f,  // 2
+    -0.5f,  0.5f,  0.5f,  // 3
+    // Back face
+    -0.5f, -0.5f, -0.5f,  // 4
+     0.5f, -0.5f, -0.5f,  // 5
+     0.5f,  0.5f, -0.5f,  // 6
+    -0.5f,  0.5f, -0.5f   // 7
+  };
 
-    -0.5f, -0.5f,  0.5f,
-     0.5f, -0.5f,  0.5f,
-     0.5f,  0.5f,  0.5f,
-     0.5f,  0.5f,  0.5f,
-    -0.5f,  0.5f,  0.5f,
-    -0.5f, -0.5f,  0.5f,
-
-    -0.5f,  0.5f,  0.5f,
-    -0.5f,  0.5f, -0.5f,
-    -0.5f, -0.5f, -0.5f,
-    -0.5f, -0.5f, -0.5f,
-    -0.5f, -0.5f,  0.5f,
-    -0.5f,  0.5f,  0.5f,
-
-     0.5f,  0.5f,  0.5f,
-     0.5f,  0.5f, -0.5f,
-     0.5f, -0.5f, -0.5f,
-     0.5f, -0.5f, -0.5f,
-     0.5f, -0.5f,  0.5f,
-     0.5f,  0.5f,  0.5f,
-
-    -0.5f, -0.5f, -0.5f,
-     0.5f, -0.5f, -0.5f,
-     0.5f, -0.5f,  0.5f,
-     0.5f, -0.5f,  0.5f,
-    -0.5f, -0.5f,  0.5f,
-    -0.5f, -0.5f, -0.5f,
-
-    -0.5f,  0.5f, -0.5f,
-     0.5f,  0.5f, -0.5f,
-     0.5f,  0.5f,  0.5f,
-     0.5f,  0.5f,  0.5f,
-    -0.5f,  0.5f,  0.5f,
-    -0.5f,  0.5f, -0.5f,
+  u32 indices[] = {
+    // Front face
+    0, 1, 2,
+    2, 3, 0,
+    // Right face
+    1, 5, 6,
+    6, 2, 1,
+    // Back face
+    5, 4, 7,
+    7, 6, 5,
+    // Left face
+    4, 0, 3,
+    3, 7, 4,
+    // Top face
+    3, 2, 6,
+    6, 7, 3,
+    // Bottom face
+    4, 5, 1,
+    1, 0, 4
   };
 
 	Vec3f32 cubePositions[] = {
-    vec3f32( 0.0f,  0.0f,  0.0f), 
-    vec3f32( 2.0f,  5.0f, -15.0f), 
-    vec3f32(-1.5f, -2.2f, -2.5f),  
-    vec3f32(-3.8f, -2.0f, -12.3f),  
-    vec3f32( 2.4f, -0.4f, -3.5f),  
-    vec3f32(-1.7f,  3.0f, -7.5f),  
-    vec3f32( 1.3f, -2.0f, -2.5f),  
-    vec3f32( 1.5f,  2.0f, -2.5f), 
-    vec3f32( 1.5f,  0.2f, -1.5f), 
-    vec3f32(-1.3f,  1.0f, -1.5f)  
+    vec3f32( 0.0f,  0.0f,  0.0f),
+    vec3f32( 2.0f,  5.0f, -15.0f),
+    vec3f32(-1.5f, -2.2f, -2.5f),
+    vec3f32(-3.8f, -2.0f, -12.3f),
+    vec3f32( 2.4f, -0.4f, -3.5f),
+    vec3f32(-1.7f,  3.0f, -7.5f),
+    vec3f32( 1.3f, -2.0f, -2.5f),
+    vec3f32( 1.5f,  2.0f, -2.5f),
+    vec3f32( 1.5f,  0.2f, -1.5f),
+    vec3f32(-1.3f,  1.0f, -1.5f)
 	};
 
-  unsigned int VBO, VAO;
+  unsigned int VBO, VAO, EBO;
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
+  glGenBuffers(1, &EBO);
 
   glBindVertexArray(VAO);
 
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, 3 * sizeof(f32), (void*)0);
   glEnableVertexAttribArray(0);
@@ -176,12 +172,9 @@ int main() {
 			model = mat4f32_rotate(model, 1.0f, 0.3f, 0.5f, (f32)glfwGetTime() * angle);
 	
 			shader_set_uniform_mat4fv(shader, "model", model);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
+		  glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 		}
 
-		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
@@ -192,8 +185,8 @@ int main() {
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
-	window_width  = width;
-	window_height = height;
+	WindowWidth  = width;
+	WindowHeight = height;
 }
 
 void process_input(GLFWwindow *window) {
@@ -201,23 +194,40 @@ void process_input(GLFWwindow *window) {
 		glfwSetWindowShouldClose(window, 1);
 	}
 
-  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-    camera_keyboard_callback(&camera, CameraMovement_Front, DeltaTime);
+  if (glfwGetKey(window, GLFW_KEY_F2) == GLFW_PRESS) {
+    mouse_mode = 0;
+    lastX = WindowWidth/2;
+    lastY = WindowHeight/2;
+    glfwSetCursorPos(window, WindowWidth/2, WindowHeight/2);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
   }
-  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-    camera_keyboard_callback(&camera, CameraMovement_Back, DeltaTime);
+  if (glfwGetKey(window, GLFW_KEY_F3) == GLFW_PRESS) {
+    mouse_mode = 1;
+    lastX = WindowWidth/2;
+    lastY = WindowHeight/2;
+    glfwSetCursorPos(window, WindowWidth/2, WindowHeight/2);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   }
-  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-    camera_keyboard_callback(&camera, CameraMovement_Left, DeltaTime);
-  }
-  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-    camera_keyboard_callback(&camera, CameraMovement_Right, DeltaTime);
-  }
-  if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
-    camera_keyboard_callback(&camera, CameraMovement_Down, DeltaTime);
-  }
-  if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-    camera_keyboard_callback(&camera, CameraMovement_Up, DeltaTime);
+
+  if (mouse_mode == 1) {
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+      camera_keyboard_callback(&camera, CameraMovement_Front, DeltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+      camera_keyboard_callback(&camera, CameraMovement_Back, DeltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+      camera_keyboard_callback(&camera, CameraMovement_Left, DeltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+      camera_keyboard_callback(&camera, CameraMovement_Right, DeltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+      camera_keyboard_callback(&camera, CameraMovement_Down, DeltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+      camera_keyboard_callback(&camera, CameraMovement_Up, DeltaTime);
+    }
   }
 
   local_persist GLenum polygon_mode = GL_FILL;
@@ -228,19 +238,21 @@ void process_input(GLFWwindow *window) {
 }
 
 void mouse_callback(GLFWwindow* window, f64 xposIn, f64 yposIn) {
-  f32 xpos = (f32)xposIn;
-  f32 ypos = (f32)yposIn;
+  if (mouse_mode == 1) {
+    f32 xpos = (f32)xposIn;
+    f32 ypos = (f32)yposIn;
 
-  if (FirstMouse) {
+    if (FirstMouse) {
+      lastX = xpos;
+      lastY = ypos;
+      FirstMouse = 0;
+    }
+
+    f32 xoffset = xpos - lastX;
+    f32 yoffset = lastY - ypos;
     lastX = xpos;
     lastY = ypos;
-    FirstMouse = 0;
+
+    camera_mouse_callback(&camera, xoffset, yoffset);
   }
-
-  f32 xoffset = xpos - lastX;
-  f32 yoffset = lastY - ypos;
-  lastX = xpos;
-  lastY = ypos;
-
-  camera_mouse_callback(&camera, xoffset, yoffset);
 }
