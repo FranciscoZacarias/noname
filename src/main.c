@@ -151,7 +151,7 @@ int main() {
   glEnableVertexAttribArray(0);
 
 	shader_use(shader);
-	
+
 	static b32 toggle = 1;
 	while(!glfwWindowShouldClose(window)) {
     f32 currentFrame = (f32)(glfwGetTime());
