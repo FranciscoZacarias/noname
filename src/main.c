@@ -1,45 +1,16 @@
-//////////////////////////////////////////////
-// Opengl(Glad) and GLFW Includes
-#include <glad/glad.h>
-#include <glad/glad.c>
-#include <GLFW/glfw3.h>
-
-// Only thing that I want to allow that is not written by me. For obv reasons.
-#include <windows.h>
-
-#include <stdlib.h> // TODO: REMOVE THIS
-#include <stdio.h>  // TODO: REMOVE THIS
-#include <math.h>   // TODO: REMOVE THIS. THIS IS BORDERLINE HEARSAY
-
-// Headers only
-#include "fdefines.h"
 #include "main.h"
 
-// *.h
-#include "fmath.h"
-#include "shader.h"
-#include "camera.h"
-
-// *.c
-#include "fmath.c"
-#include "shader.c"
-#include "camera.c"
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void process_input(GLFWwindow *window);
-void mouse_callback(GLFWwindow* window, f64 xpos, f64 ypos);
-
 global_variable s32 WindowWidth  = 800;
-global_variable s32 WindowHeight = 600;
+global_variable s32 WindowHeight = 800;
 #define aspect_ratio() (WindowWidth/WindowHeight)
 
 global_variable Camera camera;
-global_variable f32 lastX;
-global_variable f32 lastY;
+global_variable f32 LastX;
+global_variable f32 LastY;
 global_variable b32 FirstMouse = 1;
 
 /* 0 for selecting, 1 for moving*/
-global_variable mouse_mode = 0;
+global_variable MouseMode = 0;
 
 global_variable f32 DeltaTime = 0.0f;
 global_variable f32 LastFrame = 0.0f;
@@ -69,8 +40,8 @@ int main() {
 	glEnable(GL_DEPTH_TEST);
 
 	camera = camera_create();
-	lastX  = WindowWidth / 2.0f;
-	lastY  = WindowHeight / 2.0f;
+	LastX  = WindowWidth / 2.0f;
+	LastY  = WindowHeight / 2.0f;
 
 	Shader shader = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());
 
@@ -152,7 +123,9 @@ int main() {
 
 	shader_use(shader);
 
-	static b32 toggle = 1;
+	Mat4f32 projection = mat4f32_perspective(45.0f, aspect_ratio(), 0.1f, 100.0f);
+	shader_set_uniform_mat4fv(shader, "projection", projection);
+
 	while(!glfwWindowShouldClose(window)) {
 		f32 currentFrame = (f32)(glfwGetTime());
 		DeltaTime = currentFrame - LastFrame;
@@ -160,22 +133,17 @@ int main() {
 
 		process_input(window);
 
-		glClearColor(0.3f, 0.8f, 0.8f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 		Mat4f32 view = mat4f32_look_at(camera.position, add_vec3f32_vec3f32(camera.position, camera.front), camera.up);
 		shader_set_uniform_mat4fv(shader, "view", view);
 
-		Mat4f32 projection = mat4f32_perspective(45.0f, aspect_ratio(), 0.1f, 100.0f);
-		shader_set_uniform_mat4fv(shader, "projection", projection);
+		glClearColor(0.3f, 0.8f, 0.8f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glBindVertexArray(VAO);
+
 		for(u32 i = 0; i < 10; i++) {
 			Mat4f32 model = mat4f32_make_translate(positions[i].x, positions[i].y, positions[i].z);
 			model = mat4f32_rotate(model, 1.0f, 0.3f, 0.5f, (f32)glfwGetTime() * (20.0f * i));
-
 			shader_set_uniform_vec3fv(shader, "color", colors[i]);
-
 			shader_set_uniform_mat4fv(shader, "model", model);
 			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 		}
@@ -200,21 +168,21 @@ void process_input(GLFWwindow *window) {
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_F2) == GLFW_PRESS) {
-		mouse_mode = 0;
-		lastX = WindowWidth/2;
-		lastY = WindowHeight/2;
+		MouseMode = 0;
+		LastX = WindowWidth/2;
+		LastY = WindowHeight/2;
 		glfwSetCursorPos(window, WindowWidth/2, WindowHeight/2);
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	}
 	if (glfwGetKey(window, GLFW_KEY_F3) == GLFW_PRESS) {
-		mouse_mode = 1;
-		lastX = WindowWidth/2;
-		lastY = WindowHeight/2;
+		MouseMode = 1;
+		LastX = WindowWidth/2;
+		LastY = WindowHeight/2;
 		glfwSetCursorPos(window, WindowWidth/2, WindowHeight/2);
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	}
 
-	if (mouse_mode == 1) {
+	if (MouseMode == 1) {
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
 			camera_keyboard_callback(&camera, CameraMovement_Front, DeltaTime);
 		}
@@ -243,20 +211,20 @@ void process_input(GLFWwindow *window) {
 }
 
 void mouse_callback(GLFWwindow* window, f64 xposIn, f64 yposIn) {
-	if (mouse_mode == 1) {
+	if (MouseMode == 1) {
 		f32 xpos = (f32)xposIn;
 		f32 ypos = (f32)yposIn;
 
 		if (FirstMouse) {
-			lastX = xpos;
-			lastY = ypos;
+			LastX = xpos;
+			LastY = ypos;
 			FirstMouse = 0;
 		}
 
-		f32 xoffset = xpos - lastX;
-		f32 yoffset = lastY - ypos;
-		lastX = xpos;
-		lastY = ypos;
+		f32 xoffset = xpos - LastX;
+		f32 yoffset = LastY - ypos;
+		LastX = xpos;
+		LastY = ypos;
 
 		camera_mouse_callback(&camera, xoffset, yoffset);
 	}

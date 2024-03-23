@@ -2,6 +2,6 @@
 build/
 debug.bat
 noname.rdbg
-external/linmath.h
-external/base_math.h
-external/base_math.c
+src/external/linmath.h
+src/external/base_math.h
+src/external/base_math.c

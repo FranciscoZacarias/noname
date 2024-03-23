@@ -77,8 +77,14 @@ function Mat4f32 mat4f32_transpose(Mat4f32 m);
 function Mat4f32 mat4f32_invert(Mat4f32 m);
 
 function Mat4f32 mul_mat4f32_mat4f32(Mat4f32 a, Mat4f32 b);
-function Mat4f32 add_m4f32_m4f32(Mat4f32 a, Mat4f32 b);
-function Mat4f32 sub_m4f32_m4f32(Mat4f32 a, Mat4f32 b);
+function Mat4f32 add_mat4f32_mat4f32(Mat4f32 a, Mat4f32 b);
+function Mat4f32 sub_mat4f32_mat4f32(Mat4f32 a, Mat4f32 b);
+
+//////////////////////////////////////////////
+// Operations
+
+function Vec3f32 mul_mat4f32_vec3f32(Mat4f32 m, Vec3f32 v);
+function Vec4f32 mul_mat4f32_vec4f32(Mat4f32 m, Vec4f32 v);
 function Mat4f32 outer_vec3f32(Vec3f32 a, Vec3f32 b);
 
 #endif // FMATH_H
