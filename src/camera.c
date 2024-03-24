@@ -24,22 +24,22 @@ function void camera_keyboard_callback(Camera* camera, CameraMovement movement, 
 	f32 cameraSpeed = (f32)(CAMERA_SPEED * delta_time);
 
   if (movement == CameraMovement_Front) {
-    Vec3f32 delta = vec3f32_scale(camera->front, cameraSpeed);
-    camera->position = add_vec3f32_vec3f32(camera->position, delta);
+    Vec3f32 delta = scale_vec3f32(camera->front, cameraSpeed);
+    camera->position = add_vec3f32(camera->position, delta);
   }
   if (movement == CameraMovement_Back) {
-    Vec3f32 delta = vec3f32_scale(camera->front, cameraSpeed);
-    camera->position = sub_vec3f32_vec3f32(camera->position, delta);
+    Vec3f32 delta = scale_vec3f32(camera->front, cameraSpeed);
+    camera->position = sub_vec3f32(camera->position, delta);
   }
   if (movement == CameraMovement_Left) {
     Vec3f32 cross = cross_vec3f32(camera->front, camera->up);
-    Vec3f32 delta = vec3f32_scale(cross, cameraSpeed);
-    camera->position = sub_vec3f32_vec3f32(camera->position, delta);
+    Vec3f32 delta = scale_vec3f32(cross, cameraSpeed);
+    camera->position = sub_vec3f32(camera->position, delta);
   }
   if (movement == CameraMovement_Right) {
     Vec3f32 cross = cross_vec3f32(camera->front, camera->up);
-    Vec3f32 delta = vec3f32_scale(cross, cameraSpeed);
-    camera->position = add_vec3f32_vec3f32(camera->position, delta);
+    Vec3f32 delta = scale_vec3f32(cross, cameraSpeed);
+    camera->position = add_vec3f32(camera->position, delta);
   }
   if (movement == CameraMovement_Down) {
     camera->position.y -= cameraSpeed;
@@ -51,14 +51,14 @@ function void camera_keyboard_callback(Camera* camera, CameraMovement movement, 
 
 function void _camera_update(Camera* camera) {
 	Vec3f32 front = vec3f32(
-		cos(radians_from_degrees(camera->yaw)) * cos(radians_from_degrees(camera->pitch)),
-		sin(radians_from_degrees(camera->pitch)),
-		sin(radians_from_degrees(camera->yaw)) * cos(radians_from_degrees(camera->pitch))
+		cos(Radians(camera->yaw)) * cos(Radians(camera->pitch)),
+		sin(Radians(camera->pitch)),
+		sin(Radians(camera->yaw)) * cos(Radians(camera->pitch))
 	);
-	
-	camera->front = vec3f32_normalize(front);
+
+	camera->front = normalize_vec3f32(front);
 	Vec3f32 right = cross_vec3f32(camera->front, WORLD_UP);
-	camera->right = vec3f32_normalize(right);
+	camera->right = normalize_vec3f32(right);
 	Vec3f32 up    = cross_vec3f32(camera->right, camera->front);
-	camera->up    = vec3f32_normalize(up);
+	camera->up    = normalize_vec3f32(up);
 }

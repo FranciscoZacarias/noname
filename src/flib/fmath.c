@@ -1,376 +1,740 @@
 //////////////////////////////////////////////
-// Vector 3
+// Vector3 f32
 
 function Vec3f32 vec3f32(f32 x, f32 y, f32 z) {
-  Vec3f32 v={x, y, z};
-  return v;
+  Vec3f32 result = {x, y, z};
+  return result;
 }
-function Vec3f32 vec3f32_scale(Vec3f32 a, f32 s) {
-  Vec3f32 v={a.x*s, a.y*s, a.z*s};
-  return v;
+
+function Vec3f32 add_vec3f32(Vec3f32 a, Vec3f32 b) {
+  Vec3f32 result = {
+    a.x + b.x,
+    a.y + b.y,
+    a.z + b.z
+  };
+  return result;
 }
-function Vec3f32 vec3f32_normalize(Vec3f32 a) {
-  Vec3f32 v=vec3f32_scale(a, 1.f/vec3f32_len(a));
-  return v;
+
+function Vec3f32 sub_vec3f32(Vec3f32 a, Vec3f32 b) {
+  Vec3f32 result = {
+    a.x - b.x,
+    a.y - b.y,
+    a.z - b.z
+  };
+  return result;
 }
-function f32 vec3f32_len(Vec3f32 v) {
-  f32 r=sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
-  return r;
+
+function Vec3f32 mul_vec3f32(Vec3f32 a, Vec3f32 b) {
+  Vec3f32 result = {
+    a.x * b.x,
+    a.y * b.y,
+    a.z * b.z
+  };
+  return result;
 }
-function f32 vec3f32_dot(Vec3f32 a, Vec3f32 b) {
-  f32 r=(a.x*b.x + a.y*b.y + a.z*b.z);
-  return r;
+
+function Vec3f32 div_vec3f32(Vec3f32 a, Vec3f32 b) {
+  Vec3f32 result = {
+    a.x / b.x,
+    a.y / b.y,
+    a.z / b.z
+  };
+  return result;
 }
+
 function Vec3f32 cross_vec3f32(Vec3f32 a, Vec3f32 b) {
-  Vec3f32 v={a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x};
-  return v;
+  Vec3f32 result = {
+    a.y*b.z - a.z*b.y,
+    a.z*b.x - a.x*b.z,
+    a.x*b.y - a.y*b.x
+  };
+  return result;
 }
-function Vec3f32 add_vec3f32_vec3f32(Vec3f32 a, Vec3f32 b) {
-  Vec3f32 v={a.x+b.x, a.y+b.y, a.z+b.z};
-  return v;
+
+function Vec3f32 scale_vec3f32(Vec3f32 v, f32 scalar) {
+  Vec3f32 result = {
+    v.x*scalar,
+    v.y*scalar,
+    v.z*scalar
+  };
+  return result;
 }
-function Vec3f32 sub_vec3f32_vec3f32(Vec3f32 a, Vec3f32 b) {
-  Vec3f32 v={a.x-b.x, a.y-b.y, a.z-b.z};
-  return v;
+
+function Vec3f32 normalize_vec3f32(Vec3f32 v) {
+  Vec3f32 result = v;
+  f32 length = sqrtf(v.x*v.x + v.y*v.y + v.z*v.z);
+  if (length != 0.0f) {
+    f32 ilength = 1.0f/length;
+    result.x *= ilength;
+    result.y *= ilength;
+    result.z *= ilength;
+  }
+  return result;
 }
-function Vec3f32 mul_vec3f32_vec3f32(Vec3f32 a, Vec3f32 b) {
-  Vec3f32 v={a.x*b.x, a.y*b.y, a.z*b.z};
-  return v;
+
+function Vec3f32 transform_vec3f32_mat4f32(Vec3f32 v, Mat4f32 m) {
+  Vec3f32 result = {
+    m.m0*v.x + m.m4*v.y + m.m8* v.z + m.m12,
+    m.m1*v.x + m.m5*v.y + m.m9* v.z + m.m13,
+    m.m2*v.x + m.m6*v.y + m.m10*v.z + m.m14
+  };
+  return result;
 }
-function Vec3f32 div_vec3f32_vec3f32(Vec3f32 a, Vec3f32 b) {
-  Vec3f32 v={a.x/b.x, a.y/b.y, a.z/b.z};
-  return v;
+
+function Vec3f32 rotate_by_axis_vec3f32(Vec3f32 v, Vec3f32 axis, f32 radians) {
+  // Using Euler-Rodrigues Formula
+  // Ref.: https://en.wikipedia.org/w/index.php?title=Euler%E2%80%93Rodrigues_formula
+
+  Vec3f32 result = v;
+
+  // Vector3Normalize(axis);
+  f32 length = sqrtf(axis.x*axis.x + axis.y*axis.y + axis.z*axis.z);
+  if (length == 0.0f) length = 1.0f;
+  f32 ilength = 1.0f/length;
+  axis.x *= ilength;
+  axis.y *= ilength;
+  axis.z *= ilength;
+
+  radians /= 2.0f;
+  f32 a = sinf(radians);
+  f32 b = axis.x*a;
+  f32 c = axis.y*a;
+  f32 d = axis.z*a;
+  a = cosf(radians);
+  Vec3f32 w = { b, c, d };
+
+  // Vector3CrossProduct(w, v)
+  Vec3f32 wv = { w.y*v.z - w.z*v.y, w.z*v.x - w.x*v.z, w.x*v.y - w.y*v.x };
+
+  // Vector3CrossProduct(w, wv)
+  Vec3f32 wwv = { w.y*wv.z - w.z*wv.y, w.z*wv.x - w.x*wv.z, w.x*wv.y - w.y*wv.x };
+
+  // Vector3Scale(wv, 2*a)
+  a *= 2;
+  wv.x *= a;
+  wv.y *= a;
+  wv.z *= a;
+
+  // Vector3Scale(wwv, 2)
+  wwv.x *= 2;
+  wwv.y *= 2;
+  wwv.z *= 2;
+
+  result.x += wv.x;
+  result.y += wv.y;
+  result.z += wv.z;
+
+  result.x += wwv.x;
+  result.y += wwv.y;
+  result.z += wwv.z;
+
+  return result;
+}
+
+function Vec3f32 lerp_vec3f32(Vec3f32 a, Vec3f32 b, f32 t) {
+  Vec3f32 result = {
+    a.x + t*(b.x - a.x),
+    a.y + t*(b.y - a.y),
+    a.z + t*(b.z - a.z)
+  };
+  return result;
+}
+
+function f32 dot_vec3f32(Vec3f32 a, Vec3f32 b) {
+  f32 result = a.x*b.x + a.y*b.y + a.z*b.z;
+  return result;
+}
+
+function f32 len_vec3f32(Vec3f32 v) {
+  f32 result = sqrtf(v.x*v.x + v.y*v.y + v.z*v.z);
+  return result;
+}
+
+function f32 distance_vec3f32(Vec3f32 a, Vec3f32 b) {
+  f32 result = 0.0f;
+  f32 dx = b.x - a.x;
+  f32 dy = b.y - a.y;
+  f32 dz = b.z - a.z;
+  result = sqrtf(dx*dx + dy*dy + dz*dz);
+  return result;
+}
+
+function f32 angle_vec3f32(Vec3f32 a, Vec3f32 b) {
+  f32 result = 0.0f;
+  Vec3f32 cross = {a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x};
+  f32 len = sqrtf(cross.x*cross.x + cross.y*cross.y + cross.z*cross.z);
+  f32 dot = (a.x*b.x + a.y*b.y + a.z*b.z);
+  result  = atan2f(len, dot);
+  return result;
 }
 
 //////////////////////////////////////////////
-// Vector 4
+// Vector4 f32
 
-function Vec4f32 vec4f32(f32 x, f32 y, f32 z, f32 w) {
-  Vec4f32 v={x, y, z, w};
-  return v;
+function Vec4f32 vec4f32 (f32 x, f32 y, f32 z) {
+  Vec4f32 result = {x, y, z, 1};
+  return result;
 }
-function Vec4f32 add_vec4f32_vec4f32(Vec4f32 a, Vec4f32 b) {
-  Vec4f32 v={a.x+b.x, a.y+b.y, a.z+b.z, a.w+b.w};
-  return v;
+
+function Vec4f32 vec4f32w(f32 x, f32 y, f32 z, f32 w) {
+  Vec4f32 result = {x, y, z, w};
+  return result;
 }
-function Vec4f32 sub_vec4f32_vec4f32(Vec4f32 a, Vec4f32 b) {
-  Vec4f32 v={a.x-b.x, a.y-b.y, a.z-b.z, a.w-b.w};
-  return v;
+
+function Vec4f32 add_vec4f32(Vec4f32 a, Vec4f32 b) {
+  Vec4f32 result = {
+    a.x + b.x,
+    a.y + b.y,
+    a.z + b.z,
+    a.w + b.w
+  };
+  return result;
 }
-function Vec4f32 mul_vec4f32_vec4f32(Vec4f32 a, Vec4f32 b) {
-  Vec4f32 v={a.x*b.x, a.y*b.y, a.z*b.z, a.w*b.w};
-  return v;
+
+function Vec4f32 sub_vec4f32(Vec4f32 a, Vec4f32 b) {
+  Vec4f32 result = {
+    a.x - b.x,
+    a.y - b.y,
+    a.z - b.z,
+    a.w - b.w
+  };
+  return result;
 }
-function Vec4f32 div_vec4f32_vec4f32(Vec4f32 a, Vec4f32 b) {
-  Vec4f32 v={a.x/b.x, a.y/b.y, a.z/b.z, a.w/b.w};
-  return v;
+
+function Vec4f32 mul_vec4f32(Vec4f32 a, Vec4f32 b) {
+  Vec4f32 result = {
+    a.x * b.x,
+    a.y * b.y,
+    a.z * b.z,
+    a.w * b.w
+  };
+  return result;
 }
-function Vec4f32 vec4f32_scale(Vec4f32 a, f32 s) {
-  Vec4f32 v={a.x*s, a.y*s, a.z*s, a.w*s};
-  return v;
+
+function Vec4f32 div_vec4f32(Vec4f32 a, Vec4f32 b) {
+  Vec4f32 result = {
+    a.x / b.x,
+    a.y / b.y,
+    a.z / b.z,
+    a.w / b.w
+  };
+  return result;
 }
-function Vec4f32 vec4f32_normalize(Vec4f32 v) {
-  Vec4f32 r=vec4f32_scale(v, 1.f/vec4f32_len(v));
-  return r;
+
+function Vec4f32 scale_vec4f32(Vec4f32 v, f32 scalar) {
+  Vec4f32 result = {
+    v.x*scalar,
+    v.y*scalar,
+    v.z*scalar,
+    v.w*scalar
+  };
+  return result;
 }
-function f32 vec4f32_len(Vec4f32 v) {
-  f32 r=sqrt(v.x*v.x + v.y*v.y + v.z*v.z + v.w*v.w);
-  return r;
+
+function Vec4f32 normalize_vec4f32(Vec4f32 v) {
+  Vec4f32 result = v;
+  f32 length = sqrtf((v.x*v.x) + (v.y*v.y) + (v.z*v.z) + (v.w*v.w));
+  if (length > 0) {
+      f32 ilength = 1.0f/length;
+      result.x = v.x*ilength;
+      result.y = v.y*ilength;
+      result.z = v.z*ilength;
+      result.w = v.w*ilength;
+  }
+  return result;
 }
-function f32 vec4f32_dot(Vec4f32 a, Vec4f32 b) {
-  f32 r=(a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w);
-  return r;
+
+function Vec4f32 lerp_vec4f32(Vec4f32 a, Vec4f32 b, f32 t) {
+  Vec4f32 result = {
+    a.x + t*(b.x - a.x),
+    a.y + t*(b.y - a.y),
+    a.z + t*(b.z - a.z),
+    a.w + t*(b.w - a.w)
+  };
+  return result;
+}
+
+function f32 dot_vec4f32(Vec4f32 a, Vec4f32 b) {
+  f32 result = (a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w);
+  return result;
+}
+
+function f32 len_vec4f32(Vec4f32 v) {
+  f32 result = sqrtf((v.x*v.x) + (v.y*v.y) + (v.z*v.z) + (v.w*v.w));
+  return result;
+}
+
+function f32 distance_vec4f32(Vec4f32 a, Vec4f32 b) {
+  f32 result = sqrtf(
+    (a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y) +
+    (a.z - b.z)*(a.z - b.z) + (a.w - b.w)*(a.w - b.w)
+  );
+  return result;
 }
 
 //////////////////////////////////////////////
-// Matrix 4
+// Matrix4 f32
+function Mat4f32 mat4f32(f32 diag) {
+  Mat4f32 result = {
+    diag, 0.0f, 0.0f, 0.0f,
+    0.0f, diag, 0.0f, 0.0f,
+    0.0f, 0.0f, diag, 0.0f,
+    0.0f, 0.0f, 0.0f, diag };
 
-function Mat4f32 mat4f32(f32 diagonal) {
-  Mat4f32 r = {0};
-  r.v[0][0] = diagonal;
-  r.v[1][1] = diagonal;
-  r.v[2][2] = diagonal;
-  r.v[3][3] = diagonal;
-  return r;
+  return result;
 }
 
-function Mat4f32 mat4f32_make_scale(f32 x, f32 y, f32 z) {
-  Mat4f32 r = mat4f32(0.0f);
-  r.v[0][0] = x;
-  r.v[1][1] = y;
-  r.v[2][2] = z;
-  r.v[3][3] = 1.f;
-  return r;
+function Mat4f32 add_mat4f32(Mat4f32 left, Mat4f32 right) {
+  Mat4f32 result = { 0 };
+  result.m0  = left.m0  + right.m0;
+  result.m1  = left.m1  + right.m1;
+  result.m2  = left.m2  + right.m2;
+  result.m3  = left.m3  + right.m3;
+  result.m4  = left.m4  + right.m4;
+  result.m5  = left.m5  + right.m5;
+  result.m6  = left.m6  + right.m6;
+  result.m7  = left.m7  + right.m7;
+  result.m8  = left.m8  + right.m8;
+  result.m9  = left.m9  + right.m9;
+  result.m10 = left.m10 + right.m10;
+  result.m11 = left.m11 + right.m11;
+  result.m12 = left.m12 + right.m12;
+  result.m13 = left.m13 + right.m13;
+  result.m14 = left.m14 + right.m14;
+  result.m15 = left.m15 + right.m15;
+  return result;
 }
 
-function Mat4f32 mat4f32_scale(Mat4f32 m, f32 s) {
-  Mat4f32 r = m;
-  for(int i = 0; i < 4; i++) {
-    r.v[i][0] *= s;
-    r.v[i][1] *= s;
-    r.v[i][2] *= s;
-    r.v[i][3] *= s;
+function Mat4f32 sub_mat4f32(Mat4f32 left, Mat4f32 right) {
+  Mat4f32 result = { 0 };
+  result.m0  = left.m0  - right.m0;
+  result.m1  = left.m1  - right.m1;
+  result.m2  = left.m2  - right.m2;
+  result.m3  = left.m3  - right.m3;
+  result.m4  = left.m4  - right.m4;
+  result.m5  = left.m5  - right.m5;
+  result.m6  = left.m6  - right.m6;
+  result.m7  = left.m7  - right.m7;
+  result.m8  = left.m8  - right.m8;
+  result.m9  = left.m9  - right.m9;
+  result.m10 = left.m10 - right.m10;
+  result.m11 = left.m11 - right.m11;
+  result.m12 = left.m12 - right.m12;
+  result.m13 = left.m13 - right.m13;
+  result.m14 = left.m14 - right.m14;
+  result.m15 = left.m15 - right.m15;
+  return result;
+}
+
+function Mat4f32 mul_mat4f32(Mat4f32 left, Mat4f32 right) {
+  Mat4f32 result = { 0 };
+  result.m0  = left.m0 *right.m0 + left.m1 *right.m4 + left.m2 *right.m8  + left.m3 *right.m12;
+  result.m1  = left.m0 *right.m1 + left.m1 *right.m5 + left.m2 *right.m9  + left.m3 *right.m13;
+  result.m2  = left.m0 *right.m2 + left.m1 *right.m6 + left.m2 *right.m10 + left.m3 *right.m14;
+  result.m3  = left.m0 *right.m3 + left.m1 *right.m7 + left.m2 *right.m11 + left.m3 *right.m15;
+  result.m4  = left.m4 *right.m0 + left.m5 *right.m4 + left.m6 *right.m8  + left.m7 *right.m12;
+  result.m5  = left.m4 *right.m1 + left.m5 *right.m5 + left.m6 *right.m9  + left.m7 *right.m13;
+  result.m6  = left.m4 *right.m2 + left.m5 *right.m6 + left.m6 *right.m10 + left.m7 *right.m14;
+  result.m7  = left.m4 *right.m3 + left.m5 *right.m7 + left.m6 *right.m11 + left.m7 *right.m15;
+  result.m8  = left.m8 *right.m0 + left.m9 *right.m4 + left.m10*right.m8  + left.m11*right.m12;
+  result.m9  = left.m8 *right.m1 + left.m9 *right.m5 + left.m10*right.m9  + left.m11*right.m13;
+  result.m10 = left.m8 *right.m2 + left.m9 *right.m6 + left.m10*right.m10 + left.m11*right.m14;
+  result.m11 = left.m8 *right.m3 + left.m9 *right.m7 + left.m10*right.m11 + left.m11*right.m15;
+  result.m12 = left.m12*right.m0 + left.m13*right.m4 + left.m14*right.m8  + left.m15*right.m12;
+  result.m13 = left.m12*right.m1 + left.m13*right.m5 + left.m14*right.m9  + left.m15*right.m13;
+  result.m14 = left.m12*right.m2 + left.m13*right.m6 + left.m14*right.m10 + left.m15*right.m14;
+  result.m15 = left.m12*right.m3 + left.m13*right.m7 + left.m14*right.m11 + left.m15*right.m15;
+  return result;
+}
+
+function Mat4f32 translate_mat4f32(f32 x, f32 y, f32 z) {
+  Mat4f32 result = {
+    1.0f, 0.0f, 0.0f, x,
+    0.0f, 1.0f, 0.0f, y,
+    0.0f, 0.0f, 1.0f, z,
+    0.0f, 0.0f, 0.0f, 1.0f
+  };
+  return result;
+}
+
+function Mat4f32 rotate_axis_mat4f32(Vec3f32 axis, f32 radians) {
+  Mat4f32 result = { 0 };
+
+  f32 x = axis.x;
+  f32 y = axis.y;
+  f32 z = axis.z;
+  f32 lengthSquared = x*x + y*y + z*z;
+
+  if ((lengthSquared != 1.0f) && (lengthSquared != 0.0f)) {
+    f32 ilength = 1.0f/sqrtf(lengthSquared);
+    x *= ilength;
+    y *= ilength;
+    z *= ilength;
   }
-  return r;
+
+  f32 sinres = sinf(radians);
+  f32 cosres = cosf(radians);
+  f32 t = 1.0f - cosres;
+
+  result.m0 = x*x*t + cosres;
+  result.m1 = y*x*t + z*sinres;
+  result.m2 = z*x*t - y*sinres;
+  result.m3 = 0.0f;
+
+  result.m4 = x*y*t - z*sinres;
+  result.m5 = y*y*t + cosres;
+  result.m6 = z*y*t + x*sinres;
+  result.m7 = 0.0f;
+
+  result.m8 = x*z*t + y*sinres;
+  result.m9 = y*z*t - x*sinres;
+  result.m10 = z*z*t + cosres;
+  result.m11 = 0.0f;
+
+  result.m12 = 0.0f;
+  result.m13 = 0.0f;
+  result.m14 = 0.0f;
+  result.m15 = 1.0f;
+
+  return result;
 }
 
-function Mat4f32 mat4f32_make_translate(f32 x, f32 y, f32 z) {
-  Mat4f32 r = mat4f32(1.f);
-  r.v[3][0] = x;
-  r.v[3][1] = y;
-  r.v[3][2] = z;
-  return r;
+function Mat4f32 rotate_x_mat4f32(f32 radians) {
+    Mat4f32 result = {
+      1.0f, 0.0f, 0.0f, 0.0f,
+      0.0f, 1.0f, 0.0f, 0.0f,
+      0.0f, 0.0f, 1.0f, 0.0f,
+      0.0f, 0.0f, 0.0f, 1.0f
+    };
+    f32 cosres = cosf(radians);
+    f32 sinres = sinf(radians);
+    result.m5  = cosres;
+    result.m6  = sinres;
+    result.m9  = -sinres;
+    result.m10 = cosres;
+    return result;
 }
 
-function Mat4f32 mat4f32_translate(Mat4f32 m, f32 x, f32 y, f32 z) {
-  Mat4f32 r = m;
-  Vec4f32 translate = vec4f32(x, y, z, 0);
-  for (int i = 0; i < 4; i++) {
-    Vec4f32 row = vec4f32(m.v[i][0], m.v[i][1], m.v[i][2], m.v[i][3]);
-    r.v[3][i] += vec4f32_dot(row, translate);
+function Mat4f32 rotate_y_mat4f32(f32 radians) {
+    Mat4f32 result = {
+      1.0f, 0.0f, 0.0f, 0.0f,
+      0.0f, 1.0f, 0.0f, 0.0f,
+      0.0f, 0.0f, 1.0f, 0.0f,
+      0.0f, 0.0f, 0.0f, 1.0f
+    };
+    f32 cosres = cosf(radians);
+    f32 sinres = sinf(radians);
+    result.m0 = cosres;
+    result.m2 = -sinres;
+    result.m8 = sinres;
+    result.m10 = cosres;
+    return result;
+}
+
+function Mat4f32 rotate_z_mat4f32(f32 radians) {
+    Mat4f32 result = {
+      1.0f, 0.0f, 0.0f, 0.0f,
+      0.0f, 1.0f, 0.0f, 0.0f,
+      0.0f, 0.0f, 1.0f, 0.0f,
+      0.0f, 0.0f, 0.0f, 1.0f
+    };
+    f32 cosres = cosf(radians);
+    f32 sinres = sinf(radians);
+    result.m0 = cosres;
+    result.m1 = sinres;
+    result.m4 = -sinres;
+    result.m5 = cosres;
+    return result;
+}
+
+function Mat4f32 rotate_xyz_mat4f32(Vec3f32 radians) {
+  Mat4f32 result = {
+    1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, 1.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f
+  };
+
+  f32 cosz = cosf(-radians.z);
+  f32 sinz = sinf(-radians.z);
+  f32 cosy = cosf(-radians.y);
+  f32 siny = sinf(-radians.y);
+  f32 cosx = cosf(-radians.x);
+  f32 sinx = sinf(-radians.x);
+
+  result.m0 = cosz*cosy;
+  result.m1 = (cosz*siny*sinx) - (sinz*cosx);
+  result.m2 = (cosz*siny*cosx) + (sinz*sinx);
+
+  result.m4 = sinz*cosy;
+  result.m5 = (sinz*siny*sinx) + (cosz*cosx);
+  result.m6 = (sinz*siny*cosx) - (cosz*sinx);
+
+  result.m8 = -siny;
+  result.m9 = cosy*sinx;
+  result.m10= cosy*cosx;
+
+  return result;
+}
+
+function Mat4f32 rotate_zyx_mat4f32(Vec3f32 radians) {
+  Mat4f32 result = { 0 };
+
+  f32 cz = cosf(radians.z);
+  f32 sz = sinf(radians.z);
+  f32 cy = cosf(radians.y);
+  f32 sy = sinf(radians.y);
+  f32 cx = cosf(radians.x);
+  f32 sx = sinf(radians.x);
+
+  result.m0 = cz*cy;
+  result.m4 = cz*sy*sx - cx*sz;
+  result.m8 = sz*sx + cz*cx*sy;
+  result.m12 = 0;
+
+  result.m1 = cy*sz;
+  result.m5 = cz*cx + sz*sy*sx;
+  result.m9 = cx*sz*sy - cz*sx;
+  result.m13 = 0;
+
+  result.m2 = -sy;
+  result.m6 = cy*sx;
+  result.m10 = cy*cx;
+  result.m14 = 0;
+
+  result.m3 = 0;
+  result.m7 = 0;
+  result.m11 = 0;
+  result.m15 = 1;
+
+  return result;
+}
+
+function Mat4f32 transpose_mat4f32(Mat4f32 m) {
+  Mat4f32 result = { 0 };
+  result.m0  = m.m0;
+  result.m1  = m.m4;
+  result.m2  = m.m8;
+  result.m3  = m.m12;
+  result.m4  = m.m1;
+  result.m5  = m.m5;
+  result.m6  = m.m9;
+  result.m7  = m.m13;
+  result.m8  = m.m2;
+  result.m9  = m.m6;
+  result.m10 = m.m10;
+  result.m11 = m.m14;
+  result.m12 = m.m3;
+  result.m13 = m.m7;
+  result.m14 = m.m11;
+  result.m15 = m.m15;
+  return result;
+}
+
+function Mat4f32 invert_mat4f32(Mat4f32 m) {
+  Mat4f32 result = { 0 };
+
+  // Cache the matrix values (speed optimization)
+  f32 a00 = m.m0,  a01 = m.m1,  a02 = m.m2,  a03 = m.m3;
+  f32 a10 = m.m4,  a11 = m.m5,  a12 = m.m6,  a13 = m.m7;
+  f32 a20 = m.m8,  a21 = m.m9,  a22 = m.m10, a23 = m.m11;
+  f32 a30 = m.m12, a31 = m.m13, a32 = m.m14, a33 = m.m15;
+
+  f32 b00 = a00*a11 - a01*a10;
+  f32 b01 = a00*a12 - a02*a10;
+  f32 b02 = a00*a13 - a03*a10;
+  f32 b03 = a01*a12 - a02*a11;
+  f32 b04 = a01*a13 - a03*a11;
+  f32 b05 = a02*a13 - a03*a12;
+  f32 b06 = a20*a31 - a21*a30;
+  f32 b07 = a20*a32 - a22*a30;
+  f32 b08 = a20*a33 - a23*a30;
+  f32 b09 = a21*a32 - a22*a31;
+  f32 b10 = a21*a33 - a23*a31;
+  f32 b11 = a22*a33 - a23*a32;
+
+  // Calculate the invert determinant (inlined to avoid double-caching)
+  f32 invDet = 1.0f/(b00*b11 - b01*b10 + b02*b09 + b03*b08 - b04*b07 + b05*b06);
+
+  result.m0  = ( a11*b11 - a12*b10 + a13*b09)*invDet;
+  result.m1  = (-a01*b11 + a02*b10 - a03*b09)*invDet;
+  result.m2  = ( a31*b05 - a32*b04 + a33*b03)*invDet;
+  result.m3  = (-a21*b05 + a22*b04 - a23*b03)*invDet;
+  result.m4  = (-a10*b11 + a12*b08 - a13*b07)*invDet;
+  result.m5  = ( a00*b11 - a02*b08 + a03*b07)*invDet;
+  result.m6  = (-a30*b05 + a32*b02 - a33*b01)*invDet;
+  result.m7  = ( a20*b05 - a22*b02 + a23*b01)*invDet;
+  result.m8  = ( a10*b10 - a11*b08 + a13*b06)*invDet;
+  result.m9  = (-a00*b10 + a01*b08 - a03*b06)*invDet;
+  result.m10 = ( a30*b04 - a31*b02 + a33*b00)*invDet;
+  result.m11 = (-a20*b04 + a21*b02 - a23*b00)*invDet;
+  result.m12 = (-a10*b09 + a11*b07 - a12*b06)*invDet;
+  result.m13 = ( a00*b09 - a01*b07 + a02*b06)*invDet;
+  result.m14 = (-a30*b03 + a31*b01 - a32*b00)*invDet;
+  result.m15 = ( a20*b03 - a21*b01 + a22*b00)*invDet;
+
+    return result;
+}
+
+function Mat4f32 scale_mat4f32(f32 x, f32 y, f32 z) {
+  Mat4f32 result = {
+    x,    0.0f, 0.0f, 0.0f,
+    0.0f, y,    0.0f, 0.0f,
+    0.0f, 0.0f, z,    0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f
+  };
+  return result;
+}
+
+function Mat4f32 frustum_mat4f32(f64 left, f64 right, f64 bottom, f64 top, f64 near_plane, f64 far_plane) {
+  Mat4f32 result = { 0 };
+
+  f32 rl = (f32)(right - left);
+  f32 tb = (f32)(top - bottom);
+  f32 fn = (f32)(far_plane - near_plane);
+
+  result.m0 = ((f32)near_plane*2.0f)/rl;
+  result.m1 = 0.0f;
+  result.m2 = 0.0f;
+  result.m3 = 0.0f;
+
+  result.m4 = 0.0f;
+  result.m5 = ((f32)near_plane*2.0f)/tb;
+  result.m6 = 0.0f;
+  result.m7 = 0.0f;
+
+  result.m8 = ((f32)right + (f32)left)/rl;
+  result.m9 = ((f32)top + (f32)bottom)/tb;
+  result.m10 = -((f32)far_plane + (f32)near_plane)/fn;
+  result.m11 = -1.0f;
+
+  result.m12 = 0.0f;
+  result.m13 = 0.0f;
+  result.m14 = -((f32)far_plane*(f32)near_plane*2.0f)/fn;
+  result.m15 = 0.0f;
+
+  return result;
+}
+
+function Mat4f32 perspective_mat4f32(f64 fovy, f64 aspect, f64 near_plane, f64 far_plane) {
+  Mat4f32 result = { 0 };
+
+  f64 top = near_plane*tan(fovy*0.5);
+  f64 bottom = -top;
+  f64 right = top*aspect;
+  f64 left = -right;
+
+  // MatrixFrustum(-right, right, -top, top, near, far);
+  f32 rl = (f32)(right - left);
+  f32 tb = (f32)(top - bottom);
+  f32 fn = (f32)(far_plane - near_plane);
+
+  result.m0 = ((f32)near_plane*2.0f)/rl;
+  result.m5 = ((f32)near_plane*2.0f)/tb;
+  result.m8 = ((f32)right + (f32)left)/rl;
+  result.m9 = ((f32)top + (f32)bottom)/tb;
+  result.m10 = -((f32)far_plane + (f32)near_plane)/fn;
+  result.m11 = -1.0f;
+  result.m14 = -((f32)far_plane*(f32)near_plane*2.0f)/fn;
+
+  return result;
+}
+
+function Mat4f32 ortographic_mat4f32(f64 left, f64 right, f64 bottom, f64 top, f64 near_plane, f64 far_plane) {
+  Mat4f32 result = { 0 };
+
+  f32 rl = (f32)(right - left);
+  f32 tb = (f32)(top - bottom);
+  f32 fn = (f32)(far_plane - near_plane);
+
+  result.m0 = 2.0f/rl;
+  result.m1 = 0.0f;
+  result.m2 = 0.0f;
+  result.m3 = 0.0f;
+  result.m4 = 0.0f;
+  result.m5 = 2.0f/tb;
+  result.m6 = 0.0f;
+  result.m7 = 0.0f;
+  result.m8 = 0.0f;
+  result.m9 = 0.0f;
+  result.m10 = -2.0f/fn;
+  result.m11 = 0.0f;
+  result.m12 = -((f32)left + (f32)right)/rl;
+  result.m13 = -((f32)top + (f32)bottom)/tb;
+  result.m14 = -((f32)far_plane + (f32)near_plane)/fn;
+  result.m15 = 1.0f;
+
+  return result;
+}
+
+function Mat4f32 look_at_mat4f32(Vec3f32 eye, Vec3f32 target, Vec3f32 up) {
+  Mat4f32 result = { 0 };
+
+  f32 length = 0.0f;
+  f32 ilength = 0.0f;
+
+  // Vector3Subtract(eye, target)
+  Vec3f32 vz = { eye.x - target.x, eye.y - target.y, eye.z - target.z };
+
+  // Vector3Normalize(vz)
+  Vec3f32 v = vz;
+  length = sqrtf(v.x*v.x + v.y*v.y + v.z*v.z);
+  if (length == 0.0f) length = 1.0f;
+  ilength = 1.0f/length;
+  vz.x *= ilength;
+  vz.y *= ilength;
+  vz.z *= ilength;
+
+  // Vector3CrossProduct(up, vz)
+  Vec3f32 vx = { up.y*vz.z - up.z*vz.y, up.z*vz.x - up.x*vz.z, up.x*vz.y - up.y*vz.x };
+
+  // Vector3Normalize(x)
+  v = vx;
+  length = sqrtf(v.x*v.x + v.y*v.y + v.z*v.z);
+  if (length == 0.0f) length = 1.0f;
+  ilength = 1.0f/length;
+  vx.x *= ilength;
+  vx.y *= ilength;
+  vx.z *= ilength;
+
+  // Vector3CrossProduct(vz, vx)
+  Vec3f32 vy = { vz.y*vx.z - vz.z*vx.y, vz.z*vx.x - vz.x*vx.z, vz.x*vx.y - vz.y*vx.x };
+
+  result.m0 = vx.x;
+  result.m1 = vy.x;
+  result.m2 = vz.x;
+  result.m3 = 0.0f;
+  result.m4 = vx.y;
+  result.m5 = vy.y;
+  result.m6 = vz.y;
+  result.m7 = 0.0f;
+  result.m8 = vx.z;
+  result.m9 = vy.z;
+  result.m10 = vz.z;
+  result.m11 = 0.0f;
+  result.m12 = -(vx.x*eye.x + vx.y*eye.y + vx.z*eye.z);   // Vector3DotProduct(vx, eye)
+  result.m13 = -(vy.x*eye.x + vy.y*eye.y + vy.z*eye.z);   // Vector3DotProduct(vy, eye)
+  result.m14 = -(vz.x*eye.x + vz.y*eye.y + vz.z*eye.z);   // Vector3DotProduct(vz, eye)
+  result.m15 = 1.0f;
+
+  return result;
+}
+
+
+//////////////////////////////////////////////
+// Math utils
+
+function f32 clampf32(f32 value, f32 min, f32 max) {
+  f32 result = value;
+  if (result < min) {
+    result = min;
+  } else if (result > max) {
+    result = max;
   }
-  return r;
+  return result;
 }
 
-function Mat4f32 mat4f32_make_rotate(f32 x, f32 y, f32 z, f32 degrees) {
-  Mat4f32 m     = mat4f32(1.f);
-  Vec3f32 axis  = vec3f32_normalize(vec3f32(x, y, z));
-  f32 radians   = radians_from_degrees(degrees);
-  f32 sin_theta = sin(radians);
-  f32 cos_theta = cos(radians);
-  f32 cos_value = 1.f - cos_theta;
-  m.v[0][0] = (axis.x * axis.x * cos_value) + cos_theta;
-  m.v[0][1] = (axis.x * axis.y * cos_value) + (axis.z * sin_theta);
-  m.v[0][2] = (axis.x * axis.z * cos_value) - (axis.y * sin_theta);
-  m.v[1][0] = (axis.y * axis.x * cos_value) - (axis.z * sin_theta);
-  m.v[1][1] = (axis.y * axis.y * cos_value) + cos_theta;
-  m.v[1][2] = (axis.y * axis.z * cos_value) + (axis.x * sin_theta);
-  m.v[2][0] = (axis.z * axis.x * cos_value) + (axis.y * sin_theta);
-  m.v[2][1] = (axis.z * axis.y * cos_value) - (axis.x * sin_theta);
-  m.v[2][2] = (axis.z * axis.z * cos_value) + cos_theta;
-  return m;
-}
-
-function Mat4f32 mat4f32_rotate(Mat4f32 m, f32 x, f32 y, f32 z, f32 degrees) {
-  Mat4f32 r;
-  f32 radians = radians_from_degrees(degrees);
-
-  Vec3f32 axis  = vec3f32(x, y, z);
-  axis = vec3f32_normalize(axis);
-
-  Mat4f32 T = outer_vec3f32(axis, axis);
-
-  Mat4f32 S = mat4f32(0.0f);
-  S.v[0][1] =  axis.z;
-  S.v[0][2] = -axis.y;
-  S.v[1][0] = -axis.z;
-  S.v[1][2] =  axis.x;
-  S.v[2][0] =  axis.y;
-  S.v[2][1] = -axis.x;
-  S = mat4f32_scale(S, sinf(radians));
-
-  Mat4f32 C = mat4f32(1.0f);
-  C = sub_mat4f32_mat4f32(C, T);
-  C = mat4f32_scale(C, cosf(radians));
-
-  T = add_mat4f32_mat4f32(T, C);
-  T = add_mat4f32_mat4f32(T, S);
-  T.v[3][3] = 1.0f;
-
-  r = mul_mat4f32_mat4f32(m, T);
-  return r;
-}
-
-function Mat4f32 mat4f32_perspective(f32 fov_degrees, f32 aspect, f32 n, f32 f) {
-  Mat4f32 r;
-  f32 radians = radians_from_degrees(fov_degrees);
-  f32 a = 1.f / tanf(radians / 2.f);
-
-  r.v[0][0] = a / aspect;
-	r.v[0][1] = 0.f;
-	r.v[0][2] = 0.f;
-	r.v[0][3] = 0.f;
-
-	r.v[1][0] = 0.f;
-	r.v[1][1] = a;
-	r.v[1][2] = 0.f;
-	r.v[1][3] = 0.f;
-
-	r.v[2][0] = 0.f;
-	r.v[2][1] = 0.f;
-	r.v[2][2] = -((f+n) / (f-n));
-	r.v[2][3] = -1.f;
-
-	r.v[3][0] = 0.f;
-	r.v[3][1] = 0.f;
-	r.v[3][2] = -((2.f*f*n) / (f-n));
-	r.v[3][3] = 0.f;
-
-  return r;
-}
-
-function Mat4f32 mat4f32_look_at(Vec3f32 eye, Vec3f32 target, Vec3f32 up) {
-  Mat4f32 r = mat4f32(0.f);
-
-  Vec3f32 f = sub_vec3f32_vec3f32(target, eye);
-  f = vec3f32_normalize(f);
-  Vec3f32 s = cross_vec3f32(f, up);
-  s = vec3f32_normalize(s);
-  Vec3f32 t = cross_vec3f32(s, f);
-
-	r.v[0][0] =  s.x;
-	r.v[0][1] =  t.x;
-	r.v[0][2] = -f.x;
-	r.v[0][3] =  0.f;
-
-	r.v[1][0] =  s.y;
-	r.v[1][1] =  t.y;
-	r.v[1][2] = -f.y;
-	r.v[1][3] =  0.f;
-
-	r.v[2][0] =  s.z;
-	r.v[2][1] =  t.z;
-	r.v[2][2] = -f.z;
-	r.v[2][3] =  0.f;
-
-	r.v[3][0] = 0.f;
-	r.v[3][1] = 0.f;
-	r.v[3][2] = 0.f;
-	r.v[3][3] = 1.f;
-
-  Mat4f32 trans = mat4f32_make_translate(-eye.x, -eye.y, -eye.z);
-  return mul_mat4f32_mat4f32(r, trans);
-}
-
-function Mat4f32 mat4f32_transpose(Mat4f32 m) {
-  Mat4f32 r = m;
-  for(int j = 0; j < 4; j++) {
-    for(int i = 0; i < 4; i++) {
-      r.v[i][j] = m.v[j][i];
-    }
-  }
-  return r;
-}
-
-function Mat4f32 mat4f32_invert(Mat4f32 m) {
-  Mat4f32 r;
-
-  f32 s[6];
-	s[0] = m.v[0][0]*m.v[1][1] - m.v[1][0]*m.v[0][1];
-	s[1] = m.v[0][0]*m.v[1][2] - m.v[1][0]*m.v[0][2];
-	s[2] = m.v[0][0]*m.v[1][3] - m.v[1][0]*m.v[0][3];
-	s[3] = m.v[0][1]*m.v[1][2] - m.v[1][1]*m.v[0][2];
-	s[4] = m.v[0][1]*m.v[1][3] - m.v[1][1]*m.v[0][3];
-	s[5] = m.v[0][2]*m.v[1][3] - m.v[1][2]*m.v[0][3];
-
-	f32 c[6];
-	c[0] = m.v[2][0]*m.v[3][1] - m.v[3][0]*m.v[2][1];
-	c[1] = m.v[2][0]*m.v[3][2] - m.v[3][0]*m.v[2][2];
-	c[2] = m.v[2][0]*m.v[3][3] - m.v[3][0]*m.v[2][3];
-	c[3] = m.v[2][1]*m.v[3][2] - m.v[3][1]*m.v[2][2];
-	c[4] = m.v[2][1]*m.v[3][3] - m.v[3][1]*m.v[2][3];
-	c[5] = m.v[2][2]*m.v[3][3] - m.v[3][2]*m.v[2][3];
-
-	// Assumes it is invertible
-	float idet = 1.0f/(s[0]*c[5]-s[1]*c[4]+s[2]*c[3]+s[3]*c[2]-s[4]*c[1]+s[5]*c[0]);
-
-	r.v[0][0] = ( m.v[1][1] * c[5] - m.v[1][2] * c[4] + m.v[1][3] * c[3]) * idet;
-	r.v[0][1] = (-m.v[0][1] * c[5] + m.v[0][2] * c[4] - m.v[0][3] * c[3]) * idet;
-	r.v[0][2] = ( m.v[3][1] * s[5] - m.v[3][2] * s[4] + m.v[3][3] * s[3]) * idet;
-	r.v[0][3] = (-m.v[2][1] * s[5] + m.v[2][2] * s[4] - m.v[2][3] * s[3]) * idet;
-
-	r.v[1][0] = (-m.v[1][0] * c[5] + m.v[1][2] * c[2] - m.v[1][3] * c[1]) * idet;
-	r.v[1][1] = ( m.v[0][0] * c[5] - m.v[0][2] * c[2] + m.v[0][3] * c[1]) * idet;
-	r.v[1][2] = (-m.v[3][0] * s[5] + m.v[3][2] * s[2] - m.v[3][3] * s[1]) * idet;
-	r.v[1][3] = ( m.v[2][0] * s[5] - m.v[2][2] * s[2] + m.v[2][3] * s[1]) * idet;
-
-	r.v[2][0] = ( m.v[1][0] * c[4] - m.v[1][1] * c[2] + m.v[1][3] * c[0]) * idet;
-	r.v[2][1] = (-m.v[0][0] * c[4] + m.v[0][1] * c[2] - m.v[0][3] * c[0]) * idet;
-	r.v[2][2] = ( m.v[3][0] * s[4] - m.v[3][1] * s[2] + m.v[3][3] * s[0]) * idet;
-	r.v[2][3] = (-m.v[2][0] * s[4] + m.v[2][1] * s[2] - m.v[2][3] * s[0]) * idet;
-
-	r.v[3][0] = (-m.v[1][0] * c[3] + m.v[1][1] * c[1] - m.v[1][2] * c[0]) * idet;
-	r.v[3][1] = ( m.v[0][0] * c[3] - m.v[0][1] * c[1] + m.v[0][2] * c[0]) * idet;
-	r.v[3][2] = (-m.v[3][0] * s[3] + m.v[3][1] * s[1] - m.v[3][2] * s[0]) * idet;
-	r.v[3][3] = ( m.v[2][0] * s[3] - m.v[2][1] * s[1] + m.v[2][2] * s[0]) * idet;
-
-  return r;
-}
-
-function Mat4f32 mul_mat4f32_mat4f32(Mat4f32 a, Mat4f32 b) {
-  Mat4f32 r = {0};
-  for(int j = 0; j < 4; j++) {
-    for(int i = 0; i < 4; i++) {
-      r.v[i][j] = (a.v[0][j]*b.v[i][0] +
-                   a.v[1][j]*b.v[i][1] +
-                   a.v[2][j]*b.v[i][2] +
-                   a.v[3][j]*b.v[i][3]);
-    }
-  }
-  return r;
-}
-
-function Mat4f32 add_mat4f32_mat4f32(Mat4f32 a, Mat4f32 b) {
-  Mat4f32 r;
-  for(int i = 0; i < 4; i++) {
-    r.v[i][0] = a.v[i][0] + b.v[i][0];
-    r.v[i][1] = a.v[i][1] + b.v[i][1];
-    r.v[i][2] = a.v[i][2] + b.v[i][2];
-    r.v[i][3] = a.v[i][3] + b.v[i][3];
-  }
-  return r;
-}
-
-function Mat4f32 sub_mat4f32_mat4f32(Mat4f32 a, Mat4f32 b) {
-  Mat4f32 r;
-  for(int i = 0; i < 4; i++) {
-    r.v[i][0] = a.v[i][0] - b.v[i][0];
-    r.v[i][1] = a.v[i][1] - b.v[i][1];
-    r.v[i][2] = a.v[i][2] - b.v[i][2];
-    r.v[i][3] = a.v[i][3] - b.v[i][3];
-  }
-  return r;
-}
-
-function Vec3f32 mul_mat4f32_vec3f32(Mat4f32 m, Vec3f32 v) {
-  Vec3f32 r = vec3f32(
-    m.v[0][0] * v.x + m.v[1][0] * v.y + m.v[2][0] * v.z + m.v[3][0],
-    m.v[0][1] * v.x + m.v[1][1] * v.y + m.v[2][1] * v.z + m.v[3][1],
-    m.v[0][2] * v.x + m.v[1][2] * v.y + m.v[2][2] * v.z + m.v[3][2]
-  );
-  return r;
-}
-
-function Vec4f32 mul_mat4f32_vec4f32(Mat4f32 m, Vec4f32 v) {
-  Vec4f32 r = vec4f32(
-    m.v[0][0] * v.x + m.v[1][0] * v.y + m.v[2][0] * v.z + m.v[3][0] * v.w,
-    m.v[0][1] * v.x + m.v[1][1] * v.y + m.v[2][1] * v.z + m.v[3][1] * v.w,
-    m.v[0][2] * v.x + m.v[1][2] * v.y + m.v[2][2] * v.z + m.v[3][2] * v.w,
-    m.v[0][3] * v.x + m.v[1][3] * v.y + m.v[2][3] * v.z + m.v[3][3] * v.w
-  );
-  return r;
-}
-
-function Mat4f32 outer_vec3f32(Vec3f32 a, Vec3f32 b) {
-  Mat4f32 r;
-  r.v[0][0] = a.x * b.x;
-  r.v[0][1] = a.x * b.y;
-  r.v[0][2] = a.x * b.z;
-  r.v[0][3] = 0.0f;
-
-  r.v[1][0] = a.y * b.x;
-  r.v[1][1] = a.y * b.y;
-  r.v[1][2] = a.y * b.z;
-  r.v[1][3] = 0.0f;
-
-  r.v[2][0] = a.z * b.x;
-  r.v[2][1] = a.z * b.y;
-  r.v[2][2] = a.z * b.z;
-  r.v[2][3] = 0.0f;
-
-  r.v[3][0] = 0.0f;
-  r.v[3][1] = 0.0f;
-  r.v[3][2] = 0.0f;
-  r.v[3][3] = 0.0f;
-  return r;
+function f32 lerpf32(f32 start, f32 end, f32 t) {
+  f32 result = start + t * (end - start);
+  return result;
 }

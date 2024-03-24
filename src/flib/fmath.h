@@ -1,90 +1,123 @@
 #ifndef FMATH_H
 #define FMATH_H
 
-#define PI 3.1415926535897f
-#define degrees_from_radians(r) (r * (180 / PI))
-#define radians_from_degrees(d) (d * (PI / 180))
+#define PI 3.14159265358979323846f
+#define Degrees(r) (r * (180 / PI))
+#define Radians(d) (d * (PI / 180))
+
+#include <math.h> // Required for: sinf(), cosf(), tan(), atan2f(), sqrtf(), floor(), fminf(), fmaxf(), fabsf()
 
 //////////////////////////////////////////////
-// Vector 3
+// Vector3 f32
 
 typedef struct Vec3f32 {
   union {
-    f32 v[3];
+    f32 data[3];
     struct {
       f32 x;
       f32 y;
       f32 z;
     };
-	};
+  };
 } Vec3f32;
 
-function Vec3f32 vec3f32(f32 x, f32 y, f32 z);
-function Vec3f32 vec3f32_scale(Vec3f32 a, f32 s);
-function Vec3f32 vec3f32_normalize(Vec3f32 v);
-function f32     vec3f32_len(Vec3f32 v);
-function f32     vec3f32_dot(Vec3f32 a, Vec3f32 b);
-function Vec3f32 cross_vec3f32(Vec3f32 a, Vec3f32 b);
-
-function Vec3f32 add_vec3f32_vec3f32(Vec3f32 a, Vec3f32 b);
-function Vec3f32 sub_vec3f32_vec3f32(Vec3f32 a, Vec3f32 b);
-function Vec3f32 mul_vec3f32_vec3f32(Vec3f32 a, Vec3f32 b);
-function Vec3f32 div_vec3f32_vec3f32(Vec3f32 a, Vec3f32 b);
-
 //////////////////////////////////////////////
-// Vector 4
+// Vector4 f32
 
 typedef struct Vec4f32 {
   union {
-    f32 v[4];
+    f32 data[4];
     struct {
       f32 x;
       f32 y;
       f32 z;
       f32 w;
     };
-	};
+  };
 } Vec4f32;
 
-function Vec4f32 vec4f32(f32 x, f32 y, f32 z, f32 w);
-function Vec4f32 vec4f32_scale(Vec4f32 a, f32 s);
-function Vec4f32 vec4f32_normalize(Vec4f32 v);
-function f32     vec4f32_len(Vec4f32 v);
-function f32     vec4f32_dot(Vec4f32 a, Vec4f32 b);
-
-function Vec4f32 add_vec4f32_vec4f32(Vec4f32 a, Vec4f32 b);
-function Vec4f32 sub_vec4f32_vec4f32(Vec4f32 a, Vec4f32 b);
-function Vec4f32 mul_vec4f32_vec4f32(Vec4f32 a, Vec4f32 b);
-function Vec4f32 div_vec4f32_vec4f32(Vec4f32 a, Vec4f32 b);
-
 //////////////////////////////////////////////
-// Matrix 4
-
+// Matrix4 f32
 typedef struct Mat4f32 {
-    f32 v[4][4];
+  union {
+    f32 data[4][4];
+    struct {
+      f32 m0, m4, m8,  m12;
+      f32 m1, m5, m9,  m13;
+      f32 m2, m6, m10, m14;
+      f32 m3, m7, m11, m15;
+    };
+  };
 } Mat4f32;
 
-function Mat4f32 mat4f32(f32 diagonal);
-function Mat4f32 mat4f32_make_scale(f32 x, f32 y, f32 z);
-function Mat4f32 mat4f32_scale(Mat4f32 m, f32 s);
-function Mat4f32 mat4f32_make_translate(f32 x, f32 y, f32 z);
-function Mat4f32 mat4f32_translate(Mat4f32 m, f32 x, f32 y, f32 z);
-function Mat4f32 mat4f32_make_rotate(f32 x, f32 y, f32 z, f32 degrees);
-function Mat4f32 mat4f32_rotate(Mat4f32 m, f32 x, f32 y, f32 z, f32 degrees);
-function Mat4f32 mat4f32_perspective(f32 fov_degrees, f32 aspect, f32 n, f32 f);
-function Mat4f32 mat4f32_look_at(Vec3f32 eye, Vec3f32 target, Vec3f32 up);
-function Mat4f32 mat4f32_transpose(Mat4f32 m);
-function Mat4f32 mat4f32_invert(Mat4f32 m);
+//////////////////////////////////////////////
+// Vector3 f32
 
-function Mat4f32 mul_mat4f32_mat4f32(Mat4f32 a, Mat4f32 b);
-function Mat4f32 add_mat4f32_mat4f32(Mat4f32 a, Mat4f32 b);
-function Mat4f32 sub_mat4f32_mat4f32(Mat4f32 a, Mat4f32 b);
+function Vec3f32 vec3f32(f32 x, f32 y, f32 z);
+
+function Vec3f32 add_vec3f32(Vec3f32 a, Vec3f32 b);
+function Vec3f32 sub_vec3f32(Vec3f32 a, Vec3f32 b);
+function Vec3f32 mul_vec3f32(Vec3f32 a, Vec3f32 b);
+function Vec3f32 div_vec3f32(Vec3f32 a, Vec3f32 b);
+
+function Vec3f32 cross_vec3f32(Vec3f32 a, Vec3f32 b);
+function Vec3f32 scale_vec3f32(Vec3f32 v, f32 scalar);
+function Vec3f32 normalize_vec3f32(Vec3f32 v);
+function Vec3f32 transform_vec3f32_mat4f32(Vec3f32 v, Mat4f32 m);
+function Vec3f32 rotate_by_axis_vec3f32(Vec3f32 v, Vec3f32 axis, f32 angle);
+function Vec3f32 lerp_vec3f32(Vec3f32 a, Vec3f32 b, f32 t);
+
+function f32 dot_vec3f32(Vec3f32 a, Vec3f32 b);
+function f32 len_vec3f32(Vec3f32 v);
+function f32 distance_vec3f32(Vec3f32 a, Vec3f32 b);
+function f32 angle_vec3f32(Vec3f32 a, Vec3f32 b);
 
 //////////////////////////////////////////////
-// Operations
+// Vector4 f32
 
-function Vec3f32 mul_mat4f32_vec3f32(Mat4f32 m, Vec3f32 v);
-function Vec4f32 mul_mat4f32_vec4f32(Mat4f32 m, Vec4f32 v);
-function Mat4f32 outer_vec3f32(Vec3f32 a, Vec3f32 b);
+function Vec4f32 vec4f32 (f32 x, f32 y, f32 z);
+function Vec4f32 vec4f32w(f32 x, f32 y, f32 z, f32 w);
+
+function Vec4f32 add_vec4f32(Vec4f32 a, Vec4f32 b);
+function Vec4f32 sub_vec4f32(Vec4f32 a, Vec4f32 b);
+function Vec4f32 mul_vec4f32(Vec4f32 a, Vec4f32 b);
+function Vec4f32 div_vec4f32(Vec4f32 a, Vec4f32 b);
+
+function Vec4f32 scale_vec4f32(Vec4f32 v, f32 scalar);
+function Vec4f32 normalize_vec4f32(Vec4f32 v);
+function Vec4f32 lerp_vec4f32(Vec4f32 a, Vec4f32 b, f32 t);
+
+function f32 dot_vec4f32(Vec4f32 a, Vec4f32 b);
+function f32 len_vec4f32(Vec4f32 v);
+function f32 distance_vec4f32(Vec4f32 a, Vec4f32 b);
+
+//////////////////////////////////////////////
+// Matrix4 f32
+function Mat4f32 mat4f32(f32 diag);
+
+function Mat4f32 add_mat4f32(Mat4f32 left, Mat4f32 right);
+function Mat4f32 sub_mat4f32(Mat4f32 left, Mat4f32 right);
+function Mat4f32 mul_mat4f32(Mat4f32 left, Mat4f32 right);
+
+function Mat4f32 translate_mat4f32(f32 x, f32 y, f32 z);
+function Mat4f32 rotate_axis_mat4f32(Vec3f32 axis, f32 radians);
+function Mat4f32 rotate_x_mat4f32(f32 radians);
+function Mat4f32 rotate_y_mat4f32(f32 radians);
+function Mat4f32 rotate_z_mat4f32(f32 radians);
+function Mat4f32 rotate_xyz_mat4f32(Vec3f32 radians);
+function Mat4f32 rotate_zyx_mat4f32(Vec3f32 radians);
+
+function Mat4f32 transpose_mat4f32(Mat4f32 m);
+function Mat4f32 invert_mat4f32(Mat4f32 m);
+function Mat4f32 scale_mat4f32(f32 x, f32 y, f32 z);
+function Mat4f32 frustum_mat4f32(f64 left, f64 right, f64 bottom, f64 top, f64 near_plane, f64 far_plane);
+function Mat4f32 perspective_mat4f32(f64 fovy, f64 aspect, f64 near_plane, f64 far_plane);
+function Mat4f32 ortographic_mat4f32(f64 left, f64 right, f64 bottom, f64 top, f64 near_plane, f64 far_plane);
+function Mat4f32 look_at_mat4f32(Vec3f32 eye, Vec3f32 target, Vec3f32 up);
+
+//////////////////////////////////////////////
+// Math utils
+function f32 clampf32(f32 value, f32 min, f32 max);
+function f32 lerpf32(f32 start, f32 end, f32 t);
 
 #endif // FMATH_H

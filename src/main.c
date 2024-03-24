@@ -1,19 +1,23 @@
 #include "main.h"
 
-global_variable s32 WindowWidth  = 800;
-global_variable s32 WindowHeight = 800;
-#define aspect_ratio() (WindowWidth/WindowHeight)
 
-global_variable Camera camera;
-global_variable f32 LastX;
-global_variable f32 LastY;
-global_variable b32 FirstMouse = 1;
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void process_input(GLFWwindow *window);
+void mouse_callback(GLFWwindow* window, f64 xpos, f64 ypos);
+
+global s32 WindowWidth  = 800;
+global s32 WindowHeight = 800;
+#define AspectRatio ((f32)WindowWidth/(f32)WindowHeight)
+
+global Camera camera;
+global f32 LastX;
+global f32 LastY;
 
 /* 0 for selecting, 1 for moving*/
-global_variable MouseMode = 0;
+global MouseMode = 1;
 
-global_variable f32 DeltaTime = 0.0f;
-global_variable f32 LastFrame = 0.0f;
+global f32 DeltaTime = 0.0f;
+global f32 LastFrame = 0.0f;
 
 int main() {
 
@@ -30,6 +34,7 @@ int main() {
 	}
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
 	glfwSetCursorPosCallback(window, mouse_callback);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -43,7 +48,7 @@ int main() {
 	LastX  = WindowWidth / 2.0f;
 	LastY  = WindowHeight / 2.0f;
 
-	Shader shader = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());
+	Shader shader_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());
 
 	f32 vertices[] = {
 		// Front face
@@ -105,7 +110,7 @@ int main() {
 		vec3f32(0.0f, 1.0f, 1.0f)
 	};
 
-	unsigned int VBO, VAO, EBO;
+	u32 VBO, VAO, EBO;
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 	glGenBuffers(1, &EBO);
@@ -121,10 +126,10 @@ int main() {
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, 3 * sizeof(f32), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	shader_use(shader);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
 
-	Mat4f32 projection = mat4f32_perspective(45.0f, aspect_ratio(), 0.1f, 100.0f);
-	shader_set_uniform_mat4fv(shader, "projection", projection);
+	shader_use(shader_program);
 
 	while(!glfwWindowShouldClose(window)) {
 		f32 currentFrame = (f32)(glfwGetTime());
@@ -133,18 +138,33 @@ int main() {
 
 		process_input(window);
 
-		Mat4f32 view = mat4f32_look_at(camera.position, add_vec3f32_vec3f32(camera.position, camera.front), camera.up);
-		shader_set_uniform_mat4fv(shader, "view", view);
-
-		glClearColor(0.3f, 0.8f, 0.8f, 1.0f);
+		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		Mat4f32 projection = mat4f32(1.0f);
+		Mat4f32 perspective = perspective_mat4f32(Radians(45), AspectRatio, 0.1f, 100.0f);
+		projection = mul_mat4f32(perspective, projection);
+		shader_set_uniform_mat4fv(shader_program, "projection", projection);
+
+		Mat4f32 view = mat4f32(1.0f);
+		Mat4f32 look_at = look_at_mat4f32(camera.position, add_vec3f32(camera.position, camera.front), camera.up);
+		view = mul_mat4f32(look_at, view);
+		shader_set_uniform_mat4fv(shader_program, "view", view);
+
+		glBindVertexArray(VAO);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
 		for(u32 i = 0; i < 10; i++) {
-			Mat4f32 model = mat4f32_make_translate(positions[i].x, positions[i].y, positions[i].z);
-			model = mat4f32_rotate(model, 1.0f, 0.3f, 0.5f, (f32)glfwGetTime() * (20.0f * i));
-			shader_set_uniform_vec3fv(shader, "color", colors[i]);
-			shader_set_uniform_mat4fv(shader, "model", model);
+			Mat4f32 model = mat4f32(1.0f);
+
+			Mat4f32 translate = translate_mat4f32(positions[i].x, positions[i].y, positions[i].z);
+			model = mul_mat4f32(translate, model);
+			Mat4f32 rotation = rotate_axis_mat4f32(vec3f32(1.0f, 0.3f, 0.5f), (f32)glfwGetTime()*(i));
+			model = mul_mat4f32(rotation, model);
+
+			shader_set_uniform_mat4fv(shader_program, "model", model);
+			shader_set_uniform_vec3fv(shader_program, "color", colors[i]);
+
 			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 		}
 
@@ -211,6 +231,8 @@ void process_input(GLFWwindow *window) {
 }
 
 void mouse_callback(GLFWwindow* window, f64 xposIn, f64 yposIn) {
+	local_persist FirstMouse = 1;
+
 	if (MouseMode == 1) {
 		f32 xpos = (f32)xposIn;
 		f32 ypos = (f32)yposIn;

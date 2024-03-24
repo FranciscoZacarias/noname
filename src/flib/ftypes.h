@@ -1,9 +1,9 @@
 
-#ifndef DEFINES_H
-#define DEFINES_H
+#ifndef FTYPES_H
+#define FTYPES_H
 
 #define local_persist   static
-#define global_variable static
+#define global static
 #define function        static
 
 #define ArrayCount(a) (sizeof(a)/sizeof((a)[0]))
@@ -21,7 +21,12 @@ typedef signed long long   s64;
 typedef float  f32;
 typedef double f64;
 
-typedef s32 b32;
 typedef s8  b8;
+typedef s16 b16;
+typedef s32 b32;
+typedef s64 b64;
 
-#endif // DEFINES_H
+#define True  1
+#define False 0
+
+#endif // FTYPES_H

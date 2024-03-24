@@ -11,17 +11,12 @@ function const char* GET_VERTEX_SHADER() {
 
 			layout (location = 0) in vec3 aPos;
 
-			out vec3 vertex_color;
-
-			uniform vec3 color;
-
 			uniform mat4 model;
 			uniform mat4 view;
 			uniform mat4 projection;
 
 			void main() {
 				gl_Position = projection * view * model * vec4(aPos, 1.0);
-				vertex_color = color;
 			}
 
 			// Vertex Shader end
@@ -38,10 +33,10 @@ function const char* GET_FRAGMENT_SHADER() {
 
 			out vec4 FragColor;
 
-			in vec3 vertex_color;
+			uniform vec3 color;
 
 			void main() {
-				FragColor = vec4(vertex_color, 1.0f);
+		    FragColor = vec4(color, 1.0f);
 			}
 
 			// Fragment Shader End
@@ -79,14 +74,14 @@ function void _shader_check_errors(u32 shader, _ShaderErrorType shader_type) {
 	}
 }
 
-function Shader shader_create(const char* vertex_path, const char* fragment_path) {
+function Shader shader_create(const char* vertex_source, const char* fragment_source) {
 	u32 vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertex_shader, 1, &vertex_path, NULL);
+	glShaderSource(vertex_shader, 1, &vertex_source, NULL);
 	glCompileShader(vertex_shader);
 	_shader_check_errors(vertex_shader, _ShaderErrorType_CompileVertex);
 
 	u32 fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragment_shader, 1, &fragment_path, NULL);
+	glShaderSource(fragment_shader, 1, &fragment_source, NULL);
 	glCompileShader(fragment_shader);
 	_shader_check_errors(fragment_shader, _ShaderErrorType_CompileFragment);
 
@@ -111,7 +106,7 @@ function void shader_set_uniform_mat4fv(Shader shader, const char* uniform, Mat4
 	if (uniform_location == -1) {
 		printf("Uniform %s not found\n", uniform);
 	}
-	glUniformMatrix4fv(uniform_location, 1, 0, &mat.v[0][0]);
+	glUniformMatrix4fv(uniform_location, 1, 1, &mat.data[0][0]);
 }
 
 function void shader_set_uniform_vec4fv(Shader shader, const char* uniform, Vec4f32 vec) {
@@ -119,7 +114,7 @@ function void shader_set_uniform_vec4fv(Shader shader, const char* uniform, Vec4
 	if (uniform_location == -1) {
 		printf("Uniform %s not found\n", uniform);
 	}
-	glUniform4fv(uniform_location, 1, &vec.v[0]);
+	glUniform4fv(uniform_location, 1, &vec.data[0]);
 }
 
 function void shader_set_uniform_vec3fv(Shader shader, const char* uniform, Vec3f32 vec) {
@@ -127,5 +122,5 @@ function void shader_set_uniform_vec3fv(Shader shader, const char* uniform, Vec3
 	if (uniform_location == -1) {
 		printf("Uniform %s not found\n", uniform);
 	}
-	glUniform3fv(uniform_location, 1, &vec.v[0]);
+	glUniform3fv(uniform_location, 1, &vec.data[0]);
 }
