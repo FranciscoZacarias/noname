@@ -140,8 +140,6 @@ int main() {
 		  0.0f,    0.0f, -100.0f, 0.0f, 0.0f, 1.0f  // -Z
 	};
 
-	glLineWidth(3.0f);
-
 	u32 VBO_axis, VAO_axis, EBO_axis;
 	glGenVertexArrays(1, &VAO_axis);
 	glGenBuffers(1, &VBO_axis);
@@ -173,6 +171,8 @@ int main() {
 			glClearColor(0.5f, 0.9f, 1.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+			glLineWidth(3.0f);
+
 			glBindVertexArray(VAO_axis);
 			glBindBuffer(GL_ARRAY_BUFFER, VBO_axis);
 
@@ -197,9 +197,12 @@ int main() {
 
 		shader_use(cube_program);
 		{
+
 			glBindVertexArray(VAO_cube);
 			glBindBuffer(GL_ARRAY_BUFFER, VBO_cube);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_cube);
+
+			glLineWidth(1.0f); // For wireframe
 
 			Mat4f32 projection = mat4f32(1.0f);
 			Mat4f32 perspective = perspective_mat4f32(Radians(45), AspectRatio, 0.1f, 100.0f);
