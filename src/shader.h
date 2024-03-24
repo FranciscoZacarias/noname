@@ -1,6 +1,8 @@
 #ifndef SHADER_H
 #define SHADER_H
 
+#include "shader_source.c"
+
 function const char* GET_VERTEX_SHADER();
 function const char* GET_FRAGMENT_SHADER();
 

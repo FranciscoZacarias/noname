@@ -1,49 +1,5 @@
 /* date = January 28th 2024 8:00 pm */
 
-#define SHADER_SOURCE(code) "#version 330 core\n" #code
-
-//////////////////////////////////////////////
-// Vertex Shader
-function const char* GET_VERTEX_SHADER() {
-	return SHADER_SOURCE(
-			//////////////////////////////////////////////
-			// Vertex Shader start
-
-			layout (location = 0) in vec3 aPos;
-
-			uniform mat4 model;
-			uniform mat4 view;
-			uniform mat4 projection;
-
-			void main() {
-				gl_Position = projection * view * model * vec4(aPos, 1.0);
-			}
-
-			// Vertex Shader end
-			//////////////////////////////////////////////
-		);
-}
-
-//////////////////////////////////////////////
-// Fragment Shader
-function const char* GET_FRAGMENT_SHADER() {
-	return SHADER_SOURCE(
-			//////////////////////////////////////////////
-			// Fragment  Shader start
-
-			out vec4 FragColor;
-
-			uniform vec3 color;
-
-			void main() {
-		    FragColor = vec4(color, 1.0f);
-			}
-
-			// Fragment Shader End
-			//////////////////////////////////////////////
-		);
-}
-
 typedef enum _ShaderErrorType {
 	_ShaderErrorType_LinkProgram,
 	_ShaderErrorType_CompileVertex,

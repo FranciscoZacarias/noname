@@ -14,7 +14,7 @@ global f32 LastX;
 global f32 LastY;
 
 /* 0 for selecting, 1 for moving*/
-global MouseMode = 1;
+global MouseMode = 0;
 
 global f32 DeltaTime = 0.0f;
 global f32 LastFrame = 0.0f;
@@ -48,7 +48,8 @@ int main() {
 	LastX  = WindowWidth / 2.0f;
 	LastY  = WindowHeight / 2.0f;
 
-	Shader shader_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());
+	Shader cube_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());
+	Shader axis_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER_COLOR_FROM_VERTEX());
 
 	f32 vertices[] = {
 		// Front face
@@ -107,29 +108,58 @@ int main() {
 		vec3f32(0.0f, 1.0f, 0.5f),
 		vec3f32(0.5f, 0.5f, 1.0f),
 		vec3f32(0.5f, 1.0f, 0.0f),
-		vec3f32(0.0f, 1.0f, 1.0f)
+		vec3f32(0.0f, 0.0f, 0.0f)
 	};
 
-	u32 VBO, VAO, EBO;
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
+	u32 VBO_cube, VAO_cube, EBO_cube;
+	glGenVertexArrays(1, &VAO_cube);
+	glGenBuffers(1, &VBO_cube);
+	glGenBuffers(1, &EBO_cube);
 
-	glBindVertexArray(VAO);
+	glBindVertexArray(VAO_cube);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_cube);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_cube);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, 3 * sizeof(f32), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-	shader_use(shader_program);
+	f32 xyz[] = {
+	  100.0f,    0.0f,    0.0f, 1.0f, 0.0f, 0.0f, //  X
+	 -100.0f,    0.0f,    0.0f, 1.0f, 0.0f, 0.0f, // -X
+		  0.0f,  100.0f,    0.0f, 0.0f, 1.0f, 0.0f, //  Y
+		  0.0f, -100.0f,    0.0f, 0.0f, 1.0f, 0.0f, // -Y
+		  0.0f,    0.0f,  100.0f, 0.0f, 0.0f, 1.0f, //  Z
+		  0.0f,    0.0f, -100.0f, 0.0f, 0.0f, 1.0f  // -Z
+	};
+
+	glLineWidth(3.0f);
+
+	u32 VBO_axis, VAO_axis, EBO_axis;
+	glGenVertexArrays(1, &VAO_axis);
+	glGenBuffers(1, &VBO_axis);
+	glGenBuffers(1, &EBO_axis);
+
+	glBindVertexArray(VAO_axis);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_axis);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(xyz), xyz, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, 6 * sizeof(f32), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_False, 6 * sizeof(float), (void*)(3* sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	while(!glfwWindowShouldClose(window)) {
 		f32 currentFrame = (f32)(glfwGetTime());
@@ -138,39 +168,75 @@ int main() {
 
 		process_input(window);
 
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		shader_use(axis_program);
+		{
+			glClearColor(0.5f, 0.9f, 1.0f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		Mat4f32 projection = mat4f32(1.0f);
-		Mat4f32 perspective = perspective_mat4f32(Radians(45), AspectRatio, 0.1f, 100.0f);
-		projection = mul_mat4f32(perspective, projection);
-		shader_set_uniform_mat4fv(shader_program, "projection", projection);
+			glBindVertexArray(VAO_axis);
+			glBindBuffer(GL_ARRAY_BUFFER, VBO_axis);
 
-		Mat4f32 view = mat4f32(1.0f);
-		Mat4f32 look_at = look_at_mat4f32(camera.position, add_vec3f32(camera.position, camera.front), camera.up);
-		view = mul_mat4f32(look_at, view);
-		shader_set_uniform_mat4fv(shader_program, "view", view);
+			Mat4f32 projection = mat4f32(1.0f);
+			Mat4f32 perspective = perspective_mat4f32(Radians(45), AspectRatio, 0.1f, 100.0f);
+			projection = mul_mat4f32(perspective, projection);
+			shader_set_uniform_mat4fv(axis_program, "projection", projection);
 
-		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-
-		for(u32 i = 0; i < 10; i++) {
 			Mat4f32 model = mat4f32(1.0f);
+			shader_set_uniform_mat4fv(axis_program, "model", model);
 
-			Mat4f32 translate = translate_mat4f32(positions[i].x, positions[i].y, positions[i].z);
-			model = mul_mat4f32(translate, model);
-			Mat4f32 rotation = rotate_axis_mat4f32(vec3f32(1.0f, 0.3f, 0.5f), (f32)glfwGetTime()*(i));
-			model = mul_mat4f32(rotation, model);
+			Mat4f32 view = mat4f32(1.0f);
+			Mat4f32 look_at = look_at_mat4f32(camera.position, add_vec3f32(camera.position, camera.front), camera.up);
+			view = mul_mat4f32(look_at, view);
+			shader_set_uniform_mat4fv(axis_program, "view", view);
 
-			shader_set_uniform_mat4fv(shader_program, "model", model);
-			shader_set_uniform_vec3fv(shader_program, "color", colors[i]);
+			glDrawArrays(GL_LINES, 0, 6);
 
-			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+			glBindVertexArray(0);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+		}
+
+		shader_use(cube_program);
+		{
+			glBindVertexArray(VAO_cube);
+			glBindBuffer(GL_ARRAY_BUFFER, VBO_cube);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_cube);
+
+			Mat4f32 projection = mat4f32(1.0f);
+			Mat4f32 perspective = perspective_mat4f32(Radians(45), AspectRatio, 0.1f, 100.0f);
+			projection = mul_mat4f32(perspective, projection);
+			shader_set_uniform_mat4fv(cube_program, "projection", projection);
+
+			Mat4f32 view = mat4f32(1.0f);
+			Mat4f32 look_at = look_at_mat4f32(camera.position, add_vec3f32(camera.position, camera.front), camera.up);
+			view = mul_mat4f32(look_at, view);
+			shader_set_uniform_mat4fv(cube_program, "view", view);
+
+			for(u32 i = 0; i < 10; i++) {
+				Mat4f32 model = mat4f32(1.0f);
+
+				Mat4f32 translate = translate_mat4f32(positions[i].x, positions[i].y, positions[i].z);
+				model = mul_mat4f32(translate, model);
+				Mat4f32 rotation = rotate_axis_mat4f32(vec3f32(1.0f, 0.3f, 0.5f), (f32)glfwGetTime()*sin(i));
+				model = mul_mat4f32(rotation, model);
+
+				shader_set_uniform_mat4fv(cube_program, "model", model);
+				shader_set_uniform_vec3fv(cube_program, "color", colors[i]);
+
+				glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+			}
+
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+			glBindVertexArray(0);
 		}
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
+
+	glDeleteVertexArrays(1, &VAO_cube);
+	glDeleteBuffers(1, &VBO_cube);
+	glDeleteBuffers(1, &EBO_cube);
 
 	glfwTerminate();
 	return 0;
