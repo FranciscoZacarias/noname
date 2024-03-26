@@ -1,11 +1,11 @@
 function Camera camera_create() {
 	Camera camera;
-	camera.position = vec3f32(0.0f, 0.0f,  3.0f);;
+	camera.position = vec3f32(0.0f, 4.0f,  6.0f);;
 	camera.front    = vec3f32(0.0f, 0.0f, -1.0f);
 	camera.up       = WORLD_UP;
 	camera.right    = vec3f32(1.0f, 0.0f, 0.0f);
 	camera.yaw      = -90.0f;
-	camera.pitch    =  0.0f;
+	camera.pitch    =  -35.0f;
 	_camera_update(&camera);
 	return camera;
 }

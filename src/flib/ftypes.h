@@ -26,7 +26,4 @@ typedef s16 b16;
 typedef s32 b32;
 typedef s64 b64;
 
-#define True  1
-#define False 0
-
 #endif // FTYPES_H

@@ -1,6 +1,5 @@
 #include "main.h"
 
-
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void process_input(GLFWwindow *window);
 void mouse_callback(GLFWwindow* window, f64 xpos, f64 ypos);
@@ -13,11 +12,12 @@ global Camera camera;
 global f32 LastX;
 global f32 LastY;
 
-/* 0 for selecting, 1 for moving*/
-global MouseMode = 0;
+global b32 RightMouseButton = 0;
 
 global f32 DeltaTime = 0.0f;
 global f32 LastFrame = 0.0f;
+
+global u32 SelectedCube = 0;
 
 int main() {
 
@@ -85,30 +85,17 @@ int main() {
 		1, 0, 4
 	};
 
-	Vec3f32 positions[] = {
-		vec3f32( 0.0f,  0.0f,  0.0f),
-		vec3f32( 2.0f,  5.0f, -15.0f),
-		vec3f32(-1.5f, -2.2f, -2.5f),
-		vec3f32(-3.8f, -2.0f, -12.3f),
-		vec3f32( 2.4f, -0.4f, -3.5f),
-		vec3f32(-1.7f,  3.0f, -7.5f),
-		vec3f32( 1.3f, -2.0f, -2.5f),
-		vec3f32( 1.5f,  2.0f, -2.5f),
-		vec3f32( 1.5f,  0.2f, -1.5f),
-		vec3f32(-1.3f,  1.0f, -1.5f)
-	};
-
-	Vec3f32 colors[] = {
-		vec3f32(1.0f, 0.0f, 0.0f),
-		vec3f32(0.0f, 0.0f, 1.0f),
-		vec3f32(0.0f, 1.0f, 0.0f),
-		vec3f32(1.0f, 1.0f, 0.0f),
-		vec3f32(1.0f, 0.0f, 1.0f),
-		vec3f32(1.0f, 0.5f, 0.0f),
-		vec3f32(0.0f, 1.0f, 0.5f),
-		vec3f32(0.5f, 0.5f, 1.0f),
-		vec3f32(0.5f, 1.0f, 0.0f),
-		vec3f32(0.0f, 0.0f, 0.0f)
+	Cube cubes[] = {
+    cube_create(vec3f32( 0.0f,  0.0f,  0.0f), vec3f32(1.0f, 0.0f, 0.0f)),
+    cube_create(vec3f32( 0.0f,  0.0f, -5.0f), vec3f32(0.0f, 1.0f, 0.0f)),
+    cube_create(vec3f32( 0.0f, -0.0f,  5.0f), vec3f32(0.0f, 0.0f, 1.0f)),
+    cube_create(vec3f32( 0.0f, 	5.0f,  0.0f), vec3f32(1.0f, 0.5f, 0.0f)),
+    cube_create(vec3f32( 0.0f, -5.0f,  0.0f), vec3f32(1.0f, 1.0f, 0.0f)),
+    cube_create(vec3f32( 5.0f,  0.0f,  0.0f), vec3f32(0.5f, 0.5f, 0.5f)),
+    cube_create(vec3f32(-5.0f,  0.0f,  0.0f), vec3f32(1.0f, 0.0f, 1.0f)),
+    cube_create(vec3f32( 0.0f,  0.0f,  0.0f), vec3f32(0.5f, 0.0f, 1.0f)),
+    cube_create(vec3f32( 0.0f,  0.0f,  0.0f), vec3f32(0.0f, 0.0f, 0.0f)),
+    cube_create(vec3f32( 0.0f,  0.0f,  0.0f), vec3f32(0.0f, 1.0f, 1.0f))
 	};
 
 	u32 VBO_cube, VAO_cube, EBO_cube;
@@ -131,13 +118,14 @@ int main() {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+	f32 lenxyz = 16.0f;
 	f32 xyz[] = {
-	  100.0f,    0.0f,    0.0f, 1.0f, 0.0f, 0.0f, //  X
-	 -100.0f,    0.0f,    0.0f, 1.0f, 0.0f, 0.0f, // -X
-		  0.0f,  100.0f,    0.0f, 0.0f, 1.0f, 0.0f, //  Y
-		  0.0f, -100.0f,    0.0f, 0.0f, 1.0f, 0.0f, // -Y
-		  0.0f,    0.0f,  100.0f, 0.0f, 0.0f, 1.0f, //  Z
-		  0.0f,    0.0f, -100.0f, 0.0f, 0.0f, 1.0f  // -Z
+	  lenxyz,    0.0f,    0.0f, 1.0f, 0.0f, 0.0f, //  X
+	 -lenxyz,    0.0f,    0.0f, 1.0f, 0.0f, 0.0f, // -X
+		  0.0f,  lenxyz,    0.0f, 0.0f, 1.0f, 0.0f, //  Y
+		  0.0f, -lenxyz,    0.0f, 0.0f, 1.0f, 0.0f, // -Y
+		  0.0f,    0.0f,  lenxyz, 0.0f, 0.0f, 1.0f, //  Z
+		  0.0f,    0.0f, -lenxyz, 0.0f, 0.0f, 1.0f  // -Z
 	};
 
 	u32 VBO_axis, VAO_axis, EBO_axis;
@@ -166,6 +154,14 @@ int main() {
 
 		process_input(window);
 
+		Mat4f32 projection = mat4f32(1.0f);
+		Mat4f32 perspective = perspective_mat4f32(Radians(45), AspectRatio, 0.1f, 100.0f);
+		projection = mul_mat4f32(perspective, projection);
+
+		Mat4f32 view = mat4f32(1.0f);
+		Mat4f32 look_at = look_at_mat4f32(camera.position, add_vec3f32(camera.position, camera.front), camera.up);
+		view = mul_mat4f32(look_at, view);
+
 		shader_use(axis_program);
 		{
 			glClearColor(0.5f, 0.9f, 1.0f, 1.0f);
@@ -176,18 +172,10 @@ int main() {
 			glBindVertexArray(VAO_axis);
 			glBindBuffer(GL_ARRAY_BUFFER, VBO_axis);
 
-			Mat4f32 projection = mat4f32(1.0f);
-			Mat4f32 perspective = perspective_mat4f32(Radians(45), AspectRatio, 0.1f, 100.0f);
-			projection = mul_mat4f32(perspective, projection);
-			shader_set_uniform_mat4fv(axis_program, "projection", projection);
-
 			Mat4f32 model = mat4f32(1.0f);
 			shader_set_uniform_mat4fv(axis_program, "model", model);
-
-			Mat4f32 view = mat4f32(1.0f);
-			Mat4f32 look_at = look_at_mat4f32(camera.position, add_vec3f32(camera.position, camera.front), camera.up);
-			view = mul_mat4f32(look_at, view);
 			shader_set_uniform_mat4fv(axis_program, "view", view);
+			shader_set_uniform_mat4fv(axis_program, "projection", projection);
 
 			glDrawArrays(GL_LINES, 0, 6);
 
@@ -197,33 +185,29 @@ int main() {
 
 		shader_use(cube_program);
 		{
-
 			glBindVertexArray(VAO_cube);
 			glBindBuffer(GL_ARRAY_BUFFER, VBO_cube);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_cube);
 
 			glLineWidth(1.0f); // For wireframe
 
-			Mat4f32 projection = mat4f32(1.0f);
-			Mat4f32 perspective = perspective_mat4f32(Radians(45), AspectRatio, 0.1f, 100.0f);
-			projection = mul_mat4f32(perspective, projection);
-			shader_set_uniform_mat4fv(cube_program, "projection", projection);
+			for(u32 i = 0; i < ArrayCount(cubes); i++) {
+				Cube cube = cubes[i];
+				cube = cube_rotate(cube, vec3f32(1.0f, 0.3f, 0.5f), (f32)glfwGetTime()*sin(i));
 
-			Mat4f32 view = mat4f32(1.0f);
-			Mat4f32 look_at = look_at_mat4f32(camera.position, add_vec3f32(camera.position, camera.front), camera.up);
-			view = mul_mat4f32(look_at, view);
-			shader_set_uniform_mat4fv(cube_program, "view", view);
+				shader_set_uniform_mat4fv(cube_program, "view", view);
+				shader_set_uniform_mat4fv(cube_program, "projection", projection);
+				shader_set_uniform_mat4fv(cube_program, "model", cube.transform);
 
-			for(u32 i = 0; i < 10; i++) {
-				Mat4f32 model = mat4f32(1.0f);
+				if (SelectedCube == i) {
+					glLineWidth(3.0f);
+					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				} else {
+					glLineWidth(1.0f);
+					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				}
 
-				Mat4f32 translate = translate_mat4f32(positions[i].x, positions[i].y, positions[i].z);
-				model = mul_mat4f32(translate, model);
-				Mat4f32 rotation = rotate_axis_mat4f32(vec3f32(1.0f, 0.3f, 0.5f), (f32)glfwGetTime()*sin(i));
-				model = mul_mat4f32(rotation, model);
-
-				shader_set_uniform_mat4fv(cube_program, "model", model);
-				shader_set_uniform_vec3fv(cube_program, "color", colors[i]);
+				shader_set_uniform_vec3fv(cube_program, "color", cube.color);
 
 				glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 			}
@@ -256,22 +240,31 @@ void process_input(GLFWwindow *window) {
 		glfwSetWindowShouldClose(window, 1);
 	}
 
-	if (glfwGetKey(window, GLFW_KEY_F2) == GLFW_PRESS) {
-		MouseMode = 0;
-		LastX = WindowWidth/2;
-		LastY = WindowHeight/2;
-		glfwSetCursorPos(window, WindowWidth/2, WindowHeight/2);
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-	}
-	if (glfwGetKey(window, GLFW_KEY_F3) == GLFW_PRESS) {
-		MouseMode = 1;
-		LastX = WindowWidth/2;
-		LastY = WindowHeight/2;
-		glfwSetCursorPos(window, WindowWidth/2, WindowHeight/2);
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	local_persist b32 is_tab_down = 0;
+	if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) {
+		if (!is_tab_down) {
+			is_tab_down = 1;
+			if (SelectedCube + 1 > 9) {
+				SelectedCube = 0;
+			} else {
+				SelectedCube++;
+			}
+		}
+	} else {
+		if (is_tab_down) {
+			is_tab_down = 0;
+		}
 	}
 
-	if (MouseMode == 1) {
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+		if (RightMouseButton == 0) {
+			RightMouseButton = 1;
+			LastX = WindowWidth/2;
+			LastY = WindowHeight/2;
+			glfwSetCursorPos(window, WindowWidth/2, WindowHeight/2);
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		}
+
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
 			camera_keyboard_callback(&camera, CameraMovement_Front, DeltaTime);
 		}
@@ -290,23 +283,25 @@ void process_input(GLFWwindow *window) {
 		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
 			camera_keyboard_callback(&camera, CameraMovement_Up, DeltaTime);
 		}
-	}
-
-	local_persist GLenum polygon_mode = GL_FILL;
-	if (glfwGetKey(window, GLFW_KEY_F1)) {
-		polygon_mode = (polygon_mode == GL_FILL) ? GL_LINE : GL_FILL;
-		glPolygonMode(GL_FRONT_AND_BACK, polygon_mode);
+	} else {
+		if (RightMouseButton == 1) {
+			RightMouseButton = 0;
+			LastX = WindowWidth/2;
+			LastY = WindowHeight/2;
+			glfwSetCursorPos(window, WindowWidth/2, WindowHeight/2);
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		}
 	}
 }
 
 void mouse_callback(GLFWwindow* window, f64 xposIn, f64 yposIn) {
-	local_persist FirstMouse = 1;
+	local_persist b32 FirstMouse = 1;
 
-	if (MouseMode == 1) {
+	if (RightMouseButton == 1) {
 		f32 xpos = (f32)xposIn;
 		f32 ypos = (f32)yposIn;
 
-		if (FirstMouse) {
+		if (FirstMouse == 1) {
 			LastX = xpos;
 			LastY = ypos;
 			FirstMouse = 0;

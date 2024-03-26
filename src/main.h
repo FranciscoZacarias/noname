@@ -26,10 +26,12 @@
 // *.h
 #include "shader.h"
 #include "camera.h"
+#include "cube.h"
 
 // *.c
 #include "shader.c"
 #include "camera.c"
+#include "cube.c"
 
 #define APP_NAME "noname"
 
