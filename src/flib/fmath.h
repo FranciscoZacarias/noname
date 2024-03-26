@@ -67,6 +67,7 @@ function Vec3f32 normalize_vec3f32(Vec3f32 v);
 function Vec3f32 transform_vec3f32_mat4f32(Vec3f32 v, Mat4f32 m);
 function Vec3f32 rotate_by_axis_vec3f32(Vec3f32 v, Vec3f32 axis, f32 angle);
 function Vec3f32 lerp_vec3f32(Vec3f32 a, Vec3f32 b, f32 t);
+function Vec3f32 unproject_vec3f32(Vec3f32 source, Mat4f32 projection, Mat4f32 view);
 
 function f32 dot_vec3f32(Vec3f32 a, Vec3f32 b);
 function f32 len_vec3f32(Vec3f32 v);
@@ -109,7 +110,6 @@ function Mat4f32 rotate_xyz_mat4f32(Vec3f32 radians);
 function Mat4f32 rotate_zyx_mat4f32(Vec3f32 radians);
 
 function Mat4f32 transpose_mat4f32(Mat4f32 m);
-function Mat4f32 invert_mat4f32(Mat4f32 m);
 function Mat4f32 scale_mat4f32(f32 x, f32 y, f32 z);
 function Mat4f32 frustum_mat4f32(f64 left, f64 right, f64 bottom, f64 top, f64 near_plane, f64 far_plane);
 function Mat4f32 perspective_mat4f32(f64 fovy, f64 aspect, f64 near_plane, f64 far_plane);

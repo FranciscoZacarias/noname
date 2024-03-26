@@ -7,7 +7,7 @@ function const char* GET_VERTEX_SHADER() {
 			layout (location = 0) in vec3 aPos;
 			layout (location = 1) in vec3 aColor;
 
-			out vec3 axis_color;
+			out vec3 line_color;
 
 			uniform mat4 model;
 			uniform mat4 view;
@@ -15,7 +15,7 @@ function const char* GET_VERTEX_SHADER() {
 
 			void main() {
 				gl_Position = projection * view * model * vec4(aPos, 1.0);
-				axis_color = aColor;
+				line_color = aColor;
 			}
 		);
 }
@@ -34,13 +34,13 @@ function const char* GET_FRAGMENT_SHADER() {
 		);
 }
 
-function const char* GET_FRAGMENT_SHADER_COLOR_FROM_VERTEX() {
+function const char* GET_FRAGMENT_SHADER_LINE_COLOR_FROM_VERTEX() {
 	return SHADER_SOURCE(
 			out vec4 FragColor;
-			in vec3 axis_color;
+			in vec3 line_color;
 
 			void main() {
-		    FragColor = vec4(axis_color, 1.0f);
+		    FragColor = vec4(line_color, 1.0f);
 			}
 		);
 }

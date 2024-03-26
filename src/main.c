@@ -12,7 +12,19 @@ global Camera camera;
 global f32 LastX;
 global f32 LastY;
 
+typedef struct MouseState {
+	f32 screen_space_x;
+	f32 screen_space_y;
+
+	f32 ndc_x;
+	f32 ndc_y;
+
+} MouseState;
+
+global MouseState Mouse = { 0 };
+
 global b32 RightMouseButton = 0;
+global b32 LeftMouseButton = 0;
 
 global f32 DeltaTime = 0.0f;
 global f32 LastFrame = 0.0f;
@@ -49,10 +61,15 @@ int main() {
 	LastX  = WindowWidth / 2.0f;
 	LastY  = WindowHeight / 2.0f;
 
-	Shader cube_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());
-	Shader axis_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER_COLOR_FROM_VERTEX());
+	Mouse.screen_space_x = LastX;
+	Mouse.screen_space_y = LastY;
+	Mouse.ndc_x = LastX;
+	Mouse.ndc_y = LastY;
 
-	
+	Shader cube_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());
+	Shader lines_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER_LINE_COLOR_FROM_VERTEX());
+
+	// Cubes -------------
 	Cubes[0] = cube_create(vec3f32( 0.0f,  0.0f,  0.0f), vec3f32(1.0f, 0.0f, 0.0f));
 	Cubes[1] = cube_create(vec3f32( 0.0f,  0.0f, -5.0f), vec3f32(0.0f, 1.0f, 0.0f));
 	Cubes[2] = cube_create(vec3f32( 0.0f, -0.0f,  5.0f), vec3f32(0.0f, 0.0f, 1.0f));
@@ -118,6 +135,8 @@ int main() {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+
+	// Axis -------------
 	f32 lenxyz = 16.0f;
 	f32 xyz[] = {
 	  lenxyz,    0.0f,    0.0f, 1.0f, 0.0f, 0.0f, //  X
@@ -128,10 +147,9 @@ int main() {
 		  0.0f,    0.0f, -lenxyz, 0.0f, 0.0f, 1.0f  // -Z
 	};
 
-	u32 VBO_axis, VAO_axis, EBO_axis;
+	u32 VBO_axis, VAO_axis;
 	glGenVertexArrays(1, &VAO_axis);
 	glGenBuffers(1, &VBO_axis);
-	glGenBuffers(1, &EBO_axis);
 
 	glBindVertexArray(VAO_axis);
 
@@ -141,7 +159,31 @@ int main() {
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, 6 * sizeof(f32), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_False, 6 * sizeof(float), (void*)(3* sizeof(float)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_False, 6 * sizeof(f32), (void*)(3* sizeof(f32)));
+	glEnableVertexAttribArray(1);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	// Raycast -------------
+	f32 cursor_ray[] = {
+		0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f
+	};
+
+	u32 VBO_ray, VAO_ray;
+	glGenVertexArrays(1, &VAO_ray);
+	glGenBuffers(1, &VBO_ray);
+
+	glBindVertexArray(VAO_ray);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_ray);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cursor_ray), cursor_ray, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, 6 * sizeof(f32), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_False, 6 * sizeof(f32), (void*)(3* sizeof(f32)));
 	glEnableVertexAttribArray(1);
 
 	glBindVertexArray(0);
@@ -154,6 +196,9 @@ int main() {
 
 		process_input(window);
 
+		glClearColor(0.5f, 0.9f, 1.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 		Mat4f32 projection = mat4f32(1.0f);
 		Mat4f32 perspective = perspective_mat4f32(Radians(45), AspectRatio, 0.1f, 100.0f);
 		projection = mul_mat4f32(perspective, projection);
@@ -162,20 +207,17 @@ int main() {
 		Mat4f32 look_at = look_at_mat4f32(camera.position, add_vec3f32(camera.position, camera.front), camera.up);
 		view = mul_mat4f32(look_at, view);
 
-		shader_use(axis_program);
+		shader_use(lines_program);
 		{
-			glClearColor(0.5f, 0.9f, 1.0f, 1.0f);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 			glLineWidth(2.0f);
 
 			glBindVertexArray(VAO_axis);
 			glBindBuffer(GL_ARRAY_BUFFER, VBO_axis);
 
 			Mat4f32 model = mat4f32(1.0f);
-			shader_set_uniform_mat4fv(axis_program, "model", model);
-			shader_set_uniform_mat4fv(axis_program, "view", view);
-			shader_set_uniform_mat4fv(axis_program, "projection", projection);
+			shader_set_uniform_mat4fv(lines_program, "model", model);
+			shader_set_uniform_mat4fv(lines_program, "view", view);
+			shader_set_uniform_mat4fv(lines_program, "projection", projection);
 
 			glDrawArrays(GL_LINES, 0, 6);
 
@@ -203,19 +245,54 @@ int main() {
 					glLineWidth(3.0f);
 					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 				} else {
-					glLineWidth(1.0f);
 					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 				}
 
 				shader_set_uniform_vec3fv(cube_program, "color", cube.color);
 
 				glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+				glLineWidth(1.0f);
 			}
 
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 			glBindVertexArray(0);
 		}
+
+		shader_use(lines_program);
+		{
+			glBindVertexArray(VAO_ray);
+			glBindBuffer(GL_ARRAY_BUFFER, VBO_ray);
+
+			glLineWidth(3.0f);
+
+			printf("Mouse ScreenSpace (%.2f, %.2f), ", Mouse.screen_space_x, Mouse.screen_space_y);
+			printf("Mouse NDC (%.2f, %.2f)", Mouse.ndc_x, Mouse.ndc_y);
+			Vec3f32 unproj = unproject_vec3f32(vec3f32(Mouse.ndc_x, Mouse.ndc_y, 1.0f), projection, view);
+			print_vec3f32(unproj, "Unprojected:");
+
+			if (LeftMouseButton) {
+				cursor_ray[0] = camera.position.x;
+				cursor_ray[1] = camera.position.y;
+				cursor_ray[2] = camera.position.z;
+
+				cursor_ray[6] = unproj.x;
+				cursor_ray[7] = unproj.y;
+				cursor_ray[8] = unproj.z;
+			}
+			glBufferData(GL_ARRAY_BUFFER, sizeof(cursor_ray), cursor_ray, GL_STATIC_DRAW);
+
+			Mat4f32 model = mat4f32(1.0f);
+			shader_set_uniform_mat4fv(lines_program, "model", model);
+			shader_set_uniform_mat4fv(lines_program, "view", view);
+			shader_set_uniform_mat4fv(lines_program, "projection", projection);
+
+			glDrawArrays(GL_LINES, 0, 2);
+
+			glBindVertexArray(0);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+		}
+
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -224,6 +301,12 @@ int main() {
 	glDeleteVertexArrays(1, &VAO_cube);
 	glDeleteBuffers(1, &VBO_cube);
 	glDeleteBuffers(1, &EBO_cube);
+
+	glDeleteVertexArrays(1, &VAO_axis);
+	glDeleteBuffers(1, &VBO_axis);
+
+	glDeleteVertexArrays(1, &VAO_ray);
+	glDeleteBuffers(1, &VBO_ray);
 
 	glfwTerminate();
 	return 0;
@@ -257,7 +340,7 @@ void process_input(GLFWwindow *window) {
 	}
 
 
-	f32 step = 0.1f;
+	f32 step = 5.0f * DeltaTime;
 	if (glfwGetKey(window, GLFW_KEY_KP_8) == GLFW_PRESS) {
 		cube_translate(&Cubes[SelectedCube], vec3f32(0.0f, step, 0.0f));
 	}
@@ -277,12 +360,17 @@ void process_input(GLFWwindow *window) {
 		cube_translate(&Cubes[SelectedCube], vec3f32(0.0f, 0.0f, -step));
 	}
 	if (glfwGetKey(window, GLFW_KEY_KP_3) == GLFW_PRESS) {
-		cube_scale(&Cubes[SelectedCube], vec3f32(1.05, 1.05, 1.05));
+		cube_scale(&Cubes[SelectedCube], vec3f32(1.0f+step, 1.0f+step, 1.0f+step));
 	}
 	if (glfwGetKey(window, GLFW_KEY_KP_1) == GLFW_PRESS) {
-		cube_scale(&Cubes[SelectedCube], vec3f32(0.95, 0.95, 0.95));
+		cube_scale(&Cubes[SelectedCube], vec3f32(1.0f-step, 1.0f-step, 1.0f-step));
 	}
 
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+		LeftMouseButton = 1;
+	} else {
+		LeftMouseButton = 0;
+	}
 
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
 		if (RightMouseButton == 0) {
@@ -316,8 +404,8 @@ void process_input(GLFWwindow *window) {
 			RightMouseButton = 0;
 			LastX = WindowWidth/2;
 			LastY = WindowHeight/2;
-			glfwSetCursorPos(window, WindowWidth/2, WindowHeight/2);
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			glfwSetCursorPos(window, Mouse.screen_space_x, Mouse.screen_space_y);
 		}
 	}
 }
@@ -341,5 +429,11 @@ void mouse_callback(GLFWwindow* window, f64 xposIn, f64 yposIn) {
 		LastY = ypos;
 
 		camera_mouse_callback(&camera, xoffset, yoffset);
+	} else {
+			Mouse.screen_space_x = xposIn;
+			Mouse.screen_space_y = yposIn;
+
+			Mouse.ndc_x = (2.0f * xposIn) / WindowWidth - 1.0f;
+			Mouse.ndc_y = 1.0f - (2.0f * yposIn) / WindowHeight;
 	}
 }
