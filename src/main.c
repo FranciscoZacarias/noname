@@ -4,8 +4,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void process_input(GLFWwindow *window);
 void mouse_callback(GLFWwindow* window, f64 xpos, f64 ypos);
 
-global s32 WindowWidth  = 800;
-global s32 WindowHeight = 800;
+global s32 WindowWidth  = 1280;
+global s32 WindowHeight = 720;
 #define AspectRatio ((f32)WindowWidth/(f32)WindowHeight)
 
 global Camera camera;
@@ -18,6 +18,7 @@ global f32 DeltaTime = 0.0f;
 global f32 LastFrame = 0.0f;
 
 global u32 SelectedCube = 0;
+global Cube Cubes[10];
 
 int main() {
 
@@ -51,6 +52,18 @@ int main() {
 	Shader cube_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());
 	Shader axis_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER_COLOR_FROM_VERTEX());
 
+	
+	Cubes[0] = cube_create(vec3f32( 0.0f,  0.0f,  0.0f), vec3f32(1.0f, 0.0f, 0.0f));
+	Cubes[1] = cube_create(vec3f32( 0.0f,  0.0f, -5.0f), vec3f32(0.0f, 1.0f, 0.0f));
+	Cubes[2] = cube_create(vec3f32( 0.0f, -0.0f,  5.0f), vec3f32(0.0f, 0.0f, 1.0f));
+	Cubes[3] = cube_create(vec3f32( 0.0f,  5.0f,  0.0f), vec3f32(1.0f, 0.5f, 0.0f));
+	Cubes[4] = cube_create(vec3f32( 0.0f, -5.0f,  0.0f), vec3f32(1.0f, 1.0f, 0.0f));
+	Cubes[5] = cube_create(vec3f32( 5.0f,  0.0f,  0.0f), vec3f32(0.5f, 0.5f, 0.5f));
+	Cubes[6] = cube_create(vec3f32(-5.0f,  0.0f,  0.0f), vec3f32(1.0f, 0.0f, 1.0f));
+	Cubes[7] = cube_create(vec3f32( 5.0f,  5.0f,  5.0f), vec3f32(0.5f, 0.0f, 1.0f));
+	Cubes[8] = cube_create(vec3f32(-5.0f, -5.0f, -5.0f), vec3f32(0.0f, 0.0f, 0.0f));
+	Cubes[9] = cube_create(vec3f32( 5.0f, -5.0f, -5.0f), vec3f32(0.0f, 1.0f, 1.0f));
+
 	f32 vertices[] = {
 		// Front face
 		-0.5f, -0.5f,  0.5f,  // 0
@@ -83,19 +96,6 @@ int main() {
 		// Bottom face
 		4, 5, 1,
 		1, 0, 4
-	};
-
-	Cube cubes[] = {
-    cube_create(vec3f32( 0.0f,  0.0f,  0.0f), vec3f32(1.0f, 0.0f, 0.0f)),
-    cube_create(vec3f32( 0.0f,  0.0f, -5.0f), vec3f32(0.0f, 1.0f, 0.0f)),
-    cube_create(vec3f32( 0.0f, -0.0f,  5.0f), vec3f32(0.0f, 0.0f, 1.0f)),
-    cube_create(vec3f32( 0.0f, 	5.0f,  0.0f), vec3f32(1.0f, 0.5f, 0.0f)),
-    cube_create(vec3f32( 0.0f, -5.0f,  0.0f), vec3f32(1.0f, 1.0f, 0.0f)),
-    cube_create(vec3f32( 5.0f,  0.0f,  0.0f), vec3f32(0.5f, 0.5f, 0.5f)),
-    cube_create(vec3f32(-5.0f,  0.0f,  0.0f), vec3f32(1.0f, 0.0f, 1.0f)),
-    cube_create(vec3f32( 0.0f,  0.0f,  0.0f), vec3f32(0.5f, 0.0f, 1.0f)),
-    cube_create(vec3f32( 0.0f,  0.0f,  0.0f), vec3f32(0.0f, 0.0f, 0.0f)),
-    cube_create(vec3f32( 0.0f,  0.0f,  0.0f), vec3f32(0.0f, 1.0f, 1.0f))
 	};
 
 	u32 VBO_cube, VAO_cube, EBO_cube;
@@ -167,7 +167,7 @@ int main() {
 			glClearColor(0.5f, 0.9f, 1.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-			glLineWidth(3.0f);
+			glLineWidth(2.0f);
 
 			glBindVertexArray(VAO_axis);
 			glBindBuffer(GL_ARRAY_BUFFER, VBO_axis);
@@ -191,9 +191,9 @@ int main() {
 
 			glLineWidth(1.0f); // For wireframe
 
-			for(u32 i = 0; i < ArrayCount(cubes); i++) {
-				Cube cube = cubes[i];
-				cube = cube_rotate(cube, vec3f32(1.0f, 0.3f, 0.5f), (f32)glfwGetTime()*sin(i));
+			for(u32 i = 0; i < ArrayCount(Cubes); i++) {
+				Cube cube = Cubes[i];
+				cube_rotate(&cube, vec3f32(1.0f, 0.3f, 0.5f), (f32)glfwGetTime()*sin(i));
 
 				shader_set_uniform_mat4fv(cube_program, "view", view);
 				shader_set_uniform_mat4fv(cube_program, "projection", projection);
@@ -255,6 +255,34 @@ void process_input(GLFWwindow *window) {
 			is_tab_down = 0;
 		}
 	}
+
+
+	f32 step = 0.1f;
+	if (glfwGetKey(window, GLFW_KEY_KP_8) == GLFW_PRESS) {
+		cube_translate(&Cubes[SelectedCube], vec3f32(0.0f, step, 0.0f));
+	}
+	if (glfwGetKey(window, GLFW_KEY_KP_5) == GLFW_PRESS) {
+		cube_translate(&Cubes[SelectedCube], vec3f32(0.0f, -step, 0.0f));
+	}
+	if (glfwGetKey(window, GLFW_KEY_KP_4) == GLFW_PRESS) {
+		cube_translate(&Cubes[SelectedCube], vec3f32(-step, 0.0f, 0.0f));
+	}
+	if (glfwGetKey(window, GLFW_KEY_KP_6) == GLFW_PRESS) {
+		cube_translate(&Cubes[SelectedCube], vec3f32(step, 0.0f, 0.0f));
+	}
+	if (glfwGetKey(window, GLFW_KEY_KP_7) == GLFW_PRESS) {
+		cube_translate(&Cubes[SelectedCube], vec3f32(0.0f, 0.0f, step));
+	}
+	if (glfwGetKey(window, GLFW_KEY_KP_9) == GLFW_PRESS) {
+		cube_translate(&Cubes[SelectedCube], vec3f32(0.0f, 0.0f, -step));
+	}
+	if (glfwGetKey(window, GLFW_KEY_KP_3) == GLFW_PRESS) {
+		cube_scale(&Cubes[SelectedCube], vec3f32(1.05, 1.05, 1.05));
+	}
+	if (glfwGetKey(window, GLFW_KEY_KP_1) == GLFW_PRESS) {
+		cube_scale(&Cubes[SelectedCube], vec3f32(0.95, 0.95, 0.95));
+	}
+
 
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
 		if (RightMouseButton == 0) {

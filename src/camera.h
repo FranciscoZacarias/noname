@@ -26,6 +26,7 @@ typedef struct Camera {
 } Camera;
 
 function Camera camera_create();
+function void print_camera(Camera camera);
 function void camera_mouse_callback(Camera* camera, f64 x_pos, f64 y_pos);
 function void camera_keyboard_callback(Camera* camera, CameraMovement movement, f32 delta_time);
 function void _camera_update(Camera* camera);

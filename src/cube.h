@@ -7,7 +7,8 @@ typedef struct Cube {
 } Cube;
 
 function Cube cube_create(Vec3f32 position, Vec3f32 color);
-function Cube cube_translate(Cube cube, Vec3f32 translation);
-function Cube cube_rotate(Cube cube, Vec3f32 axis, f32 radians);
+function void cube_translate(Cube* cube, Vec3f32 translation);
+function void cube_rotate(Cube* cube, Vec3f32 axis, f32 radians);
+function void cube_scale(Cube* cube, Vec3f32 scale);
 
 #endif // CUBE_H

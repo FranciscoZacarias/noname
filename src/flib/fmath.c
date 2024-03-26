@@ -6,6 +6,11 @@ function Vec3f32 vec3f32(f32 x, f32 y, f32 z) {
   return result;
 }
 
+#include "stdio.h" 
+function void print_vec3f32(Vec3f32 v, const char* label) {
+  printf("%s vec3f32(%.2ff, %.2ff, %.2ff);\n", label, v.x, v.y, v.z);
+}
+
 function Vec3f32 add_vec3f32(Vec3f32 a, Vec3f32 b) {
   Vec3f32 result = {
     a.x + b.x,

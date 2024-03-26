@@ -6,16 +6,17 @@ function Cube cube_create(Vec3f32 position, Vec3f32 color) {
 	return result;
 }
 
-function Cube cube_translate(Cube cube, Vec3f32 translation) {
-	Cube result = cube;
+function void cube_translate(Cube* cube, Vec3f32 translation) {
 	Mat4f32 translate = translate_mat4f32(translation.x, translation.y, translation.z);
-	result.transform = mul_mat4f32(translate, cube.transform);
-	return result;
+	cube->transform = mul_mat4f32(translate, cube->transform);
 }
 
-function Cube cube_rotate(Cube cube, Vec3f32 axis, f32 radians) {
-	Cube result = cube;
+function void cube_rotate(Cube* cube, Vec3f32 axis, f32 radians) {
 	Mat4f32 rotation = rotate_axis_mat4f32(axis, radians);
-	result.transform = mul_mat4f32(rotation, result.transform);
-	return result;
+	cube->transform = mul_mat4f32(rotation, cube->transform);
+}
+
+function void cube_scale(Cube* cube, Vec3f32 scale) {
+	Mat4f32 scalar = scale_mat4f32(scale.x, scale.y, scale.z);
+	cube->transform = mul_mat4f32(scalar, cube->transform);
 }

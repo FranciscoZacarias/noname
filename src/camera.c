@@ -1,13 +1,21 @@
 function Camera camera_create() {
 	Camera camera;
-	camera.position = vec3f32(0.0f, 4.0f,  6.0f);;
-	camera.front    = vec3f32(0.0f, 0.0f, -1.0f);
-	camera.up       = WORLD_UP;
-	camera.right    = vec3f32(1.0f, 0.0f, 0.0f);
-	camera.yaw      = -90.0f;
-	camera.pitch    =  -35.0f;
+	camera.position = vec3f32(-9.21f, 5.45f, 14.81f);
+	camera.front = vec3f32(0.56f, -0.31f, -0.77f);
+	camera.up = vec3f32(0.18f, 0.95f, -0.25f);
+	camera.right = vec3f32(0.81f, -0.00f, 0.58f);
+	camera.pitch = -18.10f;
+	camera.yaw = -54.20f;
 	_camera_update(&camera);
 	return camera;
+}
+
+function void print_camera(Camera camera) {
+	print_vec3f32(camera.position, "camera.position =");
+	print_vec3f32(camera.front, "camera.front =");
+	print_vec3f32(camera.up, "camera.up =");
+	print_vec3f32(camera.right, "camera.right =");
+	printf("camera.pitch = %.2ff;\ncamera.yaw = %.2ff;\n-------------\n", camera.pitch, camera.yaw);
 }
 
 function void camera_mouse_callback(Camera* camera, f64 x_pos, f64 y_pos) {

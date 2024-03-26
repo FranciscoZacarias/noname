@@ -54,6 +54,7 @@ typedef struct Mat4f32 {
 // Vector3 f32
 
 function Vec3f32 vec3f32(f32 x, f32 y, f32 z);
+function void print_vec3f32(Vec3f32 v, const char* label);
 
 function Vec3f32 add_vec3f32(Vec3f32 a, Vec3f32 b);
 function Vec3f32 sub_vec3f32(Vec3f32 a, Vec3f32 b);
