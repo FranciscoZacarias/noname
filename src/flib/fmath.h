@@ -51,7 +51,17 @@ typedef struct Mat4f32 {
 } Mat4f32;
 
 //////////////////////////////////////////////
-// Vector3 f32
+// Generic Math 
+
+typedef struct Linef32 {
+  Vec3f32 point;
+  Vec3f32 direction;
+} Linef32;
+
+function Linef32 linef32(Vec3f32 point, Vec3f32 direction);
+
+//////////////////////////////////////////////
+// Vector3 f32 
 
 function Vec3f32 vec3f32(f32 x, f32 y, f32 z);
 function void print_vec3f32(Vec3f32 v, const char* label);

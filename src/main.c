@@ -32,28 +32,44 @@ global f32 LastFrame = 0.0f;
 global u32 SelectedCube = 0;
 global Cube Cubes[10];
 
-function Vec3f32 line_plane_intersect(Vec3f32 ray, Vec3f32 planePoint1, Vec3f32 planePoint2, Vec3f32 planePoint3) {
-    Vec3f32 planeNormal = cross_vec3f32(vec3f32(planePoint2.x - planePoint1.x, planePoint2.y - planePoint1.y, planePoint2.z - planePoint1.z),
-                                       vec3f32(planePoint3.x - planePoint1.x, planePoint3.y - planePoint1.y, planePoint3.z - planePoint1.z));
-    f32 dotProductValue = dot_vec3f32(ray, planeNormal);
-    
-    // Check if the line is parallel to the plane
-    if (dotProductValue == 0) {
-        printf("The line is parallel to the plane.\n");
-        return (Vec3f32){0.0f, 0.0f, 0.0f}; // Return a zero vector indicating no intersection
-    }
-    
-    // Calculate parameter t
-    Vec3f32 lineToPlaneVector = {line_start.x - planePoint1.x, line_start.y - planePoint1.y, line_start.z - planePoint1.z};
-    f32 t = -dot_vec3f32(lineToPlaneVector, planeNormal) / dotProductValue;
-    
-    // Calculate intersection point
-    Vec3f32 intersectionPoint = { 0 };
-    intersectionPoint.x = line_start.x + t * ray.x;
-    intersectionPoint.y = line_start.y + t * ray.y;
-    intersectionPoint.z = line_start.z + t * ray.z;
-    
-    return intersectionPoint;
+Vec3f32 intersectLinePlane(Linef32 line, Vec3f32 point1, Vec3f32 point2, Vec3f32 point3) {
+		Vec3f32 result = vec3f32(F32_MAX, F32_MAX, F32_MAX);
+
+		Vec3f32 plane_v1 = vec3f32(point2.x - point1.x,
+															 point2.y - point1.y,
+															 point2.z - point1.z);
+
+		Vec3f32 plane_v2 = vec3f32(point3.x - point1.x,
+															 point3.y - point1.y,
+															 point3.z - point1.z);
+
+		Vec3f32 plane_normal = vec3f32(plane_v1.y * plane_v2.z - plane_v1.z * plane_v2.y,
+																	 plane_v1.z * plane_v2.x - plane_v1.x * plane_v2.z,
+																	 plane_v1.x * plane_v2.y - plane_v1.y * plane_v2.x);
+
+		f32 dot_product = dot_vec3f32(line.direction, plane_normal);
+
+		// If the dot product is close to zero, the line is parallel to the plane
+		if (fabs(dot_product) < 0.000001f) {
+				return result;
+		}
+
+		// Calculate the vector from a point on the line to a point on the plane
+		Vec3f32 lineToPlane = vec3f32(point1.x - line.point.x,
+																	point1.y - line.point.y,
+																	point1.z - line.point.z);
+
+		// Calculate the distance along the line to the intersection point
+		f32 t = (lineToPlane.x * plane_normal.x +
+						 lineToPlane.y * plane_normal.y +
+						 lineToPlane.z * plane_normal.z) / dot_product;
+
+		// Calculate the intersection point
+		result = vec3f32(line.point.x + t * line.direction.x,
+										 line.point.y + t * line.direction.y,
+										 line.point.z + t * line.direction.z);
+
+		return result;
 }
 
 int main(void) {
@@ -90,9 +106,6 @@ int main(void) {
 	Mouse.ndc_x = LastX;
 	Mouse.ndc_y = LastY;
 
-	Shader cube_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());
-	Shader lines_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER_LINE_COLOR_FROM_VERTEX());
-
 	// Cubes -------------
 	Cubes[0] = cube_create(vec3f32( 0.0f,  0.0f,  0.0f), vec3f32(1.0f, 0.0f, 0.0f));
 	Cubes[1] = cube_create(vec3f32( 0.0f,  0.0f, -5.0f), vec3f32(0.0f, 1.0f, 0.0f));
@@ -105,18 +118,33 @@ int main(void) {
 	Cubes[8] = cube_create(vec3f32(-5.0f, -5.0f, -5.0f), vec3f32(0.0f, 0.0f, 0.0f));
 	Cubes[9] = cube_create(vec3f32( 5.0f, -5.0f, -5.0f), vec3f32(0.0f, 1.0f, 1.0f));
 
-	u32 VBO_cube, VAO_cube, EBO_cube;
-	glGenVertexArrays(1, &VAO_cube);
-	glGenBuffers(1, &VBO_cube);
-	glGenBuffers(1, &EBO_cube);
+	Shader cube_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());
+	cube_program_init(cube_program);
 
-	glBindVertexArray(VAO_cube);
+	// Far plane --------
+	f32 var_plane_vertices[] = {
+		// Front face
+		-10.f, -10.f, -100.f,  // 0
+		 10.f, -10.f, -100.f,  // 1
+		 10.f,  10.f, -100.f,  // 2
+		-10.f,  10.f, -100.f,  // 3
+	};
+	u32 far_plane_indices[] = {
+		0, 1, 2, 2, 3, 0
+	};
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_cube);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	u32 VAO_far, VBO_far, EBO_far;
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_cube);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	glGenVertexArrays(1, &VAO_far);
+	glGenBuffers(1, &VBO_far);
+	glGenBuffers(1, &EBO_far);
+
+	glBindVertexArray(VAO_far);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_far);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_far);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(var_plane_vertices), var_plane_vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(far_plane_indices), far_plane_indices, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, 3 * sizeof(f32), (void*)0);
 	glEnableVertexAttribArray(0);
@@ -126,14 +154,15 @@ int main(void) {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	// Axis -------------
+	Shader lines_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER_LINE_COLOR_FROM_VERTEX());
 	f32 lenxyz = 16.0f;
 	f32 xyz[] = {
-	  lenxyz,    0.0f,    0.0f, 1.0f, 0.0f, 0.0f, //  X
+		lenxyz,    0.0f,    0.0f, 1.0f, 0.0f, 0.0f, //  X
 	 -lenxyz,    0.0f,    0.0f, 1.0f, 0.0f, 0.0f, // -X
-		  0.0f,  lenxyz,    0.0f, 0.0f, 1.0f, 0.0f, //  Y
-		  0.0f, -lenxyz,    0.0f, 0.0f, 1.0f, 0.0f, // -Y
-		  0.0f,    0.0f,  lenxyz, 0.0f, 0.0f, 1.0f, //  Z
-		  0.0f,    0.0f, -lenxyz, 0.0f, 0.0f, 1.0f  // -Z
+			0.0f,  lenxyz,    0.0f, 0.0f, 1.0f, 0.0f, //  Y
+			0.0f, -lenxyz,    0.0f, 0.0f, 1.0f, 0.0f, // -Y
+			0.0f,    0.0f,  lenxyz, 0.0f, 0.0f, 1.0f, //  Z
+			0.0f,    0.0f, -lenxyz, 0.0f, 0.0f, 1.0f  // -Z
 	};
 
 	u32 VBO_axis, VAO_axis;
@@ -196,6 +225,25 @@ int main(void) {
 		Mat4f32 look_at = look_at_mat4f32(camera.position, add_vec3f32(camera.position, camera.front), camera.up);
 		view = mul_mat4f32(look_at, view);
 
+		// far plane, to test intersections
+		shader_use(cube_program);
+		{
+			glBindVertexArray(VAO_far);
+			glBindBuffer(GL_ARRAY_BUFFER, VBO_far);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_far);
+
+			shader_set_uniform_mat4fv(cube_program, "view", view);
+			shader_set_uniform_mat4fv(cube_program, "projection", projection);
+			shader_set_uniform_mat4fv(cube_program, "model", mat4f32(1.0f));
+			shader_set_uniform_vec3fv(cube_program, "color", vec3f32(0.0f, 0.0f, 1.0f));
+
+			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+			glBindVertexArray(0);			
+		}
+
 		shader_use(lines_program);
 		{
 			glLineWidth(2.0f);
@@ -235,6 +283,15 @@ int main(void) {
 			}
 			glBufferData(GL_ARRAY_BUFFER, sizeof(cursor_ray), cursor_ray, GL_STATIC_DRAW);
 
+			Vec3f32 ray_direction = sub_vec3f32(vec3f32(cursor_ray[6], cursor_ray[7], cursor_ray[8]),
+																					vec3f32(cursor_ray[0], cursor_ray[1], cursor_ray[2]));
+
+			Vec3f32 far_1 = vec3f32(0.0f, 0.0f, -100.0f);
+			Vec3f32 far_2 = vec3f32(5.0f, 5.0f, -100.0f);
+			Vec3f32 far_3 = vec3f32(0.0f, 5.0f, -100.0f);
+			Vec3f32 intersect = intersectLinePlane(linef32(vec3f32(cursor_ray[0], cursor_ray[1], cursor_ray[2]), ray_direction), far_1, far_2, far_3);
+			print_vec3f32(intersect, "Far plane ray intersection:");
+
 			Mat4f32 model = mat4f32(1.0f);
 			shader_set_uniform_mat4fv(lines_program, "model", model);
 			shader_set_uniform_mat4fv(lines_program, "view", view);
@@ -244,51 +301,39 @@ int main(void) {
 
 			glBindVertexArray(0);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+			Cube cube = cube_create(intersect, vec3f32(1.0f, 0.0f, 0.0f));
+			cube_scale(&cube, vec3f32(0.25f, 0.25f, 0.25f));
+			cube_program_draw(cube, view, projection);
 		}
 
 		shader_use(cube_program);
 		{
-			glBindVertexArray(VAO_cube);
-			glBindBuffer(GL_ARRAY_BUFFER, VBO_cube);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_cube);
-
-			glLineWidth(1.0f); // For wireframe
+			glLineWidth(1.0f);
 
 			for(u32 i = 0; i < ArrayCount(Cubes); i++) {
 				Cube cube = Cubes[i];
 				cube_rotate(&cube, vec3f32(1.0f, 0.3f, 0.5f), (f32)glfwGetTime()*sin(i));
 				
-				Mat4f32 cube_world_space_transform = mul_mat4f32(view, cube.transform);
-
-				shader_set_uniform_mat4fv(cube_program, "view", view);
-				shader_set_uniform_mat4fv(cube_program, "projection", projection);
-				shader_set_uniform_mat4fv(cube_program, "model", cube.transform);
-
 				if (SelectedCube == i) {
 					glLineWidth(3.0f);
 					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-				} else {
-					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 				}
 
-				shader_set_uniform_vec3fv(cube_program, "color", cube.color);
+				cube_program_draw(cube, view, projection);
 
-				glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-				glLineWidth(1.0f);
+				if (SelectedCube == i) {
+					glLineWidth(1.0f);
+					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				}
 			}
-
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-			glBindVertexArray(0);
 		}
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 
-	glDeleteVertexArrays(1, &VAO_cube);
-	glDeleteBuffers(1, &VBO_cube);
-	glDeleteBuffers(1, &EBO_cube);
+	cube_program_clean();
 
 	glDeleteVertexArrays(1, &VAO_axis);
 	glDeleteBuffers(1, &VBO_axis);

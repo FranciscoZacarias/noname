@@ -1,32 +1,28 @@
 #ifndef CUBE_H
 #define CUBE_H
 
-typedef struct Cube {
-  Mat4f32 transform;
-  Vec3f32 color;
-} Cube;
+typedef struct CubeProgram {
+  Shader shader_program;
+  u32 VAO;
+  u32 VBO;
+  u32 EBO;
+} CubeProgram;
 
-typedef struct CubeFace {
-  Vec3f32 a;
-  Vec3f32 b;
-  Vec3f32 c;
-  Vec3f32 d;
-} CubeFace;
+global CubeProgram CubeProgramObject = { 0 };
 
-// Vertices and indices that define cubes in local space ----
-f32 vertices[] = {
+global f32 CubeObjectVertices[] = {
   // Front face
-  -0.5f, -0.5f,  0.5f,  // 0
-   0.5f, -0.5f,  0.5f,  // 1
-   0.5f,  0.5f,  0.5f,  // 2
-  -0.5f,  0.5f,  0.5f,  // 3
+  -1.f, -1.f,  1.f,  // 0
+   1.f, -1.f,  1.f,  // 1
+   1.f,  1.f,  1.f,  // 2
+  -1.f,  1.f,  1.f,  // 3
   // Back face
-  -0.5f, -0.5f, -0.5f,  // 4
-   0.5f, -0.5f, -0.5f,  // 5
-   0.5f,  0.5f, -0.5f,  // 6
-  -0.5f,  0.5f, -0.5f   // 7
+  -1.f, -1.f, -1.f,  // 4
+   1.f, -1.f, -1.f,  // 5
+   1.f,  1.f, -1.f,  // 6
+  -1.f,  1.f, -1.f   // 7
 };
-u32 indices[] = {
+global u32 CubeObjectIndices[] = {
   0, 1, 2, 2, 3, 0,  // Front face
   1, 5, 6, 6, 2, 1,  // Right face
   5, 4, 7, 7, 6, 5,  // Back face
@@ -35,11 +31,20 @@ u32 indices[] = {
   4, 5, 1, 1, 0, 4   // Bottom face
 };
 
+typedef struct Cube { 
+  Mat4f32 transform;
+  Vec3f32 color;
+} Cube;
+
+function void cube_program_init(Shader shader);
+function void cube_program_draw(Cube cube, Mat4f32 view, Mat4f32 projection);
+function void cube_program_clean();
+
 function Cube cube_create(Vec3f32 position, Vec3f32 color);
 function void cube_translate(Cube* cube, Vec3f32 translation);
 function void cube_rotate(Cube* cube, Vec3f32 axis, f32 radians);
 function void cube_scale(Cube* cube, Vec3f32 scale);
 
-function CubeFace cube_get_face(Cube cube, u32 face_nr);
+function 
 
 #endif // CUBE_H

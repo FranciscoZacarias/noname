@@ -1,4 +1,12 @@
 //////////////////////////////////////////////
+// Generic math
+
+function Linef32 linef32(Vec3f32 point, Vec3f32 direction) {
+	Linef32 result = {point, direction};
+	return result;
+}
+
+//////////////////////////////////////////////
 // Vector3 f32
 
 function Vec3f32 vec3f32(f32 x, f32 y, f32 z) {

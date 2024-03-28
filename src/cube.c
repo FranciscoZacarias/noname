@@ -1,4 +1,49 @@
 
+function void cube_program_init(Shader shader) {
+	CubeProgramObject.shader_program = shader;
+
+	glGenVertexArrays(1, &CubeProgramObject.VAO);
+	glGenBuffers(1, &CubeProgramObject.VBO);
+	glGenBuffers(1, &CubeProgramObject.EBO);
+
+	glBindVertexArray(CubeProgramObject.VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, CubeProgramObject.VBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, CubeProgramObject.EBO);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(CubeObjectVertices), CubeObjectVertices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(CubeObjectIndices), CubeObjectIndices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, 3 * sizeof(f32), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+function void cube_program_draw(Cube cube, Mat4f32 view, Mat4f32 projection) {
+	glBindVertexArray(CubeProgramObject.VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, CubeProgramObject.VBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, CubeProgramObject.EBO);
+
+	shader_set_uniform_mat4fv(CubeProgramObject.shader_program, "view", view);
+	shader_set_uniform_mat4fv(CubeProgramObject.shader_program, "projection", projection);
+	shader_set_uniform_mat4fv(CubeProgramObject.shader_program, "model", cube.transform);
+	shader_set_uniform_vec3fv(CubeProgramObject.shader_program, "color", cube.color);
+
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+}
+
+function void cube_program_clean() {
+	glDeleteVertexArrays(1, &CubeProgramObject.VAO);
+	glDeleteBuffers(1, &CubeProgramObject.VBO);
+	glDeleteBuffers(1, &CubeProgramObject.EBO);
+}
+
 function Cube cube_create(Vec3f32 position, Vec3f32 color) {
 	Cube result = { 0 };
 	result.transform = translate_mat4f32(position.x, position.y, position.z);
@@ -19,17 +64,4 @@ function void cube_rotate(Cube* cube, Vec3f32 axis, f32 radians) {
 function void cube_scale(Cube* cube, Vec3f32 scale) {
 	Mat4f32 scalar = scale_mat4f32(scale.x, scale.y, scale.z);
 	cube->transform = mul_mat4f32(scalar, cube->transform);
-}
-
-function CubeFace cube_get_face(Cube cube, u32 face_nr) {
-	CubeFace result = { 0 };
-	if (face_nr < 0 || face_nr >= 6) {
-		printf("ERROR: Tried to get face nr %d of cube", face_nr);
-		return result;
-	}
-
-	result.a = vec3f32(vertices
-	result.b = vec3f32(
-	result.c = vec3f32(
-	result.d = vec3f32(
 }
