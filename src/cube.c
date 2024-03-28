@@ -20,3 +20,16 @@ function void cube_scale(Cube* cube, Vec3f32 scale) {
 	Mat4f32 scalar = scale_mat4f32(scale.x, scale.y, scale.z);
 	cube->transform = mul_mat4f32(scalar, cube->transform);
 }
+
+function CubeFace cube_get_face(Cube cube, u32 face_nr) {
+	CubeFace result = { 0 };
+	if (face_nr < 0 || face_nr >= 6) {
+		printf("ERROR: Tried to get face nr %d of cube", face_nr);
+		return result;
+	}
+
+	result.a = vec3f32(vertices
+	result.b = vec3f32(
+	result.c = vec3f32(
+	result.d = vec3f32(
+}

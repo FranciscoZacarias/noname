@@ -32,7 +32,31 @@ global f32 LastFrame = 0.0f;
 global u32 SelectedCube = 0;
 global Cube Cubes[10];
 
-int main() {
+function Vec3f32 line_plane_intersect(Vec3f32 ray, Vec3f32 planePoint1, Vec3f32 planePoint2, Vec3f32 planePoint3) {
+    Vec3f32 planeNormal = cross_vec3f32(vec3f32(planePoint2.x - planePoint1.x, planePoint2.y - planePoint1.y, planePoint2.z - planePoint1.z),
+                                       vec3f32(planePoint3.x - planePoint1.x, planePoint3.y - planePoint1.y, planePoint3.z - planePoint1.z));
+    f32 dotProductValue = dot_vec3f32(ray, planeNormal);
+    
+    // Check if the line is parallel to the plane
+    if (dotProductValue == 0) {
+        printf("The line is parallel to the plane.\n");
+        return (Vec3f32){0.0f, 0.0f, 0.0f}; // Return a zero vector indicating no intersection
+    }
+    
+    // Calculate parameter t
+    Vec3f32 lineToPlaneVector = {line_start.x - planePoint1.x, line_start.y - planePoint1.y, line_start.z - planePoint1.z};
+    f32 t = -dot_vec3f32(lineToPlaneVector, planeNormal) / dotProductValue;
+    
+    // Calculate intersection point
+    Vec3f32 intersectionPoint = { 0 };
+    intersectionPoint.x = line_start.x + t * ray.x;
+    intersectionPoint.y = line_start.y + t * ray.y;
+    intersectionPoint.z = line_start.z + t * ray.z;
+    
+    return intersectionPoint;
+}
+
+int main(void) {
 
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -81,40 +105,6 @@ int main() {
 	Cubes[8] = cube_create(vec3f32(-5.0f, -5.0f, -5.0f), vec3f32(0.0f, 0.0f, 0.0f));
 	Cubes[9] = cube_create(vec3f32( 5.0f, -5.0f, -5.0f), vec3f32(0.0f, 1.0f, 1.0f));
 
-	f32 vertices[] = {
-		// Front face
-		-0.5f, -0.5f,  0.5f,  // 0
-		 0.5f, -0.5f,  0.5f,  // 1
-		 0.5f,  0.5f,  0.5f,  // 2
-		-0.5f,  0.5f,  0.5f,  // 3
-		// Back face
-		-0.5f, -0.5f, -0.5f,  // 4
-		 0.5f, -0.5f, -0.5f,  // 5
-		 0.5f,  0.5f, -0.5f,  // 6
-		-0.5f,  0.5f, -0.5f   // 7
-	};
-
-	u32 indices[] = {
-		// Front face
-		0, 1, 2,
-		2, 3, 0,
-		// Right face
-		1, 5, 6,
-		6, 2, 1,
-		// Back face
-		5, 4, 7,
-		7, 6, 5,
-		// Left face
-		4, 0, 3,
-		3, 7, 4,
-		// Top face
-		3, 2, 6,
-		6, 7, 3,
-		// Bottom face
-		4, 5, 1,
-		1, 0, 4
-	};
-
 	u32 VBO_cube, VAO_cube, EBO_cube;
 	glGenVertexArrays(1, &VAO_cube);
 	glGenBuffers(1, &VBO_cube);
@@ -134,7 +124,6 @@ int main() {
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
 
 	// Axis -------------
 	f32 lenxyz = 16.0f;
@@ -225,6 +214,38 @@ int main() {
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}
 
+		Vec3f32 raycast = { 0 };
+		shader_use(lines_program);
+		{
+			glBindVertexArray(VAO_ray);
+			glBindBuffer(GL_ARRAY_BUFFER, VBO_ray);
+
+			glLineWidth(3.0f);
+
+			raycast = unproject_vec3f32(vec3f32(Mouse.ndc_x, Mouse.ndc_y, 1.0f), projection, view);
+
+			if (LeftMouseButton) {
+				cursor_ray[0] = camera.position.x;
+				cursor_ray[1] = camera.position.y;
+				cursor_ray[2] = camera.position.z;
+
+				cursor_ray[6] = raycast.x;
+				cursor_ray[7] = raycast.y;
+				cursor_ray[8] = raycast.z;
+			}
+			glBufferData(GL_ARRAY_BUFFER, sizeof(cursor_ray), cursor_ray, GL_STATIC_DRAW);
+
+			Mat4f32 model = mat4f32(1.0f);
+			shader_set_uniform_mat4fv(lines_program, "model", model);
+			shader_set_uniform_mat4fv(lines_program, "view", view);
+			shader_set_uniform_mat4fv(lines_program, "projection", projection);
+
+			glDrawArrays(GL_LINES, 0, 2);
+
+			glBindVertexArray(0);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+		}
+
 		shader_use(cube_program);
 		{
 			glBindVertexArray(VAO_cube);
@@ -236,6 +257,8 @@ int main() {
 			for(u32 i = 0; i < ArrayCount(Cubes); i++) {
 				Cube cube = Cubes[i];
 				cube_rotate(&cube, vec3f32(1.0f, 0.3f, 0.5f), (f32)glfwGetTime()*sin(i));
+				
+				Mat4f32 cube_world_space_transform = mul_mat4f32(view, cube.transform);
 
 				shader_set_uniform_mat4fv(cube_program, "view", view);
 				shader_set_uniform_mat4fv(cube_program, "projection", projection);
@@ -258,41 +281,6 @@ int main() {
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 			glBindVertexArray(0);
 		}
-
-		shader_use(lines_program);
-		{
-			glBindVertexArray(VAO_ray);
-			glBindBuffer(GL_ARRAY_BUFFER, VBO_ray);
-
-			glLineWidth(3.0f);
-
-			printf("Mouse ScreenSpace (%.2f, %.2f), ", Mouse.screen_space_x, Mouse.screen_space_y);
-			printf("Mouse NDC (%.2f, %.2f)", Mouse.ndc_x, Mouse.ndc_y);
-			Vec3f32 unproj = unproject_vec3f32(vec3f32(Mouse.ndc_x, Mouse.ndc_y, 1.0f), projection, view);
-			print_vec3f32(unproj, "Unprojected:");
-
-			if (LeftMouseButton) {
-				cursor_ray[0] = camera.position.x;
-				cursor_ray[1] = camera.position.y;
-				cursor_ray[2] = camera.position.z;
-
-				cursor_ray[6] = unproj.x;
-				cursor_ray[7] = unproj.y;
-				cursor_ray[8] = unproj.z;
-			}
-			glBufferData(GL_ARRAY_BUFFER, sizeof(cursor_ray), cursor_ray, GL_STATIC_DRAW);
-
-			Mat4f32 model = mat4f32(1.0f);
-			shader_set_uniform_mat4fv(lines_program, "model", model);
-			shader_set_uniform_mat4fv(lines_program, "view", view);
-			shader_set_uniform_mat4fv(lines_program, "projection", projection);
-
-			glDrawArrays(GL_LINES, 0, 2);
-
-			glBindVertexArray(0);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-		}
-
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
