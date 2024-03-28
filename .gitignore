@@ -2,6 +2,4 @@
 build/
 debug.bat
 noname.rdbg
-src/external/linmath.h
-src/external/base_math.h
-src/external/base_math.c
+.gitignore
