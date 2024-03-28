@@ -1,6 +1,6 @@
 
-function void cube_program_init(Shader shader) {
-	CubeProgramObject.shader_program = shader;
+function void cube_program_init() {
+	CubeProgramObject.shader_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());
 
 	glGenVertexArrays(1, &CubeProgramObject.VAO);
 	glGenBuffers(1, &CubeProgramObject.VBO);
@@ -22,6 +22,8 @@ function void cube_program_init(Shader shader) {
 }
 
 function void cube_program_draw(Cube cube, Mat4f32 view, Mat4f32 projection) {
+	shader_use(CubeProgramObject.shader_program);
+
 	glBindVertexArray(CubeProgramObject.VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, CubeProgramObject.VBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, CubeProgramObject.EBO);

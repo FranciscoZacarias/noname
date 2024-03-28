@@ -72,6 +72,38 @@ Vec3f32 intersectLinePlane(Linef32 line, Vec3f32 point1, Vec3f32 point2, Vec3f32
 		return result;
 }
 
+function b32 is_vector_inside_rectangle(Vec3f32 p, Vec3f32 a, Vec3f32 b, Vec3f32 c) {
+	/*
+	b                  c
+	+------------------+
+	|    |
+	|    |
+	|----+p
+	|
+	+
+	a
+	*/
+	b32 result = 0;
+
+	Vec3f32 ab = sub_vec3f32(a, b); // lm
+	Vec3f32 bc = sub_vec3f32(b, c); // mn
+	Vec3f32 ap = sub_vec3f32(a, p); // lp
+	Vec3f32 bp = sub_vec3f32(b, p); // mp
+
+	f32 abap = dot_vec3f32(ab, ap);
+	f32 abab = dot_vec3f32(ab, ab);
+	f32 bcbp = dot_vec3f32(bc, bp);
+	f32 bcbc = dot_vec3f32(bc, bc);
+	
+
+	if (0 <= abap && abap <= abab &&
+			0 <= bcbp && bcbp <= bcbc) {
+			result = 1;
+	}
+
+	return result;
+}
+
 int main(void) {
 
 	glfwInit();
@@ -118,8 +150,7 @@ int main(void) {
 	Cubes[8] = cube_create(vec3f32(-5.0f, -5.0f, -5.0f), vec3f32(0.0f, 0.0f, 0.0f));
 	Cubes[9] = cube_create(vec3f32( 5.0f, -5.0f, -5.0f), vec3f32(0.0f, 1.0f, 1.0f));
 
-	Shader cube_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());
-	cube_program_init(cube_program);
+	cube_program_init();
 
 	// Far plane --------
 	f32 var_plane_vertices[] = {
@@ -226,16 +257,16 @@ int main(void) {
 		view = mul_mat4f32(look_at, view);
 
 		// far plane, to test intersections
-		shader_use(cube_program);
+		shader_use(CubeProgramObject.shader_program);
 		{
 			glBindVertexArray(VAO_far);
 			glBindBuffer(GL_ARRAY_BUFFER, VBO_far);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_far);
 
-			shader_set_uniform_mat4fv(cube_program, "view", view);
-			shader_set_uniform_mat4fv(cube_program, "projection", projection);
-			shader_set_uniform_mat4fv(cube_program, "model", mat4f32(1.0f));
-			shader_set_uniform_vec3fv(cube_program, "color", vec3f32(0.0f, 0.0f, 1.0f));
+			shader_set_uniform_mat4fv(CubeProgramObject.shader_program, "view", view);
+			shader_set_uniform_mat4fv(CubeProgramObject.shader_program, "projection", projection);
+			shader_set_uniform_mat4fv(CubeProgramObject.shader_program, "model", mat4f32(1.0f));
+			shader_set_uniform_vec3fv(CubeProgramObject.shader_program, "color", vec3f32(0.0f, 0.0f, 1.0f));
 
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
@@ -292,6 +323,7 @@ int main(void) {
 			Vec3f32 intersect = intersectLinePlane(linef32(vec3f32(cursor_ray[0], cursor_ray[1], cursor_ray[2]), ray_direction), far_1, far_2, far_3);
 			print_vec3f32(intersect, "Far plane ray intersection:");
 
+
 			Mat4f32 model = mat4f32(1.0f);
 			shader_set_uniform_mat4fv(lines_program, "model", model);
 			shader_set_uniform_mat4fv(lines_program, "view", view);
@@ -302,12 +334,17 @@ int main(void) {
 			glBindVertexArray(0);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-			Cube cube = cube_create(intersect, vec3f32(1.0f, 0.0f, 0.0f));
-			cube_scale(&cube, vec3f32(0.25f, 0.25f, 0.25f));
+
+			Cube cube = cube_create(intersect, vec3f32(0.0f, 0.0f, 0.0f));
+			if (is_vector_inside_rectangle(intersect, vec3f32(-10.f, -10.f, -100.f), vec3f32(10.f, -10.f, -100.f), vec3f32(10.f,  10.f, -100.f))) {
+				printf("INTERSECT!!!\n");
+				cube.color = vec3f32(0.0f, 1.0f, 0.0);
+			}
+			print_vec3f32(cube.color, "color");
+			cube_scale(&cube, vec3f32(1.0f, 1.0f, 1.0f));
 			cube_program_draw(cube, view, projection);
 		}
 
-		shader_use(cube_program);
 		{
 			glLineWidth(1.0f);
 
