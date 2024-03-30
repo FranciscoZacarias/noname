@@ -42,10 +42,10 @@ typedef struct Mat4f32 {
   union {
     f32 data[4][4];
     struct {
-      f32 m0, m4, m8,  m12;
-      f32 m1, m5, m9,  m13;
-      f32 m2, m6, m10, m14;
-      f32 m3, m7, m11, m15;
+      f32 m0, m4, m8,  m12,
+          m1, m5, m9,  m13,
+          m2, m6, m10, m14,
+          m3, m7, m11, m15;
     };
   };
 } Mat4f32;
@@ -53,17 +53,18 @@ typedef struct Mat4f32 {
 //////////////////////////////////////////////
 // Generic Math 
 
-typedef struct Linef32 {
+typedef struct Line3f32 {
   Vec3f32 point;
   Vec3f32 direction;
-} Linef32;
+} Line3f32;
 
-function Linef32 linef32(Vec3f32 point, Vec3f32 direction);
+function Line3f32 linef32(Vec3f32 point, Vec3f32 direction);
 
 //////////////////////////////////////////////
 // Vector3 f32 
 
 function Vec3f32 vec3f32(f32 x, f32 y, f32 z);
+function Vec3f32 vec3f32_from_vec4f32(Vec4f32 v);
 function void print_vec3f32(Vec3f32 v, const char* label);
 
 function Vec3f32 add_vec3f32(Vec3f32 a, Vec3f32 b);
@@ -94,6 +95,7 @@ function Vec4f32 add_vec4f32(Vec4f32 a, Vec4f32 b);
 function Vec4f32 sub_vec4f32(Vec4f32 a, Vec4f32 b);
 function Vec4f32 mul_vec4f32(Vec4f32 a, Vec4f32 b);
 function Vec4f32 div_vec4f32(Vec4f32 a, Vec4f32 b);
+function Vec4f32 mul_vec4f32_mat4f32(Vec4f32 v, Mat4f32 m);
 
 function Vec4f32 scale_vec4f32(Vec4f32 v, f32 scalar);
 function Vec4f32 normalize_vec4f32(Vec4f32 v);

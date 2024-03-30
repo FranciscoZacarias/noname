@@ -10,7 +10,7 @@ function void cube_program_init() {
 	glBindBuffer(GL_ARRAY_BUFFER, CubeProgramObject.VBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, CubeProgramObject.EBO);
 
-	glBufferData(GL_ARRAY_BUFFER, sizeof(CubeObjectVertices), CubeObjectVertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(CubeObjectVerticesLocalSpace), CubeObjectVerticesLocalSpace, GL_STATIC_DRAW);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(CubeObjectIndices), CubeObjectIndices, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, 3 * sizeof(f32), (void*)0);

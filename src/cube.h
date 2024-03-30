@@ -10,25 +10,32 @@ typedef struct CubeProgram {
 
 global CubeProgram CubeProgramObject = { 0 };
 
-global f32 CubeObjectVertices[] = {
-  // Front face
-  -1.f, -1.f,  1.f,  // 0
-   1.f, -1.f,  1.f,  // 1
-   1.f,  1.f,  1.f,  // 2
-  -1.f,  1.f,  1.f,  // 3
-  // Back face
-  -1.f, -1.f, -1.f,  // 4
-   1.f, -1.f, -1.f,  // 5
-   1.f,  1.f, -1.f,  // 6
-  -1.f,  1.f, -1.f   // 7
+/*
+3,7   2,6
++-----+
+|     |
+|     |
++-----+
+0,4   1,5
+*/
+global f32 CubeObjectVerticesLocalSpace[] = {
+  -1.f, -1.f,  1.f, // 0 Back  face
+   1.f, -1.f,  1.f, // 1 Back  face
+   1.f,  1.f,  1.f, // 2 Back  face
+  -1.f,  1.f,  1.f, // 3 Back  face
+  -1.f, -1.f, -1.f, // 4 Front face
+   1.f, -1.f, -1.f, // 5 Front face
+   1.f,  1.f, -1.f, // 6 Front face
+  -1.f,  1.f, -1.f  // 7 Front face
 };
+
 global u32 CubeObjectIndices[] = {
-  0, 1, 2, 2, 3, 0,  // Front face
-  1, 5, 6, 6, 2, 1,  // Right face
-  5, 4, 7, 7, 6, 5,  // Back face
-  4, 0, 3, 3, 7, 4,  // Left face
-  3, 2, 6, 6, 7, 3,  // Top face
-  4, 5, 1, 1, 0, 4   // Bottom face
+  0, 1, 2, 2, 3, 0, // Back
+  1, 5, 6, 6, 2, 1, // Right
+  5, 4, 7, 7, 6, 5, // Front
+  4, 0, 3, 3, 7, 4, // Left
+  3, 2, 6, 6, 7, 3, // Top
+  4, 5, 1, 1, 0, 4  // Bottom
 };
 
 typedef struct Cube { 

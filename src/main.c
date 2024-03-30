@@ -18,21 +18,25 @@ typedef struct MouseState {
 
 	f32 ndc_x;
 	f32 ndc_y;
-
 } MouseState;
 
 global MouseState Mouse = { 0 };
 
-global b32 RightMouseButton = 0;
+typedef enum CameraMode {
+	CameraMode_Select,
+	CameraMode_Fly
+} CameraMode;
+
+global CameraMode ActiveCameraMode = CameraMode_Select;
 global b32 LeftMouseButton = 0;
 
 global f32 DeltaTime = 0.0f;
 global f32 LastFrame = 0.0f;
 
-global u32 SelectedCube = 0;
+global u32 SelectedCube = U32_MAX;
 global Cube Cubes[10];
 
-Vec3f32 intersectLinePlane(Linef32 line, Vec3f32 point1, Vec3f32 point2, Vec3f32 point3) {
+Vec3f32 intersect_line_with_plane(Line3f32 line, Vec3f32 point1, Vec3f32 point2, Vec3f32 point3) {
 		Vec3f32 result = vec3f32(F32_MAX, F32_MAX, F32_MAX);
 
 		Vec3f32 plane_v1 = vec3f32(point2.x - point1.x,
@@ -73,31 +77,19 @@ Vec3f32 intersectLinePlane(Linef32 line, Vec3f32 point1, Vec3f32 point2, Vec3f32
 }
 
 function b32 is_vector_inside_rectangle(Vec3f32 p, Vec3f32 a, Vec3f32 b, Vec3f32 c) {
-	/*
-	b                  c
-	+------------------+
-	|    |
-	|    |
-	|----+p
-	|
-	+
-	a
-	*/
 	b32 result = 0;
 
-	Vec3f32 ab = sub_vec3f32(a, b); // lm
-	Vec3f32 bc = sub_vec3f32(b, c); // mn
-	Vec3f32 ap = sub_vec3f32(a, p); // lp
-	Vec3f32 bp = sub_vec3f32(b, p); // mp
+	Vec3f32 ab = sub_vec3f32(a, b);
+	Vec3f32 bc = sub_vec3f32(b, c);
+	Vec3f32 ap = sub_vec3f32(a, p);
+	Vec3f32 bp = sub_vec3f32(b, p);
 
 	f32 abap = dot_vec3f32(ab, ap);
 	f32 abab = dot_vec3f32(ab, ab);
 	f32 bcbp = dot_vec3f32(bc, bp);
 	f32 bcbc = dot_vec3f32(bc, bc);
-	
 
-	if (0 <= abap && abap <= abab &&
-			0 <= bcbp && bcbp <= bcbc) {
+	if (0 <= abap && abap <= abab && 0 <= bcbp && bcbp <= bcbc) {
 			result = 1;
 	}
 
@@ -129,6 +121,7 @@ int main(void) {
 
 	glEnable(GL_DEPTH_TEST);
 
+	// Camera and Mouse -----------
 	camera = camera_create();
 	LastX  = WindowWidth / 2.0f;
 	LastY  = WindowHeight / 2.0f;
@@ -149,40 +142,7 @@ int main(void) {
 	Cubes[7] = cube_create(vec3f32( 5.0f,  5.0f,  5.0f), vec3f32(0.5f, 0.0f, 1.0f));
 	Cubes[8] = cube_create(vec3f32(-5.0f, -5.0f, -5.0f), vec3f32(0.0f, 0.0f, 0.0f));
 	Cubes[9] = cube_create(vec3f32( 5.0f, -5.0f, -5.0f), vec3f32(0.0f, 1.0f, 1.0f));
-
 	cube_program_init();
-
-	// Far plane --------
-	f32 var_plane_vertices[] = {
-		// Front face
-		-10.f, -10.f, -100.f,  // 0
-		 10.f, -10.f, -100.f,  // 1
-		 10.f,  10.f, -100.f,  // 2
-		-10.f,  10.f, -100.f,  // 3
-	};
-	u32 far_plane_indices[] = {
-		0, 1, 2, 2, 3, 0
-	};
-
-	u32 VAO_far, VBO_far, EBO_far;
-
-	glGenVertexArrays(1, &VAO_far);
-	glGenBuffers(1, &VBO_far);
-	glGenBuffers(1, &EBO_far);
-
-	glBindVertexArray(VAO_far);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_far);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_far);
-
-	glBufferData(GL_ARRAY_BUFFER, sizeof(var_plane_vertices), var_plane_vertices, GL_STATIC_DRAW);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(far_plane_indices), far_plane_indices, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, 3 * sizeof(f32), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	// Axis -------------
 	Shader lines_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER_LINE_COLOR_FROM_VERTEX());
@@ -248,33 +208,21 @@ int main(void) {
 		glClearColor(0.5f, 0.9f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		Mat4f32 projection = mat4f32(1.0f);
-		Mat4f32 perspective = perspective_mat4f32(Radians(45), AspectRatio, 0.1f, 100.0f);
-		projection = mul_mat4f32(perspective, projection);
-
+		// View
 		Mat4f32 view = mat4f32(1.0f);
 		Mat4f32 look_at = look_at_mat4f32(camera.position, add_vec3f32(camera.position, camera.front), camera.up);
 		view = mul_mat4f32(look_at, view);
 
-		// far plane, to test intersections
-		shader_use(CubeProgramObject.shader_program);
-		{
-			glBindVertexArray(VAO_far);
-			glBindBuffer(GL_ARRAY_BUFFER, VBO_far);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_far);
+		// Projection 
+		Mat4f32 projection = mat4f32(1.0f);
+		Mat4f32 perspective = perspective_mat4f32(Radians(45), AspectRatio, 0.1f, 100.0f);
+		projection = mul_mat4f32(perspective, projection);
 
-			shader_set_uniform_mat4fv(CubeProgramObject.shader_program, "view", view);
-			shader_set_uniform_mat4fv(CubeProgramObject.shader_program, "projection", projection);
-			shader_set_uniform_mat4fv(CubeProgramObject.shader_program, "model", mat4f32(1.0f));
-			shader_set_uniform_vec3fv(CubeProgramObject.shader_program, "color", vec3f32(0.0f, 0.0f, 1.0f));
+		// Raycast
+		Vec3f32 raycast = unproject_vec3f32(vec3f32(Mouse.ndc_x, Mouse.ndc_y, 1.0f), projection, view);
+		Vec3f32 ray_direction = sub_vec3f32(vec3f32(raycast.x, raycast.y, raycast.z), vec3f32(camera.position.x, camera.position.y, camera.position.z));
 
-			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-			glBindVertexArray(0);			
-		}
-
+		// Draw Axis
 		shader_use(lines_program);
 		{
 			glLineWidth(2.0f);
@@ -293,76 +241,41 @@ int main(void) {
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}
 
-		Vec3f32 raycast = { 0 };
-		shader_use(lines_program);
-		{
-			glBindVertexArray(VAO_ray);
-			glBindBuffer(GL_ARRAY_BUFFER, VBO_ray);
-
-			glLineWidth(3.0f);
-
-			raycast = unproject_vec3f32(vec3f32(Mouse.ndc_x, Mouse.ndc_y, 1.0f), projection, view);
-
-			if (LeftMouseButton) {
-				cursor_ray[0] = camera.position.x;
-				cursor_ray[1] = camera.position.y;
-				cursor_ray[2] = camera.position.z;
-
-				cursor_ray[6] = raycast.x;
-				cursor_ray[7] = raycast.y;
-				cursor_ray[8] = raycast.z;
-			}
-			glBufferData(GL_ARRAY_BUFFER, sizeof(cursor_ray), cursor_ray, GL_STATIC_DRAW);
-
-			Vec3f32 ray_direction = sub_vec3f32(vec3f32(cursor_ray[6], cursor_ray[7], cursor_ray[8]),
-																					vec3f32(cursor_ray[0], cursor_ray[1], cursor_ray[2]));
-
-			Vec3f32 far_1 = vec3f32(0.0f, 0.0f, -100.0f);
-			Vec3f32 far_2 = vec3f32(5.0f, 5.0f, -100.0f);
-			Vec3f32 far_3 = vec3f32(0.0f, 5.0f, -100.0f);
-			Vec3f32 intersect = intersectLinePlane(linef32(vec3f32(cursor_ray[0], cursor_ray[1], cursor_ray[2]), ray_direction), far_1, far_2, far_3);
-			print_vec3f32(intersect, "Far plane ray intersection:");
-
-
-			Mat4f32 model = mat4f32(1.0f);
-			shader_set_uniform_mat4fv(lines_program, "model", model);
-			shader_set_uniform_mat4fv(lines_program, "view", view);
-			shader_set_uniform_mat4fv(lines_program, "projection", projection);
-
-			glDrawArrays(GL_LINES, 0, 2);
-
-			glBindVertexArray(0);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-
-			Cube cube = cube_create(intersect, vec3f32(0.0f, 0.0f, 0.0f));
-			if (is_vector_inside_rectangle(intersect, vec3f32(-10.f, -10.f, -100.f), vec3f32(10.f, -10.f, -100.f), vec3f32(10.f,  10.f, -100.f))) {
-				printf("INTERSECT!!!\n");
-				cube.color = vec3f32(0.0f, 1.0f, 0.0);
-			}
-			print_vec3f32(cube.color, "color");
-			cube_scale(&cube, vec3f32(1.0f, 1.0f, 1.0f));
-			cube_program_draw(cube, view, projection);
-		}
-
+		// Draw cubes
 		{
 			glLineWidth(1.0f);
 
 			for(u32 i = 0; i < ArrayCount(Cubes); i++) {
 				Cube cube = Cubes[i];
 				cube_rotate(&cube, vec3f32(1.0f, 0.3f, 0.5f), (f32)glfwGetTime()*sin(i));
-				
-				if (SelectedCube == i) {
-					glLineWidth(3.0f);
-					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				for (u32 j = 0; j < ArrayCount(CubeObjectIndices); j += 6) {
+					Vec4f32 p1 = vec4f32(CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+0]*3)+0],
+															 CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+0]*3)+1],
+															 CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+0]*3)+2]);
+					Vec4f32 p2 = vec4f32(CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+1]*3)+0],
+															 CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+1]*3)+1],
+															 CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+1]*3)+2]);
+					Vec4f32 p3 = vec4f32(CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+2]*3)+0],
+															 CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+2]*3)+1],
+															 CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+2]*3)+2]);
+
+					Vec3f32 transformed_p1 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(p1, cube.transform));
+					Vec3f32 transformed_p2 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(p2, cube.transform));
+					Vec3f32 transformed_p3 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(p3, cube.transform));
+
+					Vec3f32 intersect = intersect_line_with_plane(linef32(vec3f32(camera.position.x, camera.position.y, camera.position.z), ray_direction), transformed_p1, transformed_p2, transformed_p3);
+
+					if (is_vector_inside_rectangle(intersect, transformed_p1, transformed_p2, transformed_p3)) { 
+						cube.color = scale_vec3f32(cube.color, 0.8f);
+						if (LeftMouseButton) {
+							SelectedCube = i;
+						}
+					}
 				}
 
+				if (SelectedCube == i)  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 				cube_program_draw(cube, view, projection);
-
-				if (SelectedCube == i) {
-					glLineWidth(1.0f);
-					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-				}
+				if (SelectedCube == i)  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			}
 		}
 
@@ -443,8 +356,8 @@ void process_input(GLFWwindow *window) {
 	}
 
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-		if (RightMouseButton == 0) {
-			RightMouseButton = 1;
+		if (ActiveCameraMode == CameraMode_Select) {
+			ActiveCameraMode = CameraMode_Fly;
 			LastX = WindowWidth/2;
 			LastY = WindowHeight/2;
 			glfwSetCursorPos(window, WindowWidth/2, WindowHeight/2);
@@ -470,8 +383,8 @@ void process_input(GLFWwindow *window) {
 			camera_keyboard_callback(&camera, CameraMovement_Up, DeltaTime);
 		}
 	} else {
-		if (RightMouseButton == 1) {
-			RightMouseButton = 0;
+		if (ActiveCameraMode == CameraMode_Fly) {
+			ActiveCameraMode = CameraMode_Select;
 			LastX = WindowWidth/2;
 			LastY = WindowHeight/2;
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -483,7 +396,7 @@ void process_input(GLFWwindow *window) {
 void mouse_callback(GLFWwindow* window, f64 xposIn, f64 yposIn) {
 	local_persist b32 FirstMouse = 1;
 
-	if (RightMouseButton == 1) {
+	if (ActiveCameraMode == CameraMode_Fly) {
 		f32 xpos = (f32)xposIn;
 		f32 ypos = (f32)yposIn;
 

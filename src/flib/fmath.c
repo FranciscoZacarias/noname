@@ -1,8 +1,8 @@
 //////////////////////////////////////////////
 // Generic math
 
-function Linef32 linef32(Vec3f32 point, Vec3f32 direction) {
-	Linef32 result = {point, direction};
+function Line3f32 linef32(Vec3f32 point, Vec3f32 direction) {
+	Line3f32 result = {point, direction};
 	return result;
 }
 
@@ -11,6 +11,12 @@ function Linef32 linef32(Vec3f32 point, Vec3f32 direction) {
 
 function Vec3f32 vec3f32(f32 x, f32 y, f32 z) {
 	Vec3f32 result = {x, y, z};
+	return result;
+}
+
+// Discards the w value
+function Vec3f32 vec3f32_from_vec4f32(Vec4f32 v) {
+	Vec3f32 result = { v.x, v.y, v.z };
 	return result;
 }
 
@@ -51,6 +57,16 @@ function Vec3f32 div_vec3f32(Vec3f32 a, Vec3f32 b) {
 		a.x / b.x,
 		a.y / b.y,
 		a.z / b.z
+	};
+	return result;
+}
+
+function Vec4f32 mul_vec4f32_mat4f32(Vec4f32 v, Mat4f32 m) {
+	Vec4f32 result = { 
+		m.m0*v.x + m.m4*v.y + m.m8 *v.z + m.m12*v.w,
+		m.m1*v.x + m.m5*v.y + m.m9 *v.z + m.m13*v.w,
+		m.m2*v.x + m.m6*v.y + m.m10*v.z + m.m14*v.w,
+		m.m3*v.x + m.m7*v.y + m.m11*v.z + m.m15*v.w
 	};
 	return result;
 }
