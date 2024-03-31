@@ -8,6 +8,11 @@ typedef struct CubeProgram {
   u32 EBO;
 } CubeProgram;
 
+typedef struct CubeWorldSpace {
+  Vec3f32 front_face[4];
+  Vec3f32 back_face[4];
+} CubeWorldSpace;
+
 global CubeProgram CubeProgramObject = { 0 };
 
 /*
@@ -51,5 +56,7 @@ function Cube cube_create(Vec3f32 position, Vec3f32 color);
 function void cube_translate(Cube* cube, Vec3f32 translation);
 function void cube_rotate(Cube* cube, Vec3f32 axis, f32 radians);
 function void cube_scale(Cube* cube, Vec3f32 scale);
+function Vec3f32 cube_get_center(Cube cube);
+function CubeWorldSpace cube_get_worldspace(Cube cube);
 
 #endif // CUBE_H

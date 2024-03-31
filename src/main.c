@@ -33,7 +33,7 @@ global b32 LeftMouseButton = 0;
 global f32 DeltaTime = 0.0f;
 global f32 LastFrame = 0.0f;
 
-global u32 SelectedCube = U32_MAX;
+global u32 SelectedCubeIndex = U32_MAX;
 global Cube Cubes[10];
 
 Vec3f32 intersect_line_with_plane(Line3f32 line, Vec3f32 point1, Vec3f32 point2, Vec3f32 point3) {
@@ -133,20 +133,20 @@ int main(void) {
 
 	// Cubes -------------
 	Cubes[0] = cube_create(vec3f32( 0.0f,  0.0f,  0.0f), vec3f32(1.0f, 0.0f, 0.0f));
-	Cubes[1] = cube_create(vec3f32( 0.0f,  0.0f, -5.0f), vec3f32(0.0f, 1.0f, 0.0f));
-	Cubes[2] = cube_create(vec3f32( 0.0f, -0.0f,  5.0f), vec3f32(0.0f, 0.0f, 1.0f));
-	Cubes[3] = cube_create(vec3f32( 0.0f,  5.0f,  0.0f), vec3f32(1.0f, 0.5f, 0.0f));
-	Cubes[4] = cube_create(vec3f32( 0.0f, -5.0f,  0.0f), vec3f32(1.0f, 1.0f, 0.0f));
-	Cubes[5] = cube_create(vec3f32( 5.0f,  0.0f,  0.0f), vec3f32(0.5f, 0.5f, 0.5f));
-	Cubes[6] = cube_create(vec3f32(-5.0f,  0.0f,  0.0f), vec3f32(1.0f, 0.0f, 1.0f));
-	Cubes[7] = cube_create(vec3f32( 5.0f,  5.0f,  5.0f), vec3f32(0.5f, 0.0f, 1.0f));
-	Cubes[8] = cube_create(vec3f32(-5.0f, -5.0f, -5.0f), vec3f32(0.0f, 0.0f, 0.0f));
-	Cubes[9] = cube_create(vec3f32( 5.0f, -5.0f, -5.0f), vec3f32(0.0f, 1.0f, 1.0f));
+	Cubes[1] = cube_create(vec3f32( 0.0f,  0.0f, -8.0f), vec3f32(0.0f, 1.0f, 0.0f));
+	Cubes[2] = cube_create(vec3f32( 0.0f, -0.0f,  8.0f), vec3f32(0.0f, 0.0f, 1.0f));
+	Cubes[3] = cube_create(vec3f32( 0.0f,  8.0f,  0.0f), vec3f32(1.0f, 0.5f, 0.0f));
+	Cubes[4] = cube_create(vec3f32( 0.0f, -8.0f,  0.0f), vec3f32(1.0f, 1.0f, 0.0f));
+	Cubes[5] = cube_create(vec3f32( 8.0f,  0.0f,  0.0f), vec3f32(0.5f, 0.5f, 0.5f));
+	Cubes[6] = cube_create(vec3f32(-8.0f,  0.0f,  0.0f), vec3f32(1.0f, 0.0f, 1.0f));
+	Cubes[7] = cube_create(vec3f32( 8.0f,  8.0f,  8.0f), vec3f32(0.5f, 0.0f, 1.0f));
+	Cubes[8] = cube_create(vec3f32(-8.0f, -8.0f, -8.0f), vec3f32(0.0f, 0.0f, 0.0f));
+	Cubes[9] = cube_create(vec3f32( 8.0f, -8.0f, -8.0f), vec3f32(0.0f, 1.0f, 1.0f));
 	cube_program_init();
 
 	// Axis -------------
 	Shader lines_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER_LINE_COLOR_FROM_VERTEX());
-	f32 lenxyz = 16.0f;
+	f32 lenxyz = 32.0f;
 	f32 xyz[] = {
 		lenxyz,    0.0f,    0.0f, 1.0f, 0.0f, 0.0f, //  X
 	 -lenxyz,    0.0f,    0.0f, 1.0f, 0.0f, 0.0f, // -X
@@ -164,30 +164,6 @@ int main(void) {
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO_axis);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(xyz), xyz, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, 6 * sizeof(f32), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_False, 6 * sizeof(f32), (void*)(3* sizeof(f32)));
-	glEnableVertexAttribArray(1);
-
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	// Raycast -------------
-	f32 cursor_ray[] = {
-		0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f
-	};
-
-	u32 VBO_ray, VAO_ray;
-	glGenVertexArrays(1, &VAO_ray);
-	glGenBuffers(1, &VBO_ray);
-
-	glBindVertexArray(VAO_ray);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_ray);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(cursor_ray), cursor_ray, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, 6 * sizeof(f32), (void*)0);
 	glEnableVertexAttribArray(0);
@@ -245,37 +221,47 @@ int main(void) {
 		{
 			glLineWidth(1.0f);
 
+			// picking phase
+			u32 selected_cube_distance_to_camera = U32_MAX;
 			for(u32 i = 0; i < ArrayCount(Cubes); i++) {
-				Cube cube = Cubes[i];
-				cube_rotate(&cube, vec3f32(1.0f, 0.3f, 0.5f), (f32)glfwGetTime()*sin(i));
+				Cube copy = Cubes[i];
 				for (u32 j = 0; j < ArrayCount(CubeObjectIndices); j += 6) {
-					Vec4f32 p1 = vec4f32(CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+0]*3)+0],
-															 CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+0]*3)+1],
-															 CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+0]*3)+2]);
-					Vec4f32 p2 = vec4f32(CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+1]*3)+0],
-															 CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+1]*3)+1],
-															 CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+1]*3)+2]);
-					Vec4f32 p3 = vec4f32(CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+2]*3)+0],
-															 CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+2]*3)+1],
-															 CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+2]*3)+2]);
+					Vec4f32 p1 = vec4f32(CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+0]*3)+0], CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+0]*3)+1], CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+0]*3)+2]);
+					Vec4f32 p2 = vec4f32(CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+1]*3)+0], CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+1]*3)+1], CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+1]*3)+2]);
+					Vec4f32 p3 = vec4f32(CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+2]*3)+0], CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+2]*3)+1], CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+2]*3)+2]);
+					Vec3f32 transformed_p1 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(p1, copy.transform));
+					Vec3f32 transformed_p2 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(p2, copy.transform));
+					Vec3f32 transformed_p3 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(p3, copy.transform));
+					Vec3f32 intersection = intersect_line_with_plane(linef32(vec3f32(camera.position.x, camera.position.y, camera.position.z), ray_direction), transformed_p1, transformed_p2, transformed_p3);
 
-					Vec3f32 transformed_p1 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(p1, cube.transform));
-					Vec3f32 transformed_p2 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(p2, cube.transform));
-					Vec3f32 transformed_p3 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(p3, cube.transform));
-
-					Vec3f32 intersect = intersect_line_with_plane(linef32(vec3f32(camera.position.x, camera.position.y, camera.position.z), ray_direction), transformed_p1, transformed_p2, transformed_p3);
-
-					if (is_vector_inside_rectangle(intersect, transformed_p1, transformed_p2, transformed_p3)) { 
-						cube.color = scale_vec3f32(cube.color, 0.8f);
+					if (is_vector_inside_rectangle(intersection, transformed_p1, transformed_p2, transformed_p3)) {
 						if (LeftMouseButton) {
-							SelectedCube = i;
+							if (SelectedCubeIndex == U32_MAX) {
+								SelectedCubeIndex = i;
+								selected_cube_distance_to_camera = distance_vec3f32(camera.position, cube_get_center(copy));
+							} else {
+								f32 current_cube_distance = distance_vec3f32(camera.position, cube_get_center(copy));
+								if (current_cube_distance < selected_cube_distance_to_camera) {
+									SelectedCubeIndex = i;
+									selected_cube_distance_to_camera = current_cube_distance;
+								}
+							}
 						}
 					}
 				}
-
-				if (SelectedCube == i)  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			}
+			
+			for(u32 i = 0; i < ArrayCount(Cubes); i++) {
+				Cube cube = Cubes[i];
 				cube_program_draw(cube, view, projection);
-				if (SelectedCube == i)  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				if (SelectedCubeIndex == i) {
+					glLineWidth(3.0f);
+					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+					cube.color = vec3f32(0.0f, 0.0f, 0.0f);
+					cube_program_draw(cube, view, projection);
+					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+					glLineWidth(1.0f);
+				}
 			}
 		}
 
@@ -287,9 +273,6 @@ int main(void) {
 
 	glDeleteVertexArrays(1, &VAO_axis);
 	glDeleteBuffers(1, &VBO_axis);
-
-	glDeleteVertexArrays(1, &VAO_ray);
-	glDeleteBuffers(1, &VBO_ray);
 
 	glfwTerminate();
 	return 0;
@@ -310,10 +293,10 @@ void process_input(GLFWwindow *window) {
 	if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) {
 		if (!is_tab_down) {
 			is_tab_down = 1;
-			if (SelectedCube + 1 > 9) {
-				SelectedCube = 0;
+			if (SelectedCubeIndex + 1 > 9) {
+				SelectedCubeIndex = 0;
 			} else {
-				SelectedCube++;
+				SelectedCubeIndex++;
 			}
 		}
 	} else {
@@ -323,30 +306,32 @@ void process_input(GLFWwindow *window) {
 	}
 
 
-	f32 step = 5.0f * DeltaTime;
-	if (glfwGetKey(window, GLFW_KEY_KP_8) == GLFW_PRESS) {
-		cube_translate(&Cubes[SelectedCube], vec3f32(0.0f, step, 0.0f));
-	}
-	if (glfwGetKey(window, GLFW_KEY_KP_5) == GLFW_PRESS) {
-		cube_translate(&Cubes[SelectedCube], vec3f32(0.0f, -step, 0.0f));
-	}
-	if (glfwGetKey(window, GLFW_KEY_KP_4) == GLFW_PRESS) {
-		cube_translate(&Cubes[SelectedCube], vec3f32(-step, 0.0f, 0.0f));
-	}
-	if (glfwGetKey(window, GLFW_KEY_KP_6) == GLFW_PRESS) {
-		cube_translate(&Cubes[SelectedCube], vec3f32(step, 0.0f, 0.0f));
-	}
-	if (glfwGetKey(window, GLFW_KEY_KP_7) == GLFW_PRESS) {
-		cube_translate(&Cubes[SelectedCube], vec3f32(0.0f, 0.0f, step));
-	}
-	if (glfwGetKey(window, GLFW_KEY_KP_9) == GLFW_PRESS) {
-		cube_translate(&Cubes[SelectedCube], vec3f32(0.0f, 0.0f, -step));
-	}
-	if (glfwGetKey(window, GLFW_KEY_KP_3) == GLFW_PRESS) {
-		cube_scale(&Cubes[SelectedCube], vec3f32(1.0f+step, 1.0f+step, 1.0f+step));
-	}
-	if (glfwGetKey(window, GLFW_KEY_KP_1) == GLFW_PRESS) {
-		cube_scale(&Cubes[SelectedCube], vec3f32(1.0f-step, 1.0f-step, 1.0f-step));
+	if (SelectedCubeIndex != U32_MAX) {
+		f32 step = 5.0f * DeltaTime;
+		if (glfwGetKey(window, GLFW_KEY_KP_8) == GLFW_PRESS) {
+			cube_translate(&Cubes[SelectedCubeIndex], vec3f32(0.0f, step, 0.0f));
+		}
+		if (glfwGetKey(window, GLFW_KEY_KP_5) == GLFW_PRESS) {
+			cube_translate(&Cubes[SelectedCubeIndex], vec3f32(0.0f, -step, 0.0f));
+		}
+		if (glfwGetKey(window, GLFW_KEY_KP_4) == GLFW_PRESS) {
+			cube_translate(&Cubes[SelectedCubeIndex], vec3f32(-step, 0.0f, 0.0f));
+		}
+		if (glfwGetKey(window, GLFW_KEY_KP_6) == GLFW_PRESS) {
+			cube_translate(&Cubes[SelectedCubeIndex], vec3f32(step, 0.0f, 0.0f));
+		}
+		if (glfwGetKey(window, GLFW_KEY_KP_7) == GLFW_PRESS) {
+			cube_translate(&Cubes[SelectedCubeIndex], vec3f32(0.0f, 0.0f, step));
+		}
+		if (glfwGetKey(window, GLFW_KEY_KP_9) == GLFW_PRESS) {
+			cube_translate(&Cubes[SelectedCubeIndex], vec3f32(0.0f, 0.0f, -step));
+		}
+		if (glfwGetKey(window, GLFW_KEY_KP_3) == GLFW_PRESS) {
+			cube_scale(&Cubes[SelectedCubeIndex], vec3f32(1.0f+step, 1.0f+step, 1.0f+step));
+		}
+		if (glfwGetKey(window, GLFW_KEY_KP_1) == GLFW_PRESS) {
+			cube_scale(&Cubes[SelectedCubeIndex], vec3f32(1.0f-step, 1.0f-step, 1.0f-step));
+		}
 	}
 
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {

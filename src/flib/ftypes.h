@@ -7,6 +7,8 @@
 #define function        static
 
 #define ArrayCount(a) (sizeof(a)/sizeof((a)[0]))
+#define Min(A,B) (((A)<(B))?(A):(B))
+#define Max(A,B) (((A)>(B))?(A):(B))
 
 typedef unsigned char      u8;
 typedef unsigned short     u16;

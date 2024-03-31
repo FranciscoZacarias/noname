@@ -67,3 +67,9 @@ function void cube_scale(Cube* cube, Vec3f32 scale) {
 	Mat4f32 scalar = scale_mat4f32(scale.x, scale.y, scale.z);
 	cube->transform = mul_mat4f32(scalar, cube->transform);
 }
+
+function Vec3f32 cube_get_center(Cube cube) {
+	Vec4f32 transformed_center = mul_vec4f32_mat4f32(vec4f32(0.0f, 0.0f, 0.0f), cube.transform);
+	Vec3f32 result = vec3f32_from_vec4f32(transformed_center);
+	return result;
+}
