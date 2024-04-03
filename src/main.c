@@ -33,7 +33,7 @@ global b32 LeftMouseButton = 0;
 global f32 DeltaTime = 0.0f;
 global f32 LastFrame = 0.0f;
 
-global u32 SelectedCubeIndex = U32_MAX;
+global u32 SelectedCubeIndex = U32_MAX; // Explicitly selected cube
 global Cube Cubes[10];
 
 Vec3f32 intersect_line_with_plane(Line3f32 line, Vec3f32 point1, Vec3f32 point2, Vec3f32 point3) {
@@ -223,6 +223,9 @@ int main(void) {
 
 			// picking phase
 			u32 selected_cube_distance_to_camera = U32_MAX;
+			
+			u32 hovered_cube_index = U32_MAX;
+			u32 hovered_cube_distance_to_camera = U32_MAX;
 			for(u32 i = 0; i < ArrayCount(Cubes); i++) {
 				Cube copy = Cubes[i];
 				for (u32 j = 0; j < ArrayCount(CubeObjectIndices); j += 6) {
@@ -235,6 +238,18 @@ int main(void) {
 					Vec3f32 intersection = intersect_line_with_plane(linef32(vec3f32(camera.position.x, camera.position.y, camera.position.z), ray_direction), transformed_p1, transformed_p2, transformed_p3);
 
 					if (is_vector_inside_rectangle(intersection, transformed_p1, transformed_p2, transformed_p3)) {
+						// Pick hovered cube to highlight
+						if (hovered_cube_index == U32_MAX) {
+							hovered_cube_index = i;
+							hovered_cube_distance_to_camera = distance_vec3f32(camera.position, cube_get_center(copy));
+						} else {
+							f32 current_cube_distance = distance_vec3f32(camera.position, cube_get_center(copy));
+							if (current_cube_distance < hovered_cube_distance_to_camera) {
+								hovered_cube_index = i;
+								hovered_cube_distance_to_camera = current_cube_distance;
+							}
+						}
+						// Pick selected cube
 						if (LeftMouseButton) {
 							if (SelectedCubeIndex == U32_MAX) {
 								SelectedCubeIndex = i;
@@ -252,12 +267,39 @@ int main(void) {
 			}
 			
 			for(u32 i = 0; i < ArrayCount(Cubes); i++) {
-				Cube cube = Cubes[i];
-				cube_program_draw(cube, view, projection);
-				if (SelectedCubeIndex == i) {
+
+				// Draw cubes normally
+				cube_program_draw(Cubes[i], view, projection);
+
+				// Draw hovered cube highlight
+				if (hovered_cube_index == i) {
+					Cube cube = Cubes[i];
 					glLineWidth(3.0f);
 					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-					cube.color = vec3f32(0.0f, 0.0f, 0.0f);
+					{
+						f32 r = sin(8.0f*glfwGetTime() + (2*PI/3)) * 0.5f + 0.5f;
+						f32 g = sin(8.0f*glfwGetTime() + (4*PI/3)) * 0.5f + 0.5f;
+						f32 b = sin(8.0f*glfwGetTime() + 0) * 0.5f + 0.5f;
+						cube.color = vec3f32(r, g, b);
+						cube_scale(&cube, vec3f32(1.1f, 1.1f, 1.1f));
+					}
+					cube_program_draw(cube, view, projection);
+					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+					glLineWidth(1.0f);
+				}
+
+				// Draw selected cube highlight
+				if (SelectedCubeIndex == i) {
+					Cube cube = Cubes[i];
+					glLineWidth(3.0f);
+					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+					{
+						f32 r = sin(8.0f*glfwGetTime() + 0) * 0.5f + 0.5f;
+						f32 g = sin(8.0f*glfwGetTime() + (2*PI/3)) * 0.5f + 0.5f;
+						f32 b = sin(8.0f*glfwGetTime() + (4*PI/3)) * 0.5f + 0.5f;
+						cube.color = vec3f32(r, g, b);
+						cube_scale(&cube, vec3f32(1.01f, 1.01f, 1.01f));
+					}
 					cube_program_draw(cube, view, projection);
 					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 					glLineWidth(1.0f);
