@@ -207,7 +207,7 @@ int main(void) {
 				}
 			}
 			
-			for(u32 i = 0; i < ArrayCount(Cubes); i++) {
+			for(u32 i = 0; i < TotalCubes; i++) {
 
 				// Draw cubes normally
 				cube_program_draw(Cubes[i], view, projection);
