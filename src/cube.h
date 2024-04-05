@@ -57,6 +57,5 @@ function void cube_translate(Cube* cube, Vec3f32 translation);
 function void cube_rotate(Cube* cube, Vec3f32 axis, f32 radians);
 function void cube_scale(Cube* cube, Vec3f32 scale);
 function Vec3f32 cube_get_center(Cube cube);
-function CubeWorldSpace cube_get_worldspace(Cube cube);
 
 #endif // CUBE_H

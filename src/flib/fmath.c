@@ -375,10 +375,12 @@ function f32 len_vec4f32(Vec4f32 v) {
 }
 
 function f32 distance_vec4f32(Vec4f32 a, Vec4f32 b) {
-	f32 result = sqrtf(
-		(a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y) +
-		(a.z - b.z)*(a.z - b.z) + (a.w - b.w)*(a.w - b.w)
-	);
+	f32 result = 0.0f;
+	f32 dx = a.x - b.x;
+	f32 dy = a.y - b.y;
+	f32 dz = a.z - b.z;
+	f32 dw = a.w - b.w;
+	result = sqrtf(dx*dx + dy*dy + dz*dz + dw*dw);
 	return result;
 }
 
@@ -785,7 +787,6 @@ function Mat4f32 look_at_mat4f32(Vec3f32 eye, Vec3f32 target, Vec3f32 up) {
 	return result;
 }
 
-
 //////////////////////////////////////////////
 // Math utils
 
@@ -801,5 +802,53 @@ function f32 clampf32(f32 value, f32 min, f32 max) {
 
 function f32 lerpf32(f32 start, f32 end, f32 t) {
 	f32 result = start + t * (end - start);
+	return result;
+}
+
+function b32 is_vector_inside_rectangle(Vec3f32 p, Vec3f32 a, Vec3f32 b, Vec3f32 c) {
+	b32 result = 0;
+
+	Vec3f32 ab = sub_vec3f32(a, b);
+	Vec3f32 bc = sub_vec3f32(b, c);
+	Vec3f32 ap = sub_vec3f32(a, p);
+	Vec3f32 bp = sub_vec3f32(b, p);
+
+	f32 abap = dot_vec3f32(ab, ap);
+	f32 abab = dot_vec3f32(ab, ab);
+	f32 bcbp = dot_vec3f32(bc, bp);
+	f32 bcbc = dot_vec3f32(bc, bc);
+
+	if (0 <= abap && abap <= abab && 0 <= bcbp && bcbp <= bcbc) {
+		result = 1;
+	}
+
+	return result;
+}
+
+function Vec3f32 intersect_line_with_plane(Line3f32 line, Vec3f32 point1, Vec3f32 point2, Vec3f32 point3) {
+	Vec3f32 result   = vec3f32(F32_MAX, F32_MAX, F32_MAX);
+	Vec3f32 plane_v1 = vec3f32(point2.x-point1.x, point2.y-point1.y, point2.z-point1.z);
+	Vec3f32 plane_v2 = vec3f32(point3.x-point1.x, point3.y-point1.y, point3.z-point1.z);
+	Vec3f32 plane_normal = vec3f32(plane_v1.y*plane_v2.z - plane_v1.z*plane_v2.y,
+																 plane_v1.z*plane_v2.x - plane_v1.x*plane_v2.z,
+																 plane_v1.x*plane_v2.y - plane_v1.y*plane_v2.x);
+	f32 dot = dot_vec3f32(line.direction, plane_normal);
+
+	// If the dot product is close to zero, the line is parallel to the plane
+	if (fabs(dot) < 0.000001f) {
+			return result;
+	}
+
+	// Calculate the vector from a point on the line to a point on the plane
+	Vec3f32 lineToPlane = vec3f32(point1.x-line.point.x, point1.y-line.point.y, point1.z-line.point.z);
+
+	// Calculate the distance along the line to the intersection point
+	f32 t = (lineToPlane.x*plane_normal.x + lineToPlane.y*plane_normal.y + lineToPlane.z*plane_normal.z) / dot;
+
+	// Calculate the intersection point
+	result = vec3f32(line.point.x + t * line.direction.x,
+										line.point.y + t * line.direction.y,
+										line.point.z + t * line.direction.z);
+
 	return result;
 }

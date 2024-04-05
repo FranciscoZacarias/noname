@@ -34,67 +34,8 @@ global f32 DeltaTime = 0.0f;
 global f32 LastFrame = 0.0f;
 
 global u32 SelectedCubeIndex = U32_MAX; // Explicitly selected cube
-global Cube Cubes[10];
-
-Vec3f32 intersect_line_with_plane(Line3f32 line, Vec3f32 point1, Vec3f32 point2, Vec3f32 point3) {
-		Vec3f32 result = vec3f32(F32_MAX, F32_MAX, F32_MAX);
-
-		Vec3f32 plane_v1 = vec3f32(point2.x - point1.x,
-															 point2.y - point1.y,
-															 point2.z - point1.z);
-
-		Vec3f32 plane_v2 = vec3f32(point3.x - point1.x,
-															 point3.y - point1.y,
-															 point3.z - point1.z);
-
-		Vec3f32 plane_normal = vec3f32(plane_v1.y * plane_v2.z - plane_v1.z * plane_v2.y,
-																	 plane_v1.z * plane_v2.x - plane_v1.x * plane_v2.z,
-																	 plane_v1.x * plane_v2.y - plane_v1.y * plane_v2.x);
-
-		f32 dot_product = dot_vec3f32(line.direction, plane_normal);
-
-		// If the dot product is close to zero, the line is parallel to the plane
-		if (fabs(dot_product) < 0.000001f) {
-				return result;
-		}
-
-		// Calculate the vector from a point on the line to a point on the plane
-		Vec3f32 lineToPlane = vec3f32(point1.x - line.point.x,
-																	point1.y - line.point.y,
-																	point1.z - line.point.z);
-
-		// Calculate the distance along the line to the intersection point
-		f32 t = (lineToPlane.x * plane_normal.x +
-						 lineToPlane.y * plane_normal.y +
-						 lineToPlane.z * plane_normal.z) / dot_product;
-
-		// Calculate the intersection point
-		result = vec3f32(line.point.x + t * line.direction.x,
-										 line.point.y + t * line.direction.y,
-										 line.point.z + t * line.direction.z);
-
-		return result;
-}
-
-function b32 is_vector_inside_rectangle(Vec3f32 p, Vec3f32 a, Vec3f32 b, Vec3f32 c) {
-	b32 result = 0;
-
-	Vec3f32 ab = sub_vec3f32(a, b);
-	Vec3f32 bc = sub_vec3f32(b, c);
-	Vec3f32 ap = sub_vec3f32(a, p);
-	Vec3f32 bp = sub_vec3f32(b, p);
-
-	f32 abap = dot_vec3f32(ab, ap);
-	f32 abab = dot_vec3f32(ab, ab);
-	f32 bcbp = dot_vec3f32(bc, bp);
-	f32 bcbc = dot_vec3f32(bc, bc);
-
-	if (0 <= abap && abap <= abab && 0 <= bcbp && bcbp <= bcbc) {
-			result = 1;
-	}
-
-	return result;
-}
+global Cube Cubes[32];
+global u32 TotalCubes = 0;
 
 int main(void) {
 
@@ -132,16 +73,16 @@ int main(void) {
 	Mouse.ndc_y = LastY;
 
 	// Cubes -------------
-	Cubes[0] = cube_create(vec3f32( 0.0f,  0.0f,  0.0f), vec3f32(1.0f, 0.0f, 0.0f));
-	Cubes[1] = cube_create(vec3f32( 0.0f,  0.0f, -8.0f), vec3f32(0.0f, 1.0f, 0.0f));
-	Cubes[2] = cube_create(vec3f32( 0.0f, -0.0f,  8.0f), vec3f32(0.0f, 0.0f, 1.0f));
-	Cubes[3] = cube_create(vec3f32( 0.0f,  8.0f,  0.0f), vec3f32(1.0f, 0.5f, 0.0f));
-	Cubes[4] = cube_create(vec3f32( 0.0f, -8.0f,  0.0f), vec3f32(1.0f, 1.0f, 0.0f));
-	Cubes[5] = cube_create(vec3f32( 8.0f,  0.0f,  0.0f), vec3f32(0.5f, 0.5f, 0.5f));
-	Cubes[6] = cube_create(vec3f32(-8.0f,  0.0f,  0.0f), vec3f32(1.0f, 0.0f, 1.0f));
-	Cubes[7] = cube_create(vec3f32( 8.0f,  8.0f,  8.0f), vec3f32(0.5f, 0.0f, 1.0f));
-	Cubes[8] = cube_create(vec3f32(-8.0f, -8.0f, -8.0f), vec3f32(0.0f, 0.0f, 0.0f));
-	Cubes[9] = cube_create(vec3f32( 8.0f, -8.0f, -8.0f), vec3f32(0.0f, 1.0f, 1.0f));
+	Cubes[TotalCubes++] = cube_create(vec3f32( 0.0f,  0.0f,  0.0f), vec3f32(1.0f, 0.0f, 0.0f));
+	Cubes[TotalCubes++] = cube_create(vec3f32( 0.0f,  0.0f, -8.0f), vec3f32(0.0f, 1.0f, 0.0f));
+	Cubes[TotalCubes++] = cube_create(vec3f32( 0.0f, -0.0f,  8.0f), vec3f32(0.0f, 0.0f, 1.0f));
+	Cubes[TotalCubes++] = cube_create(vec3f32( 0.0f,  8.0f,  0.0f), vec3f32(1.0f, 0.5f, 0.0f));
+	Cubes[TotalCubes++] = cube_create(vec3f32( 0.0f, -8.0f,  0.0f), vec3f32(1.0f, 1.0f, 0.0f));
+	Cubes[TotalCubes++] = cube_create(vec3f32( 8.0f,  0.0f,  0.0f), vec3f32(0.5f, 0.5f, 0.5f));
+	Cubes[TotalCubes++] = cube_create(vec3f32(-8.0f,  0.0f,  0.0f), vec3f32(1.0f, 0.0f, 1.0f));
+	Cubes[TotalCubes++] = cube_create(vec3f32( 8.0f,  8.0f,  8.0f), vec3f32(0.5f, 0.0f, 1.0f));
+	Cubes[TotalCubes++] = cube_create(vec3f32(-8.0f, -8.0f, -8.0f), vec3f32(0.0f, 0.0f, 0.0f));
+	Cubes[TotalCubes++] = cube_create(vec3f32( 8.0f, -8.0f, -8.0f), vec3f32(0.0f, 1.0f, 1.0f));
 	cube_program_init();
 
 	// Axis -------------
@@ -226,7 +167,7 @@ int main(void) {
 			
 			u32 hovered_cube_index = U32_MAX;
 			u32 hovered_cube_distance_to_camera = U32_MAX;
-			for(u32 i = 0; i < ArrayCount(Cubes); i++) {
+			for(u32 i = 0; i < TotalCubes; i++) {
 				Cube copy = Cubes[i];
 				for (u32 j = 0; j < ArrayCount(CubeObjectIndices); j += 6) {
 					Vec4f32 p1 = vec4f32(CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+0]*3)+0], CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+0]*3)+1], CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+0]*3)+2]);
@@ -273,17 +214,18 @@ int main(void) {
 
 				// Draw hovered cube highlight
 				if (hovered_cube_index == i) {
-					Cube cube = Cubes[i];
+					// Hover cube
+					Cube hover_cube = Cubes[i];
 					glLineWidth(3.0f);
 					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 					{
 						f32 r = sin(8.0f*glfwGetTime() + (2*PI/3)) * 0.5f + 0.5f;
 						f32 g = sin(8.0f*glfwGetTime() + (4*PI/3)) * 0.5f + 0.5f;
 						f32 b = sin(8.0f*glfwGetTime() + 0) * 0.5f + 0.5f;
-						cube.color = vec3f32(r, g, b);
-						cube_scale(&cube, vec3f32(1.1f, 1.1f, 1.1f));
+						hover_cube.color = vec3f32(r, g, b);
+						cube_scale(&hover_cube, vec3f32(1.1f, 1.1f, 1.1f));
 					}
-					cube_program_draw(cube, view, projection);
+					cube_program_draw(hover_cube, view, projection);
 					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 					glLineWidth(1.0f);
 				}

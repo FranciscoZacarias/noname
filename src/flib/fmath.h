@@ -6,7 +6,7 @@
 #define Radians(d) (d * (PI / 180))
 
 #include <math.h> // Required for: sinf(), cosf(), tan(), atan2f(), sqrtf(), floor(), fminf(), fmaxf(), fabsf()
-
+ 
 //////////////////////////////////////////////
 // Vector3 f32
 
@@ -132,5 +132,7 @@ function Mat4f32 look_at_mat4f32(Vec3f32 eye, Vec3f32 target, Vec3f32 up);
 // Math utils
 function f32 clampf32(f32 value, f32 min, f32 max);
 function f32 lerpf32(f32 start, f32 end, f32 t);
+function b32 is_vector_inside_rectangle(Vec3f32 p, Vec3f32 a, Vec3f32 b, Vec3f32 c);
+function Vec3f32 intersect_line_with_plane(Line3f32 line, Vec3f32 point1, Vec3f32 point2, Vec3f32 point3);
 
 #endif // FMATH_H
