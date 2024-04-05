@@ -219,10 +219,7 @@ int main(void) {
 					glLineWidth(3.0f);
 					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 					{
-						f32 r = sin(8.0f*glfwGetTime() + (2*PI/3)) * 0.5f + 0.5f;
-						f32 g = sin(8.0f*glfwGetTime() + (4*PI/3)) * 0.5f + 0.5f;
-						f32 b = sin(8.0f*glfwGetTime() + 0) * 0.5f + 0.5f;
-						hover_cube.color = vec3f32(r, g, b);
+						hover_cube.color = vec3f32(sin(8.0f*glfwGetTime() + (2*PI/3)) * 0.5f + 0.5f, sin(8.0f*glfwGetTime() + (4*PI/3)) * 0.5f + 0.5f, sin(8.0f*glfwGetTime()) * 0.5f + 0.5f);
 						cube_scale(&hover_cube, vec3f32(1.1f, 1.1f, 1.1f));
 					}
 					cube_program_draw(hover_cube, view, projection);
@@ -236,10 +233,7 @@ int main(void) {
 					glLineWidth(3.0f);
 					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 					{
-						f32 r = sin(8.0f*glfwGetTime() + 0) * 0.5f + 0.5f;
-						f32 g = sin(8.0f*glfwGetTime() + (2*PI/3)) * 0.5f + 0.5f;
-						f32 b = sin(8.0f*glfwGetTime() + (4*PI/3)) * 0.5f + 0.5f;
-						cube.color = vec3f32(r, g, b);
+						cube.color = vec3f32(sin(8.0f*glfwGetTime()) * 0.5f + 0.5f, sin(8.0f*glfwGetTime() + (2*PI/3)) * 0.5f + 0.5f, sin(8.0f*glfwGetTime() + (4*PI/3)) * 0.5f + 0.5f);
 						cube_scale(&cube, vec3f32(1.01f, 1.01f, 1.01f));
 					}
 					cube_program_draw(cube, view, projection);
