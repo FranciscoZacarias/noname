@@ -43,6 +43,9 @@ global Vec3f32 Raycast = {F32_MAX, F32_MAX, F32_MAX};
 global u32  SelectedCubeIndex = U32_MAX; // Explicitly selected cube
 
 global u32 HoveredCubeIndex = U32_MAX; // Cube being hovered by the mouse cursor, right now
+global Vec3f32 hovered_p1 = { 0 };
+global Vec3f32 hovered_p2 = { 0 };
+global Vec3f32 hovered_p3 = { 0 };
 
 global Cube Cubes[64];
 global u32 TotalCubes = 0;
@@ -175,6 +178,10 @@ int main(void) {
 		{
 			// picking phase
 			HoveredCubeIndex = U32_MAX;
+			hovered_p1 = vec3f32(0.f, 0.f, 0.f);;
+			hovered_p2 = vec3f32(0.f, 0.f, 0.f);;
+			hovered_p3 = vec3f32(0.f, 0.f, 0.f);;
+
 			u32 hovered_cube_distance_to_camera  = U32_MAX;
 			u32 selected_cube_distance_to_camera = U32_MAX;
 			
@@ -195,30 +202,19 @@ int main(void) {
 						// Pick hovered cube to highlight
 						if (HoveredCubeIndex == U32_MAX) {
 							HoveredCubeIndex = i;
+							hovered_p1 = p1;
+							hovered_p2 = p2;
+							hovered_p3 = p3;
 							hovered_cube_distance_to_camera = distance_vec3f32(camera.position, cube_center);
 						} else {
 							f32 current_cube_distance = distance_vec3f32(camera.position, cube_center);
 							if (current_cube_distance < hovered_cube_distance_to_camera) {
 								HoveredCubeIndex = i;
+								hovered_p1 = p1;
+								hovered_p2 = p2;
+								hovered_p3 = p3;
 								hovered_cube_distance_to_camera = current_cube_distance;
 							}
-						}
-
-						// Add cube to the face being hovered:
-						if (F_KeyState) {
-							Vec3f32 v1 = sub_vec3f32(p2, p1);
-							Vec3f32 v2 = sub_vec3f32(p3, p1);
-							Vec3f32 face_normal = cross_vec3f32(v1, v2);
-							face_normal = normalize_vec3f32(face_normal);
-
-							Vec3f32 reflected_vector = reflect_point_across_plane_with_normal(cube_center, face_normal);
-							Vec3f32 mirrored_cube_center = add_vec3f32(cube_center, reflected_vector);
-
-							print_vec3f32(cube_center, "Hovered cube");
-							print_vec3f32(mirrored_cube_center, "Reflected cube center");
-
-							CubeToAddPosiiton = mirrored_cube_center;
-							AddCube = 1;
 						}
 
 						// Pick selected cube
@@ -236,6 +232,24 @@ int main(void) {
 						}
 					}
 				}
+			}
+
+			// Add cube to the face being hovered:
+			if (F_KeyState && HoveredCubeIndex != U32_MAX) {
+				Vec3f32 cube_center = cube_get_center(Cubes[HoveredCubeIndex]);
+				Vec3f32 v1 = sub_vec3f32(hovered_p2, hovered_p1);
+				Vec3f32 v2 = sub_vec3f32(hovered_p3, hovered_p1);
+				Vec3f32 face_normal = cross_vec3f32(v1, v2);
+				face_normal = normalize_vec3f32(face_normal);
+
+				Vec3f32 new_cube_position = add_vec3f32(cube_center, scale_vec3f32(face_normal, 2));
+
+				print_vec3f32(cube_center, "Reference Cube center");
+				print_vec3f32(new_cube_position, "New Cube Center");
+				printf("Total cubes: %d\n", TotalCubes);
+
+				CubeToAddPosiiton = new_cube_position;
+				AddCube = 1;
 			}
 		}
 
@@ -275,8 +289,6 @@ int main(void) {
 					glLineWidth(1.0f);
 				}
 			}
-
-			printf("Total cubes: %d\n", TotalCubes);
 
 			if (AddCube) {
 				Cubes[TotalCubes++] = cube_create(CubeToAddPosiiton, vec3f32(1.0f, 1.0f, 1.0f));

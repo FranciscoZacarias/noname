@@ -22,7 +22,7 @@ function Vec3f32 vec3f32_from_vec4f32(Vec4f32 v) {
 
 #include "stdio.h" 
 function void print_vec3f32(Vec3f32 v, const char* label) {
-	printf("%s vec3f32(%.2ff, %.2ff, %.2ff);\n", label, v.x, v.y, v.z);
+	printf("Vec3f32(%.2ff, %.2ff, %.2ff) - %s\n", v.x, v.y, v.z, label);
 }
 
 function Vec3f32 add_vec3f32(Vec3f32 a, Vec3f32 b) {
