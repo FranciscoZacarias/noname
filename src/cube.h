@@ -63,8 +63,6 @@ typedef struct CubeVertices {
   };
 } CubeVertices;
 
-typedef Vec3f32 CubeFace[6];
-
 function void cube_program_init();
 function void cube_program_draw(Cube cube, Mat4f32 view, Mat4f32 projection);
 function void cube_program_clean();
