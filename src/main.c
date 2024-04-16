@@ -33,8 +33,13 @@ global b32 LeftMouseButton = 0;
 global f32 DeltaTime = 0.0f;
 global f32 LastFrame = 0.0f;
 
-global u32 SelectedCubeIndex = U32_MAX; // Explicitly selected cube
-global Cube Cubes[32];
+global Vec3f32 Raycast = {F32_MAX, F32_MAX, F32_MAX};
+
+global u32  SelectedCubeIndex = U32_MAX; // Explicitly selected cube
+
+global u32 HoveredCubeIndex = U32_MAX; // Cube being hovered by the mouse cursor, right now
+
+global Cube Cubes[64];
 global u32 TotalCubes = 0;
 
 int main(void) {
@@ -136,8 +141,8 @@ int main(void) {
 		projection = mul_mat4f32(perspective, projection);
 
 		// Raycast
-		Vec3f32 raycast = unproject_vec3f32(vec3f32(Mouse.ndc_x, Mouse.ndc_y, 1.0f), projection, view);
-		Vec3f32 ray_direction = sub_vec3f32(vec3f32(raycast.x, raycast.y, raycast.z), vec3f32(camera.position.x, camera.position.y, camera.position.z));
+		Vec3f32 unproject_mouse = unproject_vec3f32(vec3f32(Mouse.ndc_x, Mouse.ndc_y, 1.0f), projection, view);
+		Raycast = sub_vec3f32(vec3f32(unproject_mouse.x, unproject_mouse.y, unproject_mouse.z), vec3f32(camera.position.x, camera.position.y, camera.position.z));
 
 		// Draw Axis
 		shader_use(lines_program);
@@ -158,38 +163,41 @@ int main(void) {
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}
 
-		// Draw cubes
+		// Picking Phase
 		{
-			glLineWidth(1.0f);
-
 			// picking phase
+			HoveredCubeIndex = U32_MAX;
+			u32 hovered_cube_distance_to_camera  = U32_MAX;
 			u32 selected_cube_distance_to_camera = U32_MAX;
 			
-			u32 hovered_cube_index = U32_MAX;
-			u32 hovered_cube_distance_to_camera = U32_MAX;
 			for(u32 i = 0; i < TotalCubes; i++) {
 				Cube copy = Cubes[i];
-				for (u32 j = 0; j < ArrayCount(CubeObjectIndices); j += 6) {
-					Vec4f32 p1 = vec4f32(CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+0]*3)+0], CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+0]*3)+1], CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+0]*3)+2]);
-					Vec4f32 p2 = vec4f32(CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+1]*3)+0], CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+1]*3)+1], CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+1]*3)+2]);
-					Vec4f32 p3 = vec4f32(CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+2]*3)+0], CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+2]*3)+1], CubeObjectVerticesLocalSpace[(CubeObjectIndices[j+2]*3)+2]);
-					Vec3f32 transformed_p1 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(p1, copy.transform));
-					Vec3f32 transformed_p2 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(p2, copy.transform));
-					Vec3f32 transformed_p3 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(p3, copy.transform));
-					Vec3f32 intersection = intersect_line_with_plane(linef32(vec3f32(camera.position.x, camera.position.y, camera.position.z), ray_direction), transformed_p1, transformed_p2, transformed_p3);
+				CubeVertices transformed_vertices = cube_get_transformed_vertices(copy);
 
-					if (is_vector_inside_rectangle(intersection, transformed_p1, transformed_p2, transformed_p3)) {
+				for (u32 j = 0; j < ArrayCount(CubeObjectIndices); j += 6) {
+					Vec3f32 intersection = intersect_line_with_plane(
+						linef32(vec3f32(camera.position.x, camera.position.y, camera.position.z), Raycast),
+						transformed_vertices.v[CubeObjectIndices[j+0]],
+						transformed_vertices.v[CubeObjectIndices[j+1]],
+						transformed_vertices.v[CubeObjectIndices[j+2]]);
+					
+					if (is_vector_inside_rectangle(intersection,  transformed_vertices.v[CubeObjectIndices[j+0]], transformed_vertices.v[CubeObjectIndices[j+1]], transformed_vertices.v[CubeObjectIndices[j+2]])) {
+
 						// Pick hovered cube to highlight
-						if (hovered_cube_index == U32_MAX) {
-							hovered_cube_index = i;
+						if (HoveredCubeIndex == U32_MAX) {
+							HoveredCubeIndex = i;
 							hovered_cube_distance_to_camera = distance_vec3f32(camera.position, cube_get_center(copy));
 						} else {
 							f32 current_cube_distance = distance_vec3f32(camera.position, cube_get_center(copy));
 							if (current_cube_distance < hovered_cube_distance_to_camera) {
-								hovered_cube_index = i;
+								HoveredCubeIndex = i;
 								hovered_cube_distance_to_camera = current_cube_distance;
 							}
 						}
+
+						// Add cube to the face being hovered:
+						
+
 						// Pick selected cube
 						if (LeftMouseButton) {
 							if (SelectedCubeIndex == U32_MAX) {
@@ -206,14 +214,17 @@ int main(void) {
 					}
 				}
 			}
-			
+		}
+
+		// Draw cubes
+		{
 			for(u32 i = 0; i < TotalCubes; i++) {
 
 				// Draw cubes normally
 				cube_program_draw(Cubes[i], view, projection);
 
 				// Draw hovered cube highlight
-				if (hovered_cube_index == i) {
+				if (HoveredCubeIndex == i) {
 					// Hover cube
 					Cube hover_cube = Cubes[i];
 					glLineWidth(3.0f);
@@ -303,12 +314,6 @@ void process_input(GLFWwindow *window) {
 		}
 		if (glfwGetKey(window, GLFW_KEY_KP_9) == GLFW_PRESS) {
 			cube_translate(&Cubes[SelectedCubeIndex], vec3f32(0.0f, 0.0f, -step));
-		}
-		if (glfwGetKey(window, GLFW_KEY_KP_3) == GLFW_PRESS) {
-			cube_scale(&Cubes[SelectedCubeIndex], vec3f32(1.0f+step, 1.0f+step, 1.0f+step));
-		}
-		if (glfwGetKey(window, GLFW_KEY_KP_1) == GLFW_PRESS) {
-			cube_scale(&Cubes[SelectedCubeIndex], vec3f32(1.0f-step, 1.0f-step, 1.0f-step));
 		}
 	}
 

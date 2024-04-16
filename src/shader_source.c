@@ -29,7 +29,7 @@ function const char* GET_FRAGMENT_SHADER() {
 		uniform vec3 color;
 
 		void main() {
-			FragColor = vec4(color, 0.2f);
+			FragColor = vec4(color, 1.0f);
 		}
 	); // --------------------
 }

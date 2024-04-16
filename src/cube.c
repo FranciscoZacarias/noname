@@ -73,3 +73,29 @@ function Vec3f32 cube_get_center(Cube cube) {
 	Vec3f32 result = vec3f32_from_vec4f32(transformed_center);
 	return result;
 }
+
+function CubeVertices cube_get_transformed_vertices(Cube cube) {
+	CubeVertices result = { 0 };
+
+	Vec4f32 back0 = vec4f32(-1.f, -1.f,  1.f);
+	Vec4f32 back1 = vec4f32( 1.f, -1.f,  1.f);
+	Vec4f32 back2 = vec4f32( 1.f,  1.f,  1.f);
+	Vec4f32 back3 = vec4f32(-1.f,  1.f,  1.f);
+
+	result.v0 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(back0, cube.transform));
+	result.v1 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(back1, cube.transform));
+	result.v2 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(back2, cube.transform));
+	result.v3 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(back3, cube.transform));
+
+	Vec4f32 front0 = vec4f32(-1.f, -1.f, -1.f);
+	Vec4f32 front1 = vec4f32( 1.f, -1.f, -1.f);
+	Vec4f32 front2 = vec4f32( 1.f,  1.f, -1.f);
+	Vec4f32 front3 = vec4f32(-1.f,  1.f, -1.f);
+
+	result.v4 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(front0, cube.transform));
+	result.v5 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(front1, cube.transform));
+	result.v6 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(front2, cube.transform));
+	result.v7 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(front3, cube.transform));
+
+	return result;
+}
