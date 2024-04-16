@@ -22,6 +22,11 @@ typedef struct MouseState {
 
 global MouseState Mouse = { 0 };
 
+// Keyboard state
+global b32 F_KeyPreviousState = 1;
+global b32 F_KeyState = 0;
+/////////////////
+
 typedef enum CameraMode {
 	CameraMode_Select,
 	CameraMode_Fly
@@ -41,6 +46,9 @@ global u32 HoveredCubeIndex = U32_MAX; // Cube being hovered by the mouse cursor
 
 global Cube Cubes[64];
 global u32 TotalCubes = 0;
+
+global Vec3f32 CubeToAddPosiiton = { 0 };
+global b32 AddCube = 0;
 
 int main(void) {
 
@@ -175,20 +183,21 @@ int main(void) {
 				CubeVertices transformed_vertices = cube_get_transformed_vertices(copy);
 
 				for (u32 j = 0; j < ArrayCount(CubeObjectIndices); j += 6) {
-					Vec3f32 intersection = intersect_line_with_plane(
-						linef32(vec3f32(camera.position.x, camera.position.y, camera.position.z), Raycast),
-						transformed_vertices.v[CubeObjectIndices[j+0]],
-						transformed_vertices.v[CubeObjectIndices[j+1]],
-						transformed_vertices.v[CubeObjectIndices[j+2]]);
+					Vec3f32 p1 = transformed_vertices.v[CubeObjectIndices[j+0]];
+					Vec3f32 p2 = transformed_vertices.v[CubeObjectIndices[j+1]];
+					Vec3f32 p3 = transformed_vertices.v[CubeObjectIndices[j+2]];
+
+					Vec3f32 intersection = intersect_line_with_plane(linef32(vec3f32(camera.position.x, camera.position.y, camera.position.z), Raycast), p1, p2, p3);
 					
-					if (is_vector_inside_rectangle(intersection,  transformed_vertices.v[CubeObjectIndices[j+0]], transformed_vertices.v[CubeObjectIndices[j+1]], transformed_vertices.v[CubeObjectIndices[j+2]])) {
+					if (is_vector_inside_rectangle(intersection, p1, p2, p3)) {
+						Vec3f32 cube_center = cube_get_center(copy);
 
 						// Pick hovered cube to highlight
 						if (HoveredCubeIndex == U32_MAX) {
 							HoveredCubeIndex = i;
-							hovered_cube_distance_to_camera = distance_vec3f32(camera.position, cube_get_center(copy));
+							hovered_cube_distance_to_camera = distance_vec3f32(camera.position, cube_center);
 						} else {
-							f32 current_cube_distance = distance_vec3f32(camera.position, cube_get_center(copy));
+							f32 current_cube_distance = distance_vec3f32(camera.position, cube_center);
 							if (current_cube_distance < hovered_cube_distance_to_camera) {
 								HoveredCubeIndex = i;
 								hovered_cube_distance_to_camera = current_cube_distance;
@@ -196,15 +205,29 @@ int main(void) {
 						}
 
 						// Add cube to the face being hovered:
-						
+						if (F_KeyState) {
+							Vec3f32 v1 = sub_vec3f32(p2, p1);
+							Vec3f32 v2 = sub_vec3f32(p3, p1);
+							Vec3f32 face_normal = cross_vec3f32(v1, v2);
+							face_normal = normalize_vec3f32(face_normal);
+
+							Vec3f32 reflected_vector = reflect_point_across_plane_with_normal(cube_center, face_normal);
+							Vec3f32 mirrored_cube_center = add_vec3f32(cube_center, reflected_vector);
+
+							print_vec3f32(cube_center, "Hovered cube");
+							print_vec3f32(mirrored_cube_center, "Reflected cube center");
+
+							CubeToAddPosiiton = mirrored_cube_center;
+							AddCube = 1;
+						}
 
 						// Pick selected cube
 						if (LeftMouseButton) {
 							if (SelectedCubeIndex == U32_MAX) {
 								SelectedCubeIndex = i;
-								selected_cube_distance_to_camera = distance_vec3f32(camera.position, cube_get_center(copy));
+								selected_cube_distance_to_camera = distance_vec3f32(camera.position, cube_center);
 							} else {
-								f32 current_cube_distance = distance_vec3f32(camera.position, cube_get_center(copy));
+								f32 current_cube_distance = distance_vec3f32(camera.position, cube_center);
 								if (current_cube_distance < selected_cube_distance_to_camera) {
 									SelectedCubeIndex = i;
 									selected_cube_distance_to_camera = current_cube_distance;
@@ -252,6 +275,13 @@ int main(void) {
 					glLineWidth(1.0f);
 				}
 			}
+
+			printf("Total cubes: %d\n", TotalCubes);
+
+			if (AddCube) {
+				Cubes[TotalCubes++] = cube_create(CubeToAddPosiiton, vec3f32(1.0f, 1.0f, 1.0f));
+				AddCube = 0;
+			}
 		}
 
 		glfwSwapBuffers(window);
@@ -293,7 +323,6 @@ void process_input(GLFWwindow *window) {
 			is_tab_down = 0;
 		}
 	}
-
 
 	if (SelectedCubeIndex != U32_MAX) {
 		f32 step = 5.0f * DeltaTime;
@@ -357,6 +386,17 @@ void process_input(GLFWwindow *window) {
 			LastY = WindowHeight/2;
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 			glfwSetCursorPos(window, Mouse.screen_space_x, Mouse.screen_space_y);
+		}
+		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+			if (F_KeyState == 0 && F_KeyPreviousState == 1) {
+				F_KeyPreviousState = 0;
+				F_KeyState = 1;
+			} else {
+				F_KeyState = 0;
+			}
+		} else {
+			F_KeyPreviousState = 1;
+			F_KeyState = 0;
 		}
 	}
 }
