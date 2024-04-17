@@ -12,6 +12,8 @@
 #ifndef _WINDOWS_H
 #define _WINDOWS_H
 # include <windows.h>
+#else
+# error "Only windows platofrm is supported"
 #endif
 
 //////////////////////////////////////////////
