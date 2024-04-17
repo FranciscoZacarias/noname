@@ -21,6 +21,29 @@ function void cube_program_init() {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
+function void cube_lines_program_init() {
+	CubeLinesObject.shader_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());
+
+	glGenVertexArrays(1, &CubeLinesObject.VAO);
+	glGenBuffers(1, &CubeLinesObject.VBO);
+	glGenBuffers(1, &CubeLinesObject.EBO);
+
+	glBindVertexArray(CubeLinesObject.VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, CubeLinesObject.VBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, CubeLinesObject.EBO);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(CubeObjectVerticesLocalSpace), CubeObjectVerticesLocalSpace, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(CubeLinesIndices), CubeLinesIndices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, 3 * sizeof(f32), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	
+}
+
 function void cube_program_draw(Cube cube, Mat4f32 view, Mat4f32 projection) {
 	shader_use(CubeProgramObject.shader_program);
 
@@ -34,6 +57,27 @@ function void cube_program_draw(Cube cube, Mat4f32 view, Mat4f32 projection) {
 	shader_set_uniform_vec3fv(CubeProgramObject.shader_program, "color", cube.color);
 
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+}
+
+function void cube_lines_draw(Cube cube, Mat4f32 view, Mat4f32 projection) {
+	shader_use(CubeLinesObject.shader_program);
+
+	glBindVertexArray(CubeLinesObject.VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, CubeLinesObject.VBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, CubeLinesObject.EBO);
+
+	shader_set_uniform_mat4fv(CubeLinesObject.shader_program, "view", view);
+	shader_set_uniform_mat4fv(CubeLinesObject.shader_program, "projection", projection);
+	shader_set_uniform_mat4fv(CubeLinesObject.shader_program, "model", cube.transform);
+	shader_set_uniform_vec3fv(CubeLinesObject.shader_program, "color", cube.color);
+
+	glLineWidth(1.6f);
+	glDrawElements(GL_LINES, 36, GL_UNSIGNED_INT, 0);
+	glLineWidth(1.0f);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);

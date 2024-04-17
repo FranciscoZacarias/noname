@@ -32,6 +32,14 @@ global u32 CubeObjectIndices[] = {
   4, 5, 1, 1, 0, 4  // Bottom
 };
 
+global CubeProgram CubeLinesObject = { 0 };
+
+global u32 CubeLinesIndices[] = {
+  4, 5, 5, 6, 6, 7, 7, 4,
+  0, 1, 1, 2, 2, 3, 3, 0,
+  0, 4, 5, 1, 6, 2, 7, 3
+};
+
 typedef struct Cube { 
   Mat4f32 transform;
   Vec3f32 color;

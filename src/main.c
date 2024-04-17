@@ -100,6 +100,7 @@ int main(void) {
 	Cubes[TotalCubes++] = cube_create(vec3f32(-8.0f, -8.0f, -8.0f), vec3f32(0.0f, 0.0f, 0.0f));
 	Cubes[TotalCubes++] = cube_create(vec3f32( 8.0f, -8.0f, -8.0f), vec3f32(0.0f, 1.0f, 1.0f));
 	cube_program_init();
+	cube_lines_program_init();
 
 	// Axis -------------
 	Shader lines_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER_LINE_COLOR_FROM_VERTEX());
@@ -130,6 +131,7 @@ int main(void) {
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 
 	while(!glfwWindowShouldClose(window)) {
 		f32 currentFrame = (f32)(glfwGetTime());
@@ -228,8 +230,8 @@ int main(void) {
 				}
 			}
 
+			// Find the face that is closest to the camera from the hovered cube.
 			if (HoveredCubeIndex != U32_MAX) {
-
 				CubeVertices transformed_vertices = cube_get_transformed_vertices(Cubes[HoveredCubeIndex]);
 				for (u32 j = 0; j < ArrayCount(CubeObjectIndices); j += 6) {
 					Vec3f32 p1 = transformed_vertices.v[CubeObjectIndices[j+0]];
@@ -298,15 +300,18 @@ int main(void) {
 		// Draw cubes
 		{
 			for(u32 i = 0; i < TotalCubes; i++) {
-
 				// Draw cubes normally
 				cube_program_draw(Cubes[i], view, projection);
+
+				Cube lines = Cubes[i];
+				lines.color = vec3f32(0.0f, 0.0f, 0.0f);
+				cube_lines_draw(lines, view, projection);
 
 				// Draw hovered cube highlight
 				if (HoveredCubeIndex == i) {
 					// Hover cube
 					Cube hover_cube = Cubes[i];
-					glLineWidth(3.0f);
+					glLineWidth(2.0f);
 					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 					{
 						hover_cube.color = vec3f32(sin(8.0f*glfwGetTime() + (2*PI/3)) * 0.5f + 0.5f, sin(8.0f*glfwGetTime() + (4*PI/3)) * 0.5f + 0.5f, sin(8.0f*glfwGetTime()) * 0.5f + 0.5f);
@@ -320,20 +325,21 @@ int main(void) {
 				// Draw selected cube highlight
 				if (SelectedCubeIndex == i) {
 					Cube cube = Cubes[i];
-					glLineWidth(3.0f);
+					glLineWidth(2.0f);
 					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 					{
 						cube.color = vec3f32(sin(8.0f*glfwGetTime()) * 0.5f + 0.5f, sin(8.0f*glfwGetTime() + (2*PI/3)) * 0.5f + 0.5f, sin(8.0f*glfwGetTime() + (4*PI/3)) * 0.5f + 0.5f);
 						cube_scale(&cube, vec3f32(1.01f, 1.01f, 1.01f));
 					}
 					cube_program_draw(cube, view, projection);
+					
 					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 					glLineWidth(1.0f);
 				}
 			}
 
 			if (AddCube) {
-				Cubes[TotalCubes++] = cube_create(CubeToAddPosiiton,  vec3f32(sin(8.0f*glfwGetTime()) * 0.5f + 0.5f, sin(8.0f*glfwGetTime() + (2*PI/3)) * 0.5f + 0.5f, sin(8.0f*glfwGetTime() + (4*PI/3)) * 0.5f + 0.5f));
+				Cubes[TotalCubes++] = cube_create(CubeToAddPosiiton,  vec3f32(0.8118f, 0.6627, 0.5451f));
 				AddCube = 0;
 			}
 		}

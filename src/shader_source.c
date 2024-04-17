@@ -17,7 +17,7 @@ function const char* GET_VERTEX_SHADER() {
 			gl_Position = projection * view * model * vec4(aPos, 1.0);
 			line_color = aColor;
 		}
-	); // --------------------
+	); // END: SHADER_SOURCE
 }
 
 //////////////////////////////////////////////
@@ -31,7 +31,7 @@ function const char* GET_FRAGMENT_SHADER() {
 		void main() {
 			FragColor = vec4(color, 1.0f);
 		}
-	); // --------------------
+	); // END: SHADER_SOURCE
 }
 
 function const char* GET_FRAGMENT_SHADER_LINE_COLOR_FROM_VERTEX() {
@@ -42,5 +42,5 @@ function const char* GET_FRAGMENT_SHADER_LINE_COLOR_FROM_VERTEX() {
 		void main() {
 			FragColor = vec4(line_color, 1.0f);
 		}
-	); // --------------------
+	); // END: SHADER_SOURCE
 }
