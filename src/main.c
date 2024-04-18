@@ -112,16 +112,6 @@ int main(void) {
 			0.0f, -axsxyz,    0.0f, 0.0f, 1.0f, 0.0f, // -Y
 			0.0f,    0.0f,  axsxyz, 0.0f, 0.0f, 1.0f, //  Z
 			0.0f,    0.0f, -axsxyz, 0.0f, 0.0f, 1.0f  // -Z
-	// World Axis -------------
-	Shader axis_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER_LINE_COLOR_FROM_VERTEX());
-	f32 axsxyz = 32.0f;
-	f32 axis_xyz[] = {
-		axsxyz,    0.0f,    0.0f, 1.0f, 0.0f, 0.0f, //  X
-	 -axsxyz,    0.0f,    0.0f, 1.0f, 0.0f, 0.0f, // -X
-			0.0f,  axsxyz,    0.0f, 0.0f, 1.0f, 0.0f, //  Y
-			0.0f, -axsxyz,    0.0f, 0.0f, 1.0f, 0.0f, // -Y
-			0.0f,    0.0f,  axsxyz, 0.0f, 0.0f, 1.0f, //  Z
-			0.0f,    0.0f, -axsxyz, 0.0f, 0.0f, 1.0f  // -Z
 	};
 
 	u32 VBO_axis, VAO_axis;
@@ -131,7 +121,6 @@ int main(void) {
 	glBindVertexArray(VAO_axis);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO_axis);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(axis_xyz), axis_xyz, GL_STATIC_DRAW);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(axis_xyz), axis_xyz, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, 6 * sizeof(f32), (void*)0);
@@ -201,7 +190,6 @@ int main(void) {
 
 		// Draw Axis
 		shader_use(axis_program);
-		shader_use(axis_program);
 		{
 			glLineWidth(2.0f);
 
@@ -209,9 +197,6 @@ int main(void) {
 			glBindBuffer(GL_ARRAY_BUFFER, VBO_axis);
 
 			Mat4f32 model = mat4f32(1.0f);
-			shader_set_uniform_mat4fv(axis_program, "model", model);
-			shader_set_uniform_mat4fv(axis_program, "view", view);
-			shader_set_uniform_mat4fv(axis_program, "projection", projection);
 			shader_set_uniform_mat4fv(axis_program, "model", model);
 			shader_set_uniform_mat4fv(axis_program, "view", view);
 			shader_set_uniform_mat4fv(axis_program, "projection", projection);
@@ -327,9 +312,7 @@ int main(void) {
 				
 				Vec3f32 new_cube_position;
 				if (dot > 0) { // Point is on the side the normal is pointing twoards
-				if (dot > 0) { // Point is on the side the normal is pointing twoards
 					new_cube_position = add_vec3f32(cube_center, scale_vec3f32(face_normal, -2));
-				} else { // Point is on the opposite side of the normal
 				} else { // Point is on the opposite side of the normal
 					new_cube_position = add_vec3f32(cube_center, scale_vec3f32(face_normal, 2));
 				}
