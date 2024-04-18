@@ -111,7 +111,8 @@ function Mat4f32 mat4f32(f32 diag);
 
 function Mat4f32 add_mat4f32(Mat4f32 left, Mat4f32 right);
 function Mat4f32 sub_mat4f32(Mat4f32 left, Mat4f32 right);
-function Mat4f32 mul_mat4f32(Mat4f32 left, Mat4f32 right);
+/* Apply the left matrix to the right matrix*/
+function Mat4f32 mul_mat4f32(Mat4f32 left, Mat4f32 right); 
 
 function Mat4f32 translate_mat4f32(f32 x, f32 y, f32 z);
 function Mat4f32 rotate_axis_mat4f32(Vec3f32 axis, f32 radians);

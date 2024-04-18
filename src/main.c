@@ -102,16 +102,16 @@ int main(void) {
 	cube_program_init();
 	cube_lines_program_init();
 
-	// Axis -------------
-	Shader lines_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER_LINE_COLOR_FROM_VERTEX());
-	f32 lenxyz = 32.0f;
-	f32 xyz[] = {
-		lenxyz,    0.0f,    0.0f, 1.0f, 0.0f, 0.0f, //  X
-	 -lenxyz,    0.0f,    0.0f, 1.0f, 0.0f, 0.0f, // -X
-			0.0f,  lenxyz,    0.0f, 0.0f, 1.0f, 0.0f, //  Y
-			0.0f, -lenxyz,    0.0f, 0.0f, 1.0f, 0.0f, // -Y
-			0.0f,    0.0f,  lenxyz, 0.0f, 0.0f, 1.0f, //  Z
-			0.0f,    0.0f, -lenxyz, 0.0f, 0.0f, 1.0f  // -Z
+	// World Axis -------------
+	Shader axis_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER_LINE_COLOR_FROM_VERTEX());
+	f32 axsxyz = 32.0f;
+	f32 axis_xyz[] = {
+		axsxyz,    0.0f,    0.0f, 1.0f, 0.0f, 0.0f, //  X
+	 -axsxyz,    0.0f,    0.0f, 1.0f, 0.0f, 0.0f, // -X
+			0.0f,  axsxyz,    0.0f, 0.0f, 1.0f, 0.0f, //  Y
+			0.0f, -axsxyz,    0.0f, 0.0f, 1.0f, 0.0f, // -Y
+			0.0f,    0.0f,  axsxyz, 0.0f, 0.0f, 1.0f, //  Z
+			0.0f,    0.0f, -axsxyz, 0.0f, 0.0f, 1.0f  // -Z
 	};
 
 	u32 VBO_axis, VAO_axis;
@@ -121,7 +121,7 @@ int main(void) {
 	glBindVertexArray(VAO_axis);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO_axis);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(xyz), xyz, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(axis_xyz), axis_xyz, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, 6 * sizeof(f32), (void*)0);
 	glEnableVertexAttribArray(0);
@@ -132,6 +132,37 @@ int main(void) {
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+	// Cybe gismos -------------
+	/*
+	Shader gismos_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER_LINE_COLOR_FROM_VERTEX());
+	f32 gizxyz = 2.0f;
+	f32 gizmos_xyz[] = {
+		gizxyz,    0.0f,    0.0f, 1.0f, 0.0f, 0.0f, //  X
+	    0.0f,    0.0f,    0.0f, 1.0f, 0.0f, 0.0f, // -X
+			0.0f,  gizxyz,    0.0f, 0.0f, 1.0f, 0.0f, //  Y
+			0.0f,    0.0f,    0.0f, 0.0f, 1.0f, 0.0f, // -Y
+			0.0f,    0.0f,  gizxyz, 0.0f, 0.0f, 1.0f, //  Z
+			0.0f,    0.0f,    0.0f, 0.0f, 0.0f, 1.0f  // -Z
+	};
+
+	u32 VBO_gismos, VAO_gismos;
+	glGenVertexArrays(1, &VAO_gismos);
+	glGenBuffers(1, &VBO_gismos);
+
+	glBindVertexArray(VAO_gismos);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_gismos);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(gizmos_xyz), gizmos_xyz, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, 6 * sizeof(f32), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_False, 6 * sizeof(f32), (void*)(3* sizeof(f32)));
+	glEnableVertexAttribArray(1);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	*/
 
 	while(!glfwWindowShouldClose(window)) {
 		f32 currentFrame = (f32)(glfwGetTime());
@@ -158,7 +189,7 @@ int main(void) {
 		Raycast = sub_vec3f32(vec3f32(unproject_mouse.x, unproject_mouse.y, unproject_mouse.z), vec3f32(camera.position.x, camera.position.y, camera.position.z));
 
 		// Draw Axis
-		shader_use(lines_program);
+		shader_use(axis_program);
 		{
 			glLineWidth(2.0f);
 
@@ -166,9 +197,9 @@ int main(void) {
 			glBindBuffer(GL_ARRAY_BUFFER, VBO_axis);
 
 			Mat4f32 model = mat4f32(1.0f);
-			shader_set_uniform_mat4fv(lines_program, "model", model);
-			shader_set_uniform_mat4fv(lines_program, "view", view);
-			shader_set_uniform_mat4fv(lines_program, "projection", projection);
+			shader_set_uniform_mat4fv(axis_program, "model", model);
+			shader_set_uniform_mat4fv(axis_program, "view", view);
+			shader_set_uniform_mat4fv(axis_program, "projection", projection);
 
 			glDrawArrays(GL_LINES, 0, 6);
 
@@ -280,17 +311,11 @@ int main(void) {
 									(cube_center.z - hovered_p1.z) * face_normal.z;
 				
 				Vec3f32 new_cube_position;
-				if (dot > 0) {
-					// Point is on the side the normal is pointing twoards
+				if (dot > 0) { // Point is on the side the normal is pointing twoards
 					new_cube_position = add_vec3f32(cube_center, scale_vec3f32(face_normal, -2));
-				} else {
-					// Point is on the opposite side of the normal
+				} else { // Point is on the opposite side of the normal
 					new_cube_position = add_vec3f32(cube_center, scale_vec3f32(face_normal, 2));
 				}
-
-				print_vec3f32(cube_center, "Reference Cube center");
-				print_vec3f32(new_cube_position, "New Cube Center");
-				printf("Total cubes: %d\n", TotalCubes);
 
 				CubeToAddPosiiton = new_cube_position;
 				AddCube = 1;
@@ -300,41 +325,93 @@ int main(void) {
 		// Draw cubes
 		{
 			for(u32 i = 0; i < TotalCubes; i++) {
-				// Draw cubes normally
-				cube_program_draw(Cubes[i], view, projection);
+				Cube cube = Cubes[i];
+				cube_program_draw(cube, view, projection);
 
-				Cube lines = Cubes[i];
-				lines.color = vec3f32(0.0f, 0.0f, 0.0f);
-				cube_lines_draw(lines, view, projection);
-
-				// Draw hovered cube highlight
-				if (HoveredCubeIndex == i) {
-					// Hover cube
-					Cube hover_cube = Cubes[i];
-					glLineWidth(2.0f);
-					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-					{
-						hover_cube.color = vec3f32(sin(8.0f*glfwGetTime() + (2*PI/3)) * 0.5f + 0.5f, sin(8.0f*glfwGetTime() + (4*PI/3)) * 0.5f + 0.5f, sin(8.0f*glfwGetTime()) * 0.5f + 0.5f);
-						cube_scale(&hover_cube, vec3f32(1.1f, 1.1f, 1.1f));
-					}
-					cube_program_draw(hover_cube, view, projection);
-					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-					glLineWidth(1.0f);
+				// Draw outline of the cube
+				{
+					Cube temp_cube_just_edges = cube;
+					temp_cube_just_edges.color = vec3f32(0.0f, 0.0f, 0.0f);
+					cube_lines_draw(temp_cube_just_edges, view, projection);
 				}
 
-				// Draw selected cube highlight
-				if (SelectedCubeIndex == i) {
-					Cube cube = Cubes[i];
-					glLineWidth(2.0f);
-					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				if (i == SelectedCubeIndex)  {
+					
+					// Draw Gizmos for the selected cube
 					{
+						Vec3f32 cube_position = vec3f32(cube.transform.m12, cube.transform.m13, cube.transform.m14);
+						f32 gizmos_length = 1.5f;
+						f32 gizmos_scale  = 0.06f;
+
+						// X
+						Cube gizmos_x       = cube_create(cube_position, vec3f32(1.0f, 0.0f, 0.0f));
+						Mat4f32 translate_x = translate_mat4f32(gizmos_length, 0.0f, 0.0f);
+						gizmos_x.transform  = mul_mat4f32(translate_x, gizmos_x.transform);
+						Mat4f32 scale_x     = scale_mat4f32(gizmos_length, gizmos_scale, gizmos_scale);
+						gizmos_x.transform  = mul_mat4f32(scale_x, gizmos_x.transform);
+						cube_program_draw(gizmos_x, view, projection);
+						// Y
+						Cube gizmos_y       = cube_create(cube_position, vec3f32(0.0f, 1.0f, 0.0f));
+						Mat4f32 translate_y = translate_mat4f32(0.0f, gizmos_length, 0.0f);
+						gizmos_y.transform  = mul_mat4f32(translate_y, gizmos_y.transform);
+						Mat4f32 scale_y     = scale_mat4f32(gizmos_scale, gizmos_length, gizmos_scale);
+						gizmos_y.transform  = mul_mat4f32(scale_y, gizmos_y.transform);
+						cube_program_draw(gizmos_y, view, projection);
+						// Z
+						Cube gizmos_z       = cube_create(cube_position, vec3f32(0.0f, 0.0f, 1.0f));
+						Mat4f32 translate_z = translate_mat4f32(0.0f, 0.0f, gizmos_length);
+						gizmos_z.transform  = mul_mat4f32(translate_z, gizmos_z.transform);
+						Mat4f32 scale_z     = scale_mat4f32(gizmos_scale, gizmos_scale, gizmos_length);
+						gizmos_z.transform  = mul_mat4f32(scale_z, gizmos_z.transform);
+						cube_program_draw(gizmos_z, view, projection);
+					}
+
+
+					/*
+					shader_use(gismos_program);
+					{
+						glBindVertexArray(VAO_gismos);
+						glBindBuffer(GL_ARRAY_BUFFER, VBO_gismos);
+
+						Mat4f32 model = mat4f32(1.0f);
+						model = mul_mat4f32(cube.transform, model);
+						shader_set_uniform_mat4fv(gismos_program, "model", model);
+						shader_set_uniform_mat4fv(gismos_program, "view", view);
+						shader_set_uniform_mat4fv(gismos_program, "projection", projection);
+
+						glLineWidth(5.0f);
+						glDrawArrays(GL_LINES, 0, 6);
+						glLineWidth(1.0f);
+
+						glBindVertexArray(0);
+						glBindBuffer(GL_ARRAY_BUFFER, 0);
+					}
+					*/
+
+					// Draw highlight of selected cube
+					{
+						glLineWidth(2.0f);
+						glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 						cube.color = vec3f32(sin(8.0f*glfwGetTime()) * 0.5f + 0.5f, sin(8.0f*glfwGetTime() + (2*PI/3)) * 0.5f + 0.5f, sin(8.0f*glfwGetTime() + (4*PI/3)) * 0.5f + 0.5f);
 						cube_scale(&cube, vec3f32(1.01f, 1.01f, 1.01f));
+						cube_program_draw(cube, view, projection);
+						glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+						glLineWidth(1.0f);
 					}
-					cube_program_draw(cube, view, projection);
-					
-					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-					glLineWidth(1.0f);
+				}
+
+				if (HoveredCubeIndex == i) {
+					// Draw hovered highlights
+					{
+						Cube hover_cube = cube;
+						glLineWidth(2.0f);
+						glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+						hover_cube.color = vec3f32(sin(8.0f*glfwGetTime() + (2*PI/3)) * 0.5f + 0.5f, sin(8.0f*glfwGetTime() + (4*PI/3)) * 0.5f + 0.5f, sin(8.0f*glfwGetTime()) * 0.5f + 0.5f);
+						cube_scale(&hover_cube, vec3f32(1.1f, 1.1f, 1.1f));
+						cube_program_draw(hover_cube, view, projection);
+						glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+						glLineWidth(1.0f);
+					}
 				}
 			}
 
