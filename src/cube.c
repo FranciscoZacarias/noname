@@ -4,7 +4,6 @@ function void cube_program_init() {
 
 	glGenVertexArrays(1, &CubeProgramObject.VAO);
 	glGenBuffers(1, &CubeProgramObject.VBO);
-	glGenBuffers(1, &CubeProgramObject.EBO);
 
 	glBindVertexArray(CubeProgramObject.VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, CubeProgramObject.VBO);
@@ -18,8 +17,8 @@ function void cube_program_init() {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-function void cube_program_draw(Cube cube, Mat4f32 view, Mat4f32 projection) {
-	shader_use(CubeProgramObject.shader_program);
+function void cube_draw(Cube cube, Mat4f32 view, Mat4f32 projection) {
+	glUseProgram(CubeProgramObject.shader_program);
 
 	glBindVertexArray(CubeProgramObject.VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, CubeProgramObject.VBO);
@@ -39,7 +38,6 @@ function void cube_program_draw(Cube cube, Mat4f32 view, Mat4f32 projection) {
 function void cube_program_clean() {
 	glDeleteVertexArrays(1, &CubeProgramObject.VAO);
 	glDeleteBuffers(1, &CubeProgramObject.VBO);
-	glDeleteBuffers(1, &CubeProgramObject.EBO);
 }
 
 function Cube cube_create(Vec3f32 position, Vec3f32 color) {

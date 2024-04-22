@@ -41,12 +41,12 @@ function Shader shader_create(const char* vertex_source, const char* fragment_so
 	glCompileShader(fragment_shader);
 	_shader_check_errors(fragment_shader, _ShaderErrorType_CompileFragment);
 
-	Shader result = { 0 };
-	result.id = glCreateProgram();
-	glAttachShader(result.id, vertex_shader);
-	glAttachShader(result.id, fragment_shader);
-	glLinkProgram(result.id);
-	_shader_check_errors(result.id, _ShaderErrorType_LinkProgram);
+	Shader result = 0;
+	result = glCreateProgram();
+	glAttachShader(result, vertex_shader);
+	glAttachShader(result, fragment_shader);
+	glLinkProgram(result);
+	_shader_check_errors(result, _ShaderErrorType_LinkProgram);
 
 	glDeleteShader(vertex_shader);
 	glDeleteShader(fragment_shader);
@@ -54,11 +54,11 @@ function Shader shader_create(const char* vertex_source, const char* fragment_so
 }
 
 function void shader_use(Shader shader) {
-	glUseProgram(shader.id);
+	glUseProgram(shader);
 }
 
 function void shader_set_uniform_mat4fv(Shader shader, const char* uniform, Mat4f32 mat) {
-	s32 uniform_location = glGetUniformLocation(shader.id, uniform);
+	s32 uniform_location = glGetUniformLocation(shader, uniform);
 	if (uniform_location == -1) {
 		printf("Uniform %s not found\n", uniform);
 	}
@@ -66,7 +66,7 @@ function void shader_set_uniform_mat4fv(Shader shader, const char* uniform, Mat4
 }
 
 function void shader_set_uniform_vec4fv(Shader shader, const char* uniform, Vec4f32 vec) {
-	s32 uniform_location = glGetUniformLocation(shader.id, uniform);
+	s32 uniform_location = glGetUniformLocation(shader, uniform);
 	if (uniform_location == -1) {
 		printf("Uniform %s not found\n", uniform);
 	}
@@ -74,7 +74,7 @@ function void shader_set_uniform_vec4fv(Shader shader, const char* uniform, Vec4
 }
 
 function void shader_set_uniform_vec3fv(Shader shader, const char* uniform, Vec3f32 vec) {
-	s32 uniform_location = glGetUniformLocation(shader.id, uniform);
+	s32 uniform_location = glGetUniformLocation(shader, uniform);
 	if (uniform_location == -1) {
 		printf("Uniform %s not found\n", uniform);
 	}

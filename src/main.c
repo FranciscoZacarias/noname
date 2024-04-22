@@ -290,7 +290,7 @@ int main(void) {
 			for(u32 i = 0; i < TotalCubes; i++) {
 				Cube cube = Cubes[i];
 				if (cube.dead) continue;
-				cube_program_draw(cube, view, projection);
+				cube_draw(cube, view, projection);
 
 				// Draw outline of the cube
 				{
@@ -313,21 +313,21 @@ int main(void) {
 						gizmos_x.transform  = mul_mat4f32(translate_x, gizmos_x.transform);
 						Mat4f32 scale_x     = scale_mat4f32(gizmos_length, gizmos_scale, gizmos_scale);
 						gizmos_x.transform  = mul_mat4f32(scale_x, gizmos_x.transform);
-						cube_program_draw(gizmos_x, view, projection);
+						cube_draw(gizmos_x, view, projection);
 						// Y
 						Cube gizmos_y       = cube_create(cube_position, vec3f32(0.0f, 1.0f, 0.0f));
 						Mat4f32 translate_y = translate_mat4f32(0.0f, gizmos_length, 0.0f);
 						gizmos_y.transform  = mul_mat4f32(translate_y, gizmos_y.transform);
 						Mat4f32 scale_y     = scale_mat4f32(gizmos_scale, gizmos_length, gizmos_scale);
 						gizmos_y.transform  = mul_mat4f32(scale_y, gizmos_y.transform);
-						cube_program_draw(gizmos_y, view, projection);
+						cube_draw(gizmos_y, view, projection);
 						// Z
 						Cube gizmos_z       = cube_create(cube_position, vec3f32(0.0f, 0.0f, 1.0f));
 						Mat4f32 translate_z = translate_mat4f32(0.0f, 0.0f, gizmos_length);
 						gizmos_z.transform  = mul_mat4f32(translate_z, gizmos_z.transform);
 						Mat4f32 scale_z     = scale_mat4f32(gizmos_scale, gizmos_scale, gizmos_length);
 						gizmos_z.transform  = mul_mat4f32(scale_z, gizmos_z.transform);
-						cube_program_draw(gizmos_z, view, projection);
+						cube_draw(gizmos_z, view, projection);
 					}
 
 					// Draw highlight of selected cube
@@ -336,7 +336,7 @@ int main(void) {
 						glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 						cube.color = vec3f32(sin(8.0f*glfwGetTime()) * 0.5f + 0.5f, sin(8.0f*glfwGetTime() + (2*PI/3)) * 0.5f + 0.5f, sin(8.0f*glfwGetTime() + (4*PI/3)) * 0.5f + 0.5f);
 						cube_scale(&cube, vec3f32(1.01f, 1.01f, 1.01f));
-						cube_program_draw(cube, view, projection);
+						cube_draw(cube, view, projection);
 						glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 						glLineWidth(1.0f);
 					}
@@ -350,7 +350,7 @@ int main(void) {
 						glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 						hover_cube.color = vec3f32(sin(8.0f*glfwGetTime() + (2*PI/3)) * 0.5f + 0.5f, sin(8.0f*glfwGetTime() + (4*PI/3)) * 0.5f + 0.5f, sin(8.0f*glfwGetTime()) * 0.5f + 0.5f);
 						cube_scale(&hover_cube, vec3f32(1.1f, 1.1f, 1.1f));
-						cube_program_draw(hover_cube, view, projection);
+						cube_draw(hover_cube, view, projection);
 						glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 						glLineWidth(1.0f);
 					}
