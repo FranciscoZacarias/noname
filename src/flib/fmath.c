@@ -282,12 +282,17 @@ function f32 angle_vec3f32(Vec3f32 a, Vec3f32 b) {
 // Vector4 f32
 
 function Vec4f32 vec4f32 (f32 x, f32 y, f32 z) {
-	Vec4f32 result = {x, y, z, 1};
+	Vec4f32 result = {x, y, z, 1.0f};
 	return result;
 }
 
 function Vec4f32 vec4f32w(f32 x, f32 y, f32 z, f32 w) {
 	Vec4f32 result = {x, y, z, w};
+	return result;
+}
+
+function Vec4f32 vec4f32_from_vec3f32(Vec3f32 v, f32 w) {
+	Vec4f32 result = {v.x, v.y, v.z, w};
 	return result;
 }
 

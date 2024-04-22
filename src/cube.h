@@ -10,66 +10,88 @@ typedef struct CubeProgram {
 
 global CubeProgram CubeProgramObject = { 0 };
 
-global f32 CubeObjectVerticesLocalSpace[] = {
-  -1.f, -1.f,  1.f, // 0 Back  face
-   1.f, -1.f,  1.f, // 1 Back  face
-   1.f,  1.f,  1.f, // 2 Back  face
-  -1.f,  1.f,  1.f, // 3 Back  face
-  -1.f, -1.f, -1.f, // 4 Front face
-   1.f, -1.f, -1.f, // 5 Front face
-   1.f,  1.f, -1.f, // 6 Front face
-  -1.f,  1.f, -1.f  // 7 Front face
-};
-
-global u32 CubeObjectIndices[] = {
-  // Do not change the order. A lot of assumptions are made 
-  // throughout the code about it.
-  0, 1, 2, 2, 3, 0, // Back
-  1, 5, 6, 6, 2, 1, // Right
-  5, 4, 7, 7, 6, 5, // Front
-  4, 0, 3, 3, 7, 4, // Left
-  3, 2, 6, 6, 7, 3, // Top
-  4, 5, 1, 1, 0, 4  // Bottom
-};
-
-global CubeProgram CubeLinesObject = { 0 };
-
-global u32 CubeLinesIndices[] = {
-  4, 5, 5, 6, 6, 7, 7, 4,
-  0, 1, 1, 2, 2, 3, 3, 0,
-  0, 4, 5, 1, 6, 2, 7, 3
-};
-
 typedef struct Cube { 
   Mat4f32 transform;
   Vec3f32 color;
 } Cube;
 
 typedef struct CubeVertices {
-/* In the same order as CubeObjectIndices presents
-     3--------2
+  /* 3--------2
     /|       /|
-   / |      / |
-  7--+-----6  |
-  |  0-----|--1
-  | /      | /
-  |/       |/
-  4--------5
-*/
+   7-+------6 |
+   | 0------|-1
+   |/       |/
+   4--------5 */
   union {
-    Vec3f32 v[8];
+    f32 data[108];
+    Vec3f32 vertices[36];
     struct {
-      Vec3f32 v0;
-      Vec3f32 v1;
-      Vec3f32 v2;
-      Vec3f32 v3;
-      Vec3f32 v4;
-      Vec3f32 v5;
-      Vec3f32 v6;
-      Vec3f32 v7;
+        // Naming scheme: {face}_{rect-vertex}_{vertex-index}
+        Vec3f32 back_1_0,  back_1_1,  back_1_2;
+        Vec3f32 back_3_2,  back_3_3,  back_3_4;
+
+        Vec3f32 front_5_4, front_5_5, front_5_6;
+        Vec3f32 front_7_6, front_7_7, front_7_4;
+
+        Vec3f32 left_3_7,  left_3_3,  left_3_0;
+        Vec3f32 left_4_0,  left_4_4,  left_4_7;
+
+        Vec3f32 right_2_6, right_2_2, right_2_1;
+        Vec3f32 right_5_1, right_5_5, right_5_6;
+
+        Vec3f32 bottom_1_0, bottom_1_1, bottom_1_5;
+        Vec3f32 bottom_4_5, bottom_4_4, bottom_4_0;
+
+        Vec3f32 top_2_3, top_2_2, top_2_6;
+        Vec3f32 top_7_6, top_7_7, top_7_3;
     };
   };
 } CubeVertices;
+
+global CubeVertices CubeVerticesLocalSpace = {
+  // Back
+  -1.0f, -1.0f, -1.0f,
+   1.0f, -1.0f, -1.0f,
+   1.0f,  1.0f, -1.0f,
+   1.0f,  1.0f, -1.0f,
+  -1.0f,  1.0f, -1.0f,
+  -1.0f, -1.0f, -1.0f,
+  // Front
+  -1.0f, -1.0f,  1.0f,
+   1.0f, -1.0f,  1.0f,
+   1.0f,  1.0f,  1.0f,
+   1.0f,  1.0f,  1.0f,
+  -1.0f,  1.0f,  1.0f,
+  -1.0f, -1.0f,  1.0f,
+  // Left
+  -1.0f,  1.0f,  1.0f,
+  -1.0f,  1.0f, -1.0f,
+  -1.0f, -1.0f, -1.0f,
+  -1.0f, -1.0f, -1.0f,
+  -1.0f, -1.0f,  1.0f,
+  -1.0f,  1.0f,  1.0f,
+  // Right
+   1.0f,  1.0f,  1.0f,
+   1.0f,  1.0f, -1.0f,
+   1.0f, -1.0f, -1.0f,
+   1.0f, -1.0f, -1.0f,
+   1.0f, -1.0f,  1.0f,
+   1.0f,  1.0f,  1.0f,
+  // Bottom
+  -1.0f, -1.0f, -1.0f,
+   1.0f, -1.0f, -1.0f,
+   1.0f, -1.0f,  1.0f,
+   1.0f, -1.0f,  1.0f,
+  -1.0f, -1.0f,  1.0f,
+  -1.0f, -1.0f, -1.0f,
+  // Top
+  -1.0f,  1.0f, -1.0f,
+   1.0f,  1.0f, -1.0f,
+   1.0f,  1.0f,  1.0f,
+   1.0f,  1.0f,  1.0f,
+  -1.0f,  1.0f,  1.0f,
+  -1.0f,  1.0f, -1.0f,
+};
 
 function void cube_program_init();
 function void cube_program_draw(Cube cube, Mat4f32 view, Mat4f32 projection);

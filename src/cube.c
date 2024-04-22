@@ -8,40 +8,14 @@ function void cube_program_init() {
 
 	glBindVertexArray(CubeProgramObject.VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, CubeProgramObject.VBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, CubeProgramObject.EBO);
 
-	glBufferData(GL_ARRAY_BUFFER, sizeof(CubeObjectVerticesLocalSpace), CubeObjectVerticesLocalSpace, GL_STATIC_DRAW);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(CubeObjectIndices), CubeObjectIndices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(CubeVerticesLocalSpace), CubeVerticesLocalSpace.data, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, 3 * sizeof(f32), (void*)0);
 	glEnableVertexAttribArray(0);
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-
-function void cube_lines_program_init() {
-	CubeLinesObject.shader_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());
-
-	glGenVertexArrays(1, &CubeLinesObject.VAO);
-	glGenBuffers(1, &CubeLinesObject.VBO);
-	glGenBuffers(1, &CubeLinesObject.EBO);
-
-	glBindVertexArray(CubeLinesObject.VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, CubeLinesObject.VBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, CubeLinesObject.EBO);
-
-	glBufferData(GL_ARRAY_BUFFER, sizeof(CubeObjectVerticesLocalSpace), CubeObjectVerticesLocalSpace, GL_STATIC_DRAW);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(CubeLinesIndices), CubeLinesIndices, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, 3 * sizeof(f32), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	
 }
 
 function void cube_program_draw(Cube cube, Mat4f32 view, Mat4f32 projection) {
@@ -49,35 +23,13 @@ function void cube_program_draw(Cube cube, Mat4f32 view, Mat4f32 projection) {
 
 	glBindVertexArray(CubeProgramObject.VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, CubeProgramObject.VBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, CubeProgramObject.EBO);
 
 	shader_set_uniform_mat4fv(CubeProgramObject.shader_program, "view", view);
 	shader_set_uniform_mat4fv(CubeProgramObject.shader_program, "projection", projection);
 	shader_set_uniform_mat4fv(CubeProgramObject.shader_program, "model", cube.transform);
 	shader_set_uniform_vec3fv(CubeProgramObject.shader_program, "color", cube.color);
 
-	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-}
-
-function void cube_lines_draw(Cube cube, Mat4f32 view, Mat4f32 projection) {
-	shader_use(CubeLinesObject.shader_program);
-
-	glBindVertexArray(CubeLinesObject.VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, CubeLinesObject.VBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, CubeLinesObject.EBO);
-
-	shader_set_uniform_mat4fv(CubeLinesObject.shader_program, "view", view);
-	shader_set_uniform_mat4fv(CubeLinesObject.shader_program, "projection", projection);
-	shader_set_uniform_mat4fv(CubeLinesObject.shader_program, "model", cube.transform);
-	shader_set_uniform_vec3fv(CubeLinesObject.shader_program, "color", cube.color);
-
-	glLineWidth(1.6f);
-	glDrawElements(GL_LINES, 36, GL_UNSIGNED_INT, 0);
-	glLineWidth(1.0f);
+	glDrawArrays(GL_TRIANGLES, 0, 108);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -121,25 +73,59 @@ function Vec3f32 cube_get_center(Cube cube) {
 function CubeVertices cube_get_transformed_vertices(Cube cube) {
 	CubeVertices result = { 0 };
 
-	Vec4f32 back0 = vec4f32(-1.f, -1.f,  1.f);
-	Vec4f32 back1 = vec4f32( 1.f, -1.f,  1.f);
-	Vec4f32 back2 = vec4f32( 1.f,  1.f,  1.f);
-	Vec4f32 back3 = vec4f32(-1.f,  1.f,  1.f);
+	Vec4f32 back0   = vec4f32_from_vec3f32(CubeVerticesLocalSpace.back_1_0, 1.0f);
+	Vec4f32 back1   = vec4f32_from_vec3f32(CubeVerticesLocalSpace.back_1_1, 1.0f);
+	Vec4f32 back2   = vec4f32_from_vec3f32(CubeVerticesLocalSpace.back_1_2, 1.0f);
+	Vec4f32 back3   = vec4f32_from_vec3f32(CubeVerticesLocalSpace.back_3_3, 1.0f);
+	result.back_1_0 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(back0, cube.transform));
+	result.back_1_1 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(back1, cube.transform));
+	result.back_1_2 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(back2, cube.transform));
+	result.back_3_3 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(back3, cube.transform));
 
-	result.v0 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(back0, cube.transform));
-	result.v1 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(back1, cube.transform));
-	result.v2 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(back2, cube.transform));
-	result.v3 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(back3, cube.transform));
+	Vec4f32 front0   = vec4f32_from_vec3f32(CubeVerticesLocalSpace.front_5_4, 1.0f);
+	Vec4f32 front1   = vec4f32_from_vec3f32(CubeVerticesLocalSpace.front_5_5, 1.0f);
+	Vec4f32 front2   = vec4f32_from_vec3f32(CubeVerticesLocalSpace.front_5_6, 1.0f);
+	Vec4f32 front3   = vec4f32_from_vec3f32(CubeVerticesLocalSpace.front_7_7, 1.0f);
+	result.front_5_4 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(front0, cube.transform));
+	result.front_5_5 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(front1, cube.transform));
+	result.front_5_6 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(front2, cube.transform));
+	result.front_7_7 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(front3, cube.transform));
 
-	Vec4f32 front0 = vec4f32(-1.f, -1.f, -1.f);
-	Vec4f32 front1 = vec4f32( 1.f, -1.f, -1.f);
-	Vec4f32 front2 = vec4f32( 1.f,  1.f, -1.f);
-	Vec4f32 front3 = vec4f32(-1.f,  1.f, -1.f);
+	Vec4f32 left0   = vec4f32_from_vec3f32(CubeVerticesLocalSpace.left_3_7, 1.0f);
+	Vec4f32 left1   = vec4f32_from_vec3f32(CubeVerticesLocalSpace.left_3_3, 1.0f);
+	Vec4f32 left2   = vec4f32_from_vec3f32(CubeVerticesLocalSpace.left_3_0, 1.0f);
+	Vec4f32 left3   = vec4f32_from_vec3f32(CubeVerticesLocalSpace.left_4_4, 1.0f);
+	result.left_3_7 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(left0, cube.transform));
+	result.left_3_3 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(left1, cube.transform));
+	result.left_3_0 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(left2, cube.transform));
+	result.left_4_4 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(left3, cube.transform));
 
-	result.v4 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(front0, cube.transform));
-	result.v5 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(front1, cube.transform));
-	result.v6 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(front2, cube.transform));
-	result.v7 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(front3, cube.transform));
+	Vec4f32 right0   = vec4f32_from_vec3f32(CubeVerticesLocalSpace.right_2_6, 1.0f);
+	Vec4f32 right1   = vec4f32_from_vec3f32(CubeVerticesLocalSpace.right_2_2, 1.0f);
+	Vec4f32 right2   = vec4f32_from_vec3f32(CubeVerticesLocalSpace.right_2_1, 1.0f);
+	Vec4f32 right3   = vec4f32_from_vec3f32(CubeVerticesLocalSpace.right_5_5, 1.0f);
+	result.right_2_6 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(right0, cube.transform));
+	result.right_2_2 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(right1, cube.transform));
+	result.right_2_1 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(right2, cube.transform));
+	result.right_5_5 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(right3, cube.transform));
+
+	Vec4f32 bottom0   = vec4f32_from_vec3f32(CubeVerticesLocalSpace.bottom_1_0, 1.0f);
+	Vec4f32 bottom1   = vec4f32_from_vec3f32(CubeVerticesLocalSpace.bottom_1_1, 1.0f);
+	Vec4f32 bottom2   = vec4f32_from_vec3f32(CubeVerticesLocalSpace.bottom_1_5, 1.0f);
+	Vec4f32 bottom3   = vec4f32_from_vec3f32(CubeVerticesLocalSpace.bottom_4_4, 1.0f);
+	result.bottom_1_0 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(bottom0, cube.transform));
+	result.bottom_1_1 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(bottom1, cube.transform));
+	result.bottom_1_5 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(bottom2, cube.transform));
+	result.bottom_4_4 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(bottom3, cube.transform));
+	
+	Vec4f32 top0   = vec4f32_from_vec3f32(CubeVerticesLocalSpace.top_2_3, 1.0f);
+	Vec4f32 top1   = vec4f32_from_vec3f32(CubeVerticesLocalSpace.top_2_2, 1.0f);
+	Vec4f32 top2   = vec4f32_from_vec3f32(CubeVerticesLocalSpace.top_2_6, 1.0f);
+	Vec4f32 top3   = vec4f32_from_vec3f32(CubeVerticesLocalSpace.top_7_7, 1.0f);
+	result.top_2_3 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(top0, cube.transform));
+	result.top_2_2 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(top1, cube.transform));
+	result.top_2_6 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(top2, cube.transform));
+	result.top_7_7 = vec3f32_from_vec4f32(mul_vec4f32_mat4f32(top3, cube.transform));
 
 	return result;
 }

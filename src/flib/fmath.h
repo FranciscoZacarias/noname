@@ -90,6 +90,7 @@ function f32 angle_vec3f32(Vec3f32 a, Vec3f32 b);
 
 function Vec4f32 vec4f32 (f32 x, f32 y, f32 z);
 function Vec4f32 vec4f32w(f32 x, f32 y, f32 z, f32 w);
+function Vec4f32 vec4f32_from_vec3f32(Vec3f32 v, f32 w);
 
 function Vec4f32 add_vec4f32(Vec4f32 a, Vec4f32 b);
 function Vec4f32 sub_vec4f32(Vec4f32 a, Vec4f32 b);
