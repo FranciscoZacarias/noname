@@ -25,6 +25,9 @@ global MouseState Mouse = { 0 };
 // Keyboard state
 global b32 F_KeyPreviousState = 1;
 global b32 F_KeyState = 0;
+
+global b32 DELETE_KeyPreviousState = 1;
+global b32 DELETE_KeyState = 0;
 /////////////////
 
 typedef enum CameraMode {
@@ -43,11 +46,12 @@ global Vec3f32 Raycast = {F32_MAX, F32_MAX, F32_MAX};
 global u32  SelectedCubeIndex = U32_MAX; // Explicitly selected cube
 
 global u32 HoveredCubeIndex = U32_MAX; // Cube being hovered by the mouse cursor, right now
-global Vec3f32 hovered_p1 = { 0 };
-global Vec3f32 hovered_p2 = { 0 };
-global Vec3f32 hovered_p3 = { 0 };
+global Vec3f32 HoveredP1 = { 0 };
+global Vec3f32 HoveredP2 = { 0 };
+global Vec3f32 Hoveredp3 = { 0 };
+global f32 HoveredFaceDistanceToCamera = F32_MAX;
 
-global Cube Cubes[1024];
+global Cube Cubes[2048];
 global u32 TotalCubes = 0;
 
 global Vec3f32 CubeToAddPosiiton = { 0 };
@@ -176,15 +180,17 @@ int main(void) {
 		// Picking Phase
 		{
 			HoveredCubeIndex = U32_MAX;
-			hovered_p1 = vec3f32(0.f, 0.f, 0.f);;
-			hovered_p2 = vec3f32(0.f, 0.f, 0.f);;
-			hovered_p3 = vec3f32(0.f, 0.f, 0.f);;
+			HoveredP1 = vec3f32(0.f, 0.f, 0.f);
+			HoveredP2 = vec3f32(0.f, 0.f, 0.f);
+			Hoveredp3 = vec3f32(0.f, 0.f, 0.f);
+			HoveredFaceDistanceToCamera = F32_MAX;
 
 			u32 hovered_cube_distance_to_camera  = U32_MAX;
 			u32 selected_cube_distance_to_camera = U32_MAX;
 			
 			for(u32 i = 0; i < TotalCubes; i++) {
 				Cube copy = Cubes[i];
+				if (copy.dead) continue;
 				CubeVertices transformed_vertices = cube_get_transformed_vertices(copy);
 
 				for (u32 j = 0; j < ArrayCount(CubeVerticesLocalSpace.vertices); j += 6) {
@@ -236,30 +242,46 @@ int main(void) {
 					Vec3f32 intersection = intersect_line_with_plane(linef32(vec3f32(camera.position.x, camera.position.y, camera.position.z), Raycast), p1, p2, p3);
 
 					if (is_vector_inside_rectangle(intersection, p1, p2, p3)) {
+						if (HoveredP1.x == 0.f && HoveredP1.y == 0.f && HoveredP1.z == 0.f,
+								HoveredP2.x == 0.f && HoveredP2.y == 0.f && HoveredP2.z == 0.f,
+								Hoveredp3.x == 0.f && Hoveredp3.y == 0.f && Hoveredp3.z == 0.f) {
+							HoveredP1 = p1;
+							HoveredP2 = p2;
+							Hoveredp3 = p3;
+							HoveredFaceDistanceToCamera = distance_vec3f32(intersection, camera.position);
+						} else {
+							if (distance_vec3f32(intersection, camera.position) < HoveredFaceDistanceToCamera) {
+								HoveredP1 = p1;
+								HoveredP2 = p2;
+								Hoveredp3 = p3;
+								HoveredFaceDistanceToCamera = distance_vec3f32(intersection, camera.position);
+							}
+						}
 					}
 				}
 			}
-			
-			// Add cube to the face being hovered:
-			if (F_KeyState && HoveredCubeIndex != U32_MAX) {
-				Vec3f32 cube_center = cube_get_center(Cubes[HoveredCubeIndex]);
-				Vec3f32 v1 = sub_vec3f32(hovered_p2, hovered_p1);
-				Vec3f32 v2 = sub_vec3f32(hovered_p3, hovered_p1);
-				Vec3f32 face_normal = normalize_vec3f32(cross_vec3f32(v1, v2));
-				// Dot product between point and plane (normal and a point)
-				f32 dot = (cube_center.x - hovered_p1.x) * face_normal.x +
-									(cube_center.y - hovered_p1.y) * face_normal.y +
-									(cube_center.z - hovered_p1.z) * face_normal.z;
-				
-				Vec3f32 new_cube_position;
-				if (dot > 0) { // Point is on the side the normal is pointing twoards
-					new_cube_position = add_vec3f32(cube_center, scale_vec3f32(face_normal, -2));
-				} else { // Point is on the opposite side of the normal
-					new_cube_position = add_vec3f32(cube_center, scale_vec3f32(face_normal, 2));
-				}
 
-				CubeToAddPosiiton = new_cube_position;
-				AddCube = 1;
+			if (HoveredCubeIndex != U32_MAX) {
+				if (DELETE_KeyState) {
+					Cubes[HoveredCubeIndex].dead = 1;
+				} else if (F_KeyState) {
+					Vec3f32 cube_center = cube_get_center(Cubes[HoveredCubeIndex]);
+					Vec3f32 v1 = sub_vec3f32(HoveredP2, HoveredP1);
+					Vec3f32 v2 = sub_vec3f32(Hoveredp3, HoveredP1);
+					Vec3f32 face_normal = normalize_vec3f32(cross_vec3f32(v1, v2));
+					// Dot product between point and plane (normal and a point)
+					f32 dot = (cube_center.x - HoveredP1.x) * face_normal.x +
+										(cube_center.y - HoveredP1.y) * face_normal.y +
+										(cube_center.z - HoveredP1.z) * face_normal.z;
+					Vec3f32 new_cube_position;
+					if (dot > 0) { // Point is on the side the normal is pointing twoards
+						new_cube_position = add_vec3f32(cube_center, scale_vec3f32(face_normal, -2));
+					} else { // Point is on the opposite side of the normal
+						new_cube_position = add_vec3f32(cube_center, scale_vec3f32(face_normal, 2));
+					}
+					CubeToAddPosiiton = new_cube_position;
+					AddCube = 1;
+				}
 			}
 		}
 
@@ -267,6 +289,7 @@ int main(void) {
 		{
 			for(u32 i = 0; i < TotalCubes; i++) {
 				Cube cube = Cubes[i];
+				if (cube.dead) continue;
 				cube_program_draw(cube, view, projection);
 
 				// Draw outline of the cube
@@ -443,6 +466,18 @@ void process_input(GLFWwindow *window) {
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 			glfwSetCursorPos(window, Mouse.screen_space_x, Mouse.screen_space_y);
 		}
+		if (glfwGetKey(window, GLFW_KEY_DELETE) == GLFW_PRESS) {
+			if (DELETE_KeyState == 0 && DELETE_KeyPreviousState == 1) {
+				DELETE_KeyPreviousState = 0;
+				DELETE_KeyState = 1;
+			} else {
+				DELETE_KeyState = 0;
+			}
+		} else {
+			DELETE_KeyPreviousState = 1;
+			DELETE_KeyState = 0;
+		}
+
 		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
 			if (F_KeyState == 0 && F_KeyPreviousState == 1) {
 				F_KeyPreviousState = 0;

@@ -13,6 +13,7 @@ global CubeProgram CubeProgramObject = { 0 };
 typedef struct Cube { 
   Mat4f32 transform;
   Vec3f32 color;
+  b32 dead; // HACK: to delete cubes.
 } Cube;
 
 typedef struct CubeVertices {

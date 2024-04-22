@@ -46,6 +46,7 @@ function Cube cube_create(Vec3f32 position, Vec3f32 color) {
 	Cube result = { 0 };
 	result.transform = translate_mat4f32(position.x, position.y, position.z);
 	result.color = color;
+	result.dead = 0;
 	return result;
 }
 
