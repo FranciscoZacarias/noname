@@ -8,6 +8,7 @@ typedef struct CubeProgram {
 } CubeProgram;
 
 global CubeProgram CubeProgramObject = { 0 };
+global CubeProgram CubeOutlineObject = { 0 };
 
 typedef struct Cube { 
   Mat4f32 transform;
@@ -16,12 +17,6 @@ typedef struct Cube {
 } Cube;
 
 typedef struct CubeVertices {
-  /* 3--------2
-    /|       /|
-   7-+------6 |
-   | 0------|-1
-   |/       |/
-   4--------5 */
   union {
     f32 data[108];
     Vec3f32 vertices[36];
@@ -48,49 +43,58 @@ typedef struct CubeVertices {
   };
 } CubeVertices;
 
+/*  3--------2
+   /|       /|
+  7-+------6 |
+  | 0------|-1
+  |/       |/
+  4--------5  */
+#define _point(x,y,z) (x),(y),(z)
+#define P0 _point(-1.0f, -1.0f, -1.0f)
+#define P1 _point( 1.0f, -1.0f, -1.0f)
+#define P2 _point( 1.0f,  1.0f, -1.0f)
+#define P3 _point(-1.0f,  1.0f, -1.0f)
+#define P4 _point(-1.0f, -1.0f,  1.0f)
+#define P5 _point( 1.0f, -1.0f,  1.0f)
+#define P6 _point( 1.0f,  1.0f,  1.0f)
+#define P7 _point(-1.0f,  1.0f,  1.0f)
+
 global CubeVertices CubeVerticesLocalSpace = {
-  // Back
-  -1.0f, -1.0f, -1.0f,
-   1.0f, -1.0f, -1.0f,
-   1.0f,  1.0f, -1.0f,
-   1.0f,  1.0f, -1.0f,
-  -1.0f,  1.0f, -1.0f,
-  -1.0f, -1.0f, -1.0f,
-  // Front
-  -1.0f, -1.0f,  1.0f,
-   1.0f, -1.0f,  1.0f,
-   1.0f,  1.0f,  1.0f,
-   1.0f,  1.0f,  1.0f,
-  -1.0f,  1.0f,  1.0f,
-  -1.0f, -1.0f,  1.0f,
-  // Left
-  -1.0f,  1.0f,  1.0f,
-  -1.0f,  1.0f, -1.0f,
-  -1.0f, -1.0f, -1.0f,
-  -1.0f, -1.0f, -1.0f,
-  -1.0f, -1.0f,  1.0f,
-  -1.0f,  1.0f,  1.0f,
-  // Right
-   1.0f,  1.0f,  1.0f,
-   1.0f,  1.0f, -1.0f,
-   1.0f, -1.0f, -1.0f,
-   1.0f, -1.0f, -1.0f,
-   1.0f, -1.0f,  1.0f,
-   1.0f,  1.0f,  1.0f,
-  // Bottom
-  -1.0f, -1.0f, -1.0f,
-   1.0f, -1.0f, -1.0f,
-   1.0f, -1.0f,  1.0f,
-   1.0f, -1.0f,  1.0f,
-  -1.0f, -1.0f,  1.0f,
-  -1.0f, -1.0f, -1.0f,
-  // Top
-  -1.0f,  1.0f, -1.0f,
-   1.0f,  1.0f, -1.0f,
-   1.0f,  1.0f,  1.0f,
-   1.0f,  1.0f,  1.0f,
-  -1.0f,  1.0f,  1.0f,
-  -1.0f,  1.0f, -1.0f,
+  /* Bck */ P0, P1, P2, P2, P3, P0,
+  /* Frt */ P4, P5, P6, P6, P7, P4,
+  /* Lft */ P7, P3, P0, P0, P4, P7,
+  /* Rgt */ P6, P2, P1, P1, P5, P6,
+  /* Bot */ P0, P1, P5, P5, P4, P0,
+  /* Top */ P3, P2, P6, P6, P7, P3
+};
+
+typedef struct CubeOutline {
+  union {
+    f32 data[72];
+    Vec3f32 vertices[24];
+    struct {
+      Vec3f32 p0p1_p0, p0p1_p1;
+      Vec3f32 p1p2_p1, p1p2_p2;
+      Vec3f32 p2p3_p2, p2p3_p3;
+      Vec3f32 p3p0_p3, p3p0_p0;
+
+      Vec3f32 p4p5_p4, p4p5_p5;
+      Vec3f32 p5p6_p5, p5p6_p6;
+      Vec3f32 p6p7_p6, p6p7_p7;
+      Vec3f32 p7p4_p7, p7p4_p4;
+
+      Vec3f32 p0p4_p0, p0p4_p4;
+      Vec3f32 p1p5_p1, p1p6_p5;
+      Vec3f32 p2p6_p2, p2p6_p6;
+      Vec3f32 p3p7_p3, p3p7_p7;
+    };
+  };
+} CubeOutline; 
+
+global CubeOutline CubeOutlineLocalSpace = {
+  /* Bck */ P0, P1, P1, P2, P2, P3, P3, P0,
+  /* Frt */ P4, P5, P5, P6, P6, P7, P7, P4,
+  /* /// */ P0, P4, P1, P5, P2, P6, P3, P7
 };
 
 function void cube_program_init();

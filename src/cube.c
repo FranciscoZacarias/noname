@@ -2,6 +2,7 @@
 function void cube_program_init() {
 	CubeProgramObject.shader_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());
 
+	// Cube Program
 	glGenVertexArrays(1, &CubeProgramObject.VAO);
 	glGenBuffers(1, &CubeProgramObject.VBO);
 
@@ -15,9 +16,26 @@ function void cube_program_init() {
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	// Cube Outline
+	CubeOutlineObject.shader_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());
+	glGenVertexArrays(1, &CubeOutlineObject.VAO);
+	glGenBuffers(1, &CubeOutlineObject.VBO);
+
+	glBindVertexArray(CubeOutlineObject.VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, CubeOutlineObject.VBO);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(CubeOutlineLocalSpace), CubeOutlineLocalSpace.data, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, 3 * sizeof(f32), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 function void cube_draw(Cube cube, Mat4f32 view, Mat4f32 projection) {
+	// Draw normal cube
 	glUseProgram(CubeProgramObject.shader_program);
 
 	glBindVertexArray(CubeProgramObject.VAO);
@@ -29,6 +47,25 @@ function void cube_draw(Cube cube, Mat4f32 view, Mat4f32 projection) {
 	shader_set_uniform_vec3fv(CubeProgramObject.shader_program, "color", cube.color);
 
 	glDrawArrays(GL_TRIANGLES, 0, 108);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	// Draw outline
+	glUseProgram(CubeOutlineObject.shader_program);
+
+	glBindVertexArray(CubeOutlineObject.VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, CubeOutlineObject.VBO);
+
+	shader_set_uniform_mat4fv(CubeOutlineObject.shader_program, "view", view);
+	shader_set_uniform_mat4fv(CubeOutlineObject.shader_program, "projection", projection);
+	shader_set_uniform_mat4fv(CubeOutlineObject.shader_program, "model", cube.transform);
+	shader_set_uniform_vec3fv(CubeOutlineObject.shader_program, "color", vec3f32(0.4, 0.4, 0.4f));
+
+	glLineWidth(2.0f);
+	glDrawArrays(GL_LINES, 0, 24);
+	glLineWidth(1.0f);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
