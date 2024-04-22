@@ -58,6 +58,11 @@ global Vec3f32 CubeToAddPosiiton = { 0 };
 global b32 AddCube = 0;
 
 CubeProgram screen_shader = { 0 };
+u32 FrameBuffer;
+u32 TextureColorBufferMultiSampled;
+u32 RenderBufferObject;
+u32 IntermidiateFrameBufferObject;
+u32 ScreenTexture;
 
 int main(void) {
 
@@ -109,7 +114,7 @@ int main(void) {
 
 	//////////////////////////////////
 	// World Axis -------------
-	Shader axis_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER_LINE_COLOR_FROM_VERTEX());
+	Shader axis_program = shader_create(VertexShaderCode, FragmentShaderLineColorFromVertexCode);
 	f32 axis_xyz[] = {
 	   32.0f,   0.0f,  0.0f,  1.0f, 0.0f, 0.0f, //  X
 	  -32.0f,   0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // -X
@@ -139,27 +144,24 @@ int main(void) {
 
 	///////////////////////////////////////
 	// Offscreen frame buffer for MSAA
-	u32 frame_buffer;
-	glGenFramebuffers(1, &frame_buffer);
+	glGenFramebuffers(1, &FrameBuffer);
 
 	// multi sampled color attachment texture
-	u32 texture_color_buffer_multi_sampled;
-	glGenTextures(1, &texture_color_buffer_multi_sampled);
-	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture_color_buffer_multi_sampled);
+	glGenTextures(1, &TextureColorBufferMultiSampled);
+	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, TextureColorBufferMultiSampled);
 	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGB, WindowWidth, WindowHeight, GL_True);
 	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
 
 	// multi sampled render buffer object for depth and stencil attachments
-	u32 rbo;
-	glGenRenderbuffers(1, &rbo);
-	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+	glGenRenderbuffers(1, &RenderBufferObject);
+	glBindRenderbuffer(GL_RENDERBUFFER, RenderBufferObject);
 	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 8, GL_DEPTH24_STENCIL8, WindowWidth, WindowHeight);
 	glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
 	// Attach to framebuffer
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frame_buffer);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, texture_color_buffer_multi_sampled, 0);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, FrameBuffer);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, TextureColorBufferMultiSampled, 0);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RenderBufferObject);
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		printf("ERROR::GL_FRAMEBUFFER:: Render Buffer Object is not complete");
@@ -167,20 +169,18 @@ int main(void) {
 
 	///////////////////////////////////////
 	// Intermidiate buffer for post-processing effects. Does not do any 3D rendering
-	u32 intermidiate_fbo;
-	glGenFramebuffers(1, &intermidiate_fbo);
+	glGenFramebuffers(1, &IntermidiateFrameBufferObject);
 
 	// create color attachment texture
-	u32 screen_texture;
-	glGenTextures(1, &screen_texture);
-	glBindTexture(GL_TEXTURE_2D, screen_texture);
+	glGenTextures(1, &ScreenTexture);
+	glBindTexture(GL_TEXTURE_2D, ScreenTexture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WindowWidth, WindowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	// attach to intermidiate_fbo
-	glBindFramebuffer(GL_FRAMEBUFFER, intermidiate_fbo);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screen_texture, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, IntermidiateFrameBufferObject);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ScreenTexture, 0);
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		printf("ERROR::GL_FRAMEBUFFER:: Render Buffer Object is not complete");
@@ -189,7 +189,7 @@ int main(void) {
 
 	///////////////////////////////////////
 	// Screen shader
-	screen_shader.shader_program = shader_create(GET_SCREEN_VERTEX_SHADER(), GET_SCREEN_FRAGMENT_SHADER());
+	screen_shader.shader_program = shader_create(ScreenVertexShaderCode, ScreenFragmentShaderCode);
 	f32 quad_vertices[] = {
 		-1.0f,  1.0f,
 		-1.0f, -1.0f,
@@ -349,8 +349,8 @@ int main(void) {
 
 		// Draw phase
 		{
-			// bind multi sampled frame_buffer
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frame_buffer);
+			// bind multi sampled FrameBuffer
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, FrameBuffer);
 			glClearColor(0.5f, 0.9f, 1.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			glEnable(GL_DEPTH_TEST);
@@ -446,8 +446,8 @@ int main(void) {
 			}
 
 			// Copy from multisampled buffer to intermidiate frame buffer
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, frame_buffer);
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, intermidiate_fbo);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, FrameBuffer);
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, IntermidiateFrameBufferObject);
 
 			// Draw into the intermidiate fbo
 			glBlitFramebuffer(0, 0, WindowWidth, WindowHeight, 0, 0, WindowWidth, WindowHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
@@ -461,7 +461,7 @@ int main(void) {
 			glUseProgram(screen_shader.shader_program);
 			glBindVertexArray(screen_shader.VAO);
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, screen_texture);
+			glBindTexture(GL_TEXTURE_2D, ScreenTexture);
 			shader_set_uniform_s32(screen_shader.shader_program, "window_width", WindowWidth);
 			shader_set_uniform_s32(screen_shader.shader_program, "window_height", WindowHeight);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -488,6 +488,54 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
 	WindowWidth  = width;
 	WindowHeight = height;
+
+	// Delete and recreate MSAA framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, FrameBuffer);
+
+	glDeleteTextures(1, &TextureColorBufferMultiSampled);
+	glDeleteRenderbuffers(1, &RenderBufferObject);
+	
+	// multi sampled color attachment texture
+	glGenTextures(1, &TextureColorBufferMultiSampled);
+	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, TextureColorBufferMultiSampled);
+	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGB, WindowWidth, WindowHeight, GL_True);
+	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+
+	// multi sampled render buffer object for depth and stencil attachments
+	glGenRenderbuffers(1, &RenderBufferObject);
+	glBindRenderbuffer(GL_RENDERBUFFER, RenderBufferObject);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 8, GL_DEPTH24_STENCIL8, WindowWidth, WindowHeight);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+	// Attach to framebuffer
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, FrameBuffer);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, TextureColorBufferMultiSampled, 0);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RenderBufferObject);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		printf("ERROR::GL_FRAMEBUFFER:: Render Buffer Object is not complete");
+	}
+
+
+	// Delete and recreate intermediate framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, IntermidiateFrameBufferObject);
+
+	glDeleteTextures(1, &ScreenTexture);
+	
+	glGenTextures(1, &ScreenTexture);
+	glBindTexture(GL_TEXTURE_2D, ScreenTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WindowWidth, WindowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	// attach to intermidiate_fbo
+	glBindFramebuffer(GL_FRAMEBUFFER, IntermidiateFrameBufferObject);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ScreenTexture, 0);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		printf("ERROR::GL_FRAMEBUFFER:: Render Buffer Object is not complete");
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void process_input(GLFWwindow *window) {

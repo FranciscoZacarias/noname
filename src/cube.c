@@ -1,6 +1,6 @@
 
 function void cube_program_init() {
-	CubeProgramObject.shader_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());
+	CubeProgramObject.shader_program = shader_create(VertexShaderCode, FragmentShaderCode);
 
 	// Cube Program
 	glGenVertexArrays(1, &CubeProgramObject.VAO);
@@ -18,7 +18,7 @@ function void cube_program_init() {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	// Cube Outline
-	CubeOutlineObject.shader_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER());
+	CubeOutlineObject.shader_program = shader_create(VertexShaderCode, FragmentShaderCode);
 	glGenVertexArrays(1, &CubeOutlineObject.VAO);
 	glGenBuffers(1, &CubeOutlineObject.VBO);
 
