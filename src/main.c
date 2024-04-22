@@ -26,8 +26,8 @@ global MouseState Mouse = { 0 };
 global b32 F_KeyPreviousState = 1;
 global b32 F_KeyState = 0;
 
-global b32 DELETE_KeyPreviousState = 1;
-global b32 DELETE_KeyState = 0;
+global b32 G_KeyPreviousState = 1;
+global b32 G_KeyState = 0;
 /////////////////
 
 typedef enum CameraMode {
@@ -262,7 +262,7 @@ int main(void) {
 			}
 
 			if (HoveredCubeIndex != U32_MAX) {
-				if (DELETE_KeyState) {
+				if (G_KeyState) {
 					Cubes[HoveredCubeIndex].dead = 1;
 				} else if (F_KeyState) {
 					Vec3f32 cube_center = cube_get_center(Cubes[HoveredCubeIndex]);
@@ -466,16 +466,16 @@ void process_input(GLFWwindow *window) {
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 			glfwSetCursorPos(window, Mouse.screen_space_x, Mouse.screen_space_y);
 		}
-		if (glfwGetKey(window, GLFW_KEY_DELETE) == GLFW_PRESS) {
-			if (DELETE_KeyState == 0 && DELETE_KeyPreviousState == 1) {
-				DELETE_KeyPreviousState = 0;
-				DELETE_KeyState = 1;
+		if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
+			if (G_KeyState == 0 && G_KeyPreviousState == 1) {
+				G_KeyPreviousState = 0;
+				G_KeyState = 1;
 			} else {
-				DELETE_KeyState = 0;
+				G_KeyState = 0;
 			}
 		} else {
-			DELETE_KeyPreviousState = 1;
-			DELETE_KeyState = 0;
+			G_KeyPreviousState = 1;
+			G_KeyState = 0;
 		}
 
 		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
