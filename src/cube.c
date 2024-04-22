@@ -67,6 +67,7 @@ function void cube_draw(Cube cube, Mat4f32 view, Mat4f32 projection) {
 	glDrawArrays(GL_LINES, 0, 24);
 	glLineWidth(1.0f);
 
+	glUseProgram(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);

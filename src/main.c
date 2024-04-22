@@ -57,6 +57,8 @@ global u32 TotalCubes = 0;
 global Vec3f32 CubeToAddPosiiton = { 0 };
 global b32 AddCube = 0;
 
+CubeProgram screen_shader = { 0 };
+
 int main(void) {
 
 	glfwInit();
@@ -105,6 +107,7 @@ int main(void) {
 	Cubes[TotalCubes++] = cube_create(vec3f32( 8.0f, -8.0f, -8.0f), vec3f32(0.0f, 1.0f, 1.0f));
 	cube_program_init();
 
+	//////////////////////////////////
 	// World Axis -------------
 	Shader axis_program = shader_create(GET_VERTEX_SHADER(), GET_FRAGMENT_SHADER_LINE_COLOR_FROM_VERTEX());
 	f32 axis_xyz[] = {
@@ -134,15 +137,88 @@ int main(void) {
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+	///////////////////////////////////////
+	// Offscreen frame buffer for MSAA
+	u32 frame_buffer;
+	glGenFramebuffers(1, &frame_buffer);
+
+	// multi sampled color attachment texture
+	u32 texture_color_buffer_multi_sampled;
+	glGenTextures(1, &texture_color_buffer_multi_sampled);
+	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture_color_buffer_multi_sampled);
+	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGB, WindowWidth, WindowHeight, GL_True);
+	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+
+	// multi sampled render buffer object for depth and stencil attachments
+	u32 rbo;
+	glGenRenderbuffers(1, &rbo);
+	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 8, GL_DEPTH24_STENCIL8, WindowWidth, WindowHeight);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+	// Attach to framebuffer
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frame_buffer);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, texture_color_buffer_multi_sampled, 0);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		printf("ERROR::GL_FRAMEBUFFER:: Render Buffer Object is not complete");
+	}
+
+	///////////////////////////////////////
+	// Intermidiate buffer for post-processing effects. Does not do any 3D rendering
+	u32 intermidiate_fbo;
+	glGenFramebuffers(1, &intermidiate_fbo);
+
+	// create color attachment texture
+	u32 screen_texture;
+	glGenTextures(1, &screen_texture);
+	glBindTexture(GL_TEXTURE_2D, screen_texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WindowWidth, WindowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	// attach to intermidiate_fbo
+	glBindFramebuffer(GL_FRAMEBUFFER, intermidiate_fbo);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screen_texture, 0);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		printf("ERROR::GL_FRAMEBUFFER:: Render Buffer Object is not complete");
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	///////////////////////////////////////
+	// Screen shader
+	screen_shader.shader_program = shader_create(GET_SCREEN_VERTEX_SHADER(), GET_SCREEN_FRAGMENT_SHADER());
+	f32 quad_vertices[] = {
+		-1.0f,  1.0f,
+		-1.0f, -1.0f,
+		 1.0f, -1.0f,
+		-1.0f,  1.0f,
+		 1.0f, -1.0f,
+		 1.0f,  1.0f
+	};
+
+	glGenVertexArrays(1, &screen_shader.VAO);
+	glGenBuffers(1, &screen_shader.VBO);
+
+	glBindVertexArray(screen_shader.VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, screen_shader.VBO);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(quad_vertices), quad_vertices, GL_STATIC_DRAW);
+	
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_False, 2 * sizeof(f32), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 	while(!glfwWindowShouldClose(window)) {
 		f32 currentFrame = (f32)(glfwGetTime());
 		DeltaTime = currentFrame - LastFrame;
 		LastFrame = currentFrame;
 
 		process_input(window);
-
-		glClearColor(0.5f, 0.9f, 1.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// View
 		Mat4f32 view = mat4f32(1.0f);
@@ -157,25 +233,6 @@ int main(void) {
 		// Raycast
 		Vec3f32 unproject_mouse = unproject_vec3f32(vec3f32(Mouse.ndc_x, Mouse.ndc_y, 1.0f), projection, view);
 		Raycast = sub_vec3f32(vec3f32(unproject_mouse.x, unproject_mouse.y, unproject_mouse.z), vec3f32(camera.position.x, camera.position.y, camera.position.z));
-
-		// Draw Axis
-		shader_use(axis_program);
-		{
-			glLineWidth(2.0f);
-
-			glBindVertexArray(VAO_axis);
-			glBindBuffer(GL_ARRAY_BUFFER, VBO_axis);
-
-			Mat4f32 model = mat4f32(1.0f);
-			shader_set_uniform_mat4fv(axis_program, "model", model);
-			shader_set_uniform_mat4fv(axis_program, "view", view);
-			shader_set_uniform_mat4fv(axis_program, "projection", projection);
-
-			glDrawArrays(GL_LINES, 0, 6);
-
-			glBindVertexArray(0);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-		}
 
 		// Picking Phase
 		{
@@ -283,10 +340,41 @@ int main(void) {
 					AddCube = 1;
 				}
 			}
+
+			if (AddCube) {
+				Cubes[TotalCubes++] = cube_create(CubeToAddPosiiton,  vec3f32(0.8118f, 0.6627, 0.5451f));
+				AddCube = 0;
+			}
 		}
 
-		// Draw cubes
+		// Draw phase
 		{
+			// bind multi sampled frame_buffer
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frame_buffer);
+			glClearColor(0.5f, 0.9f, 1.0f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			glEnable(GL_DEPTH_TEST);
+
+			// Draw Axis
+			shader_use(axis_program);
+			{
+				glLineWidth(2.0f);
+
+				glBindVertexArray(VAO_axis);
+				glBindBuffer(GL_ARRAY_BUFFER, VBO_axis);
+
+				Mat4f32 model = mat4f32(1.0f);
+				shader_set_uniform_mat4fv(axis_program, "model", model);
+				shader_set_uniform_mat4fv(axis_program, "view", view);
+				shader_set_uniform_mat4fv(axis_program, "projection", projection);
+
+				glDrawArrays(GL_LINES, 0, 6);
+
+				glBindVertexArray(0);
+				glBindBuffer(GL_ARRAY_BUFFER, 0);
+			}
+
+			// Draw cubes
 			for(u32 i = 0; i < TotalCubes; i++) {
 				Cube cube = Cubes[i];
 				if (cube.dead) continue;
@@ -357,10 +445,30 @@ int main(void) {
 				}
 			}
 
-			if (AddCube) {
-				Cubes[TotalCubes++] = cube_create(CubeToAddPosiiton,  vec3f32(0.8118f, 0.6627, 0.5451f));
-				AddCube = 0;
-			}
+			// Copy from multisampled buffer to intermidiate frame buffer
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, frame_buffer);
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, intermidiate_fbo);
+
+			// Draw into the intermidiate fbo
+			glBlitFramebuffer(0, 0, WindowWidth, WindowHeight, 0, 0, WindowWidth, WindowHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			// glClearColor(0.5f, 0.9f, 1.0f, 1.0f);
+			glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT);
+			glDisable(GL_DEPTH_TEST);
+
+			glUseProgram(screen_shader.shader_program);
+			glBindVertexArray(screen_shader.VAO);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, screen_texture);
+			shader_set_uniform_s32(screen_shader.shader_program, "window_width", WindowWidth);
+			shader_set_uniform_s32(screen_shader.shader_program, "window_height", WindowHeight);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+
+			glUseProgram(0);
+			glBindVertexArray(0);
+			glBindTexture(GL_TEXTURE_2D, 0);
 		}
 
 		glfwSwapBuffers(window);

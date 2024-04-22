@@ -60,7 +60,7 @@ function void shader_use(Shader shader) {
 function void shader_set_uniform_mat4fv(Shader shader, const char* uniform, Mat4f32 mat) {
 	s32 uniform_location = glGetUniformLocation(shader, uniform);
 	if (uniform_location == -1) {
-		printf("Uniform %s not found\n", uniform);
+		printf("Mat4f32 :: Uniform %s not found\n", uniform);
 	}
 	glUniformMatrix4fv(uniform_location, 1, 1, &mat.data[0][0]);
 }
@@ -68,7 +68,7 @@ function void shader_set_uniform_mat4fv(Shader shader, const char* uniform, Mat4
 function void shader_set_uniform_vec4fv(Shader shader, const char* uniform, Vec4f32 vec) {
 	s32 uniform_location = glGetUniformLocation(shader, uniform);
 	if (uniform_location == -1) {
-		printf("Uniform %s not found\n", uniform);
+		printf("Vec4f32 :: Uniform %s not found\n", uniform);
 	}
 	glUniform4fv(uniform_location, 1, &vec.data[0]);
 }
@@ -76,7 +76,15 @@ function void shader_set_uniform_vec4fv(Shader shader, const char* uniform, Vec4
 function void shader_set_uniform_vec3fv(Shader shader, const char* uniform, Vec3f32 vec) {
 	s32 uniform_location = glGetUniformLocation(shader, uniform);
 	if (uniform_location == -1) {
-		printf("Uniform %s not found\n", uniform);
+		printf("Vec3f32 :: Uniform %s not found\n", uniform);
 	}
 	glUniform3fv(uniform_location, 1, &vec.data[0]);
+}
+
+function void shader_set_uniform_s32(Shader shader, const char* uniform, s32 s) {
+	s32 uniform_location = glGetUniformLocation(shader, uniform);
+	if (uniform_location == -1) {
+		printf("s32 :: Uniform %s not found\n", uniform);
+	}
+	glUniform1i(uniform_location, s);
 }
