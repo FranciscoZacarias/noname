@@ -58,7 +58,7 @@ global Vec3f32 CubeToAddPosiiton = { 0 };
 global b32 AddCube = 0;
 
 #define MSAA_SAMPLES 8
-CubeProgram screen_shader = { 0 };
+CubeProgram ScreenShader = { 0 };
 u32 FrameBuffer;
 u32 TextureColorBufferMultiSampled;
 u32 RenderBufferObject;
@@ -190,7 +190,7 @@ int main(void) {
 
 	///////////////////////////////////////
 	// Screen shader
-	screen_shader.shader_program = shader_create(ScreenVertexShaderCode, ScreenFragmentShaderCode);
+	ScreenShader.shader_program = shader_create(ScreenVertexShaderCode, ScreenFragmentShaderCode);
 	f32 quad_vertices[] = {
 		-1.0f,  1.0f,
 		-1.0f, -1.0f,
@@ -200,11 +200,11 @@ int main(void) {
 		 1.0f,  1.0f
 	};
 
-	glGenVertexArrays(1, &screen_shader.VAO);
-	glGenBuffers(1, &screen_shader.VBO);
+	glGenVertexArrays(1, &ScreenShader.VAO);
+	glGenBuffers(1, &ScreenShader.VBO);
 
-	glBindVertexArray(screen_shader.VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, screen_shader.VBO);
+	glBindVertexArray(ScreenShader.VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, ScreenShader.VBO);
 
 	glBufferData(GL_ARRAY_BUFFER, sizeof(quad_vertices), quad_vertices, GL_STATIC_DRAW);
 	
@@ -458,12 +458,12 @@ int main(void) {
 			glClear(GL_COLOR_BUFFER_BIT);
 			glDisable(GL_DEPTH_TEST);
 
-			glUseProgram(screen_shader.shader_program);
-			glBindVertexArray(screen_shader.VAO);
+			glUseProgram(ScreenShader.shader_program);
+			glBindVertexArray(ScreenShader.VAO);
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, ScreenTexture);
-			shader_set_uniform_s32(screen_shader.shader_program, "window_width", WindowWidth);
-			shader_set_uniform_s32(screen_shader.shader_program, "window_height", WindowHeight);
+			shader_set_uniform_s32(ScreenShader.shader_program, "window_width", WindowWidth);
+			shader_set_uniform_s32(ScreenShader.shader_program, "window_height", WindowHeight);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 
 			glUseProgram(0);

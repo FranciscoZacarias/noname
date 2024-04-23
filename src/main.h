@@ -31,6 +31,7 @@
 #include "cube.h"
 
 // *.c
+#include "shader_source.c"
 #include "shader.c"
 #include "camera.c"
 #include "cube.c"
