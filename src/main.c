@@ -57,6 +57,7 @@ global u32 TotalCubes = 0;
 global Vec3f32 CubeToAddPosiiton = { 0 };
 global b32 AddCube = 0;
 
+#define MSAA_SAMPLES 8
 CubeProgram screen_shader = { 0 };
 u32 FrameBuffer;
 u32 TextureColorBufferMultiSampled;
@@ -149,13 +150,13 @@ int main(void) {
 	// multi sampled color attachment texture
 	glGenTextures(1, &TextureColorBufferMultiSampled);
 	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, TextureColorBufferMultiSampled);
-	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGB, WindowWidth, WindowHeight, GL_True);
+	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, MSAA_SAMPLES, GL_RGB, WindowWidth, WindowHeight, GL_True);
 	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
 
 	// multi sampled render buffer object for depth and stencil attachments
 	glGenRenderbuffers(1, &RenderBufferObject);
 	glBindRenderbuffer(GL_RENDERBUFFER, RenderBufferObject);
-	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 8, GL_DEPTH24_STENCIL8, WindowWidth, WindowHeight);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, MSAA_SAMPLES, GL_DEPTH24_STENCIL8, WindowWidth, WindowHeight);
 	glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
 	// Attach to framebuffer
@@ -453,7 +454,6 @@ int main(void) {
 			glBlitFramebuffer(0, 0, WindowWidth, WindowHeight, 0, 0, WindowWidth, WindowHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-			// glClearColor(0.5f, 0.9f, 1.0f, 1.0f);
 			glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
 			glDisable(GL_DEPTH_TEST);
@@ -498,13 +498,13 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	// multi sampled color attachment texture
 	glGenTextures(1, &TextureColorBufferMultiSampled);
 	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, TextureColorBufferMultiSampled);
-	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGB, WindowWidth, WindowHeight, GL_True);
+	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, MSAA_SAMPLES, GL_RGB, WindowWidth, WindowHeight, GL_True);
 	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
 
 	// multi sampled render buffer object for depth and stencil attachments
 	glGenRenderbuffers(1, &RenderBufferObject);
 	glBindRenderbuffer(GL_RENDERBUFFER, RenderBufferObject);
-	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 8, GL_DEPTH24_STENCIL8, WindowWidth, WindowHeight);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, MSAA_SAMPLES, GL_DEPTH24_STENCIL8, WindowWidth, WindowHeight);
 	glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
 	// Attach to framebuffer
@@ -515,7 +515,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		printf("ERROR::GL_FRAMEBUFFER:: Render Buffer Object is not complete");
 	}
-
 
 	// Delete and recreate intermediate framebuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, IntermidiateFrameBufferObject);
