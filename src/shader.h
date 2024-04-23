@@ -1,9 +1,6 @@
 #ifndef SHADER_H
 #define SHADER_H
 
-function const char* GET_VERTEX_SHADER();
-function const char* GET_FRAGMENT_SHADER();
-
 typedef u32 Shader;
 
 function Shader shader_create(const char* vertex_path, const char* fragment_path);
