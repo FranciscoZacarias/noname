@@ -5,7 +5,9 @@
 // Header to include in projects
 //
 
-#include "fdefines.h"
+#include "ftypes.h"
+#include "fcontext_cracking.h"
+#include "fcore.h"
 
 #include "fmath.h"
 #include "fmemory.h"
