@@ -8,9 +8,15 @@
 #define global        static
 #define function      static
 
-#define ArrayCount(a) (sizeof(a)/sizeof((a)[0]))
 #define Min(A,B) (((A)<(B))?(A):(B))
 #define Max(A,B) (((A)>(B))?(A):(B))
+
+#define ArrayCount(a) (sizeof(a)/sizeof((a)[0]))
+#define OffsetOf(s,m) ((size_t)&(((s*)0)->m))
+
+#define Gigabytes(n) (u64)(n*1024*1024*1024)
+#define Megabytes(n) (u64)(n*1024*1024)
+#define Kilobytes(n) (u64)(n*1024)
 
 // End: Defines ---------------------
 
