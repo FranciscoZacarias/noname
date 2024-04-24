@@ -1,6 +1,8 @@
 
-#ifndef FTYPES_H
-#define FTYPES_H
+#ifndef FDEFINES_H
+#define FDEFINES_H
+
+// Start: Defines -------------------
 
 #define local_persist static
 #define global        static
@@ -9,6 +11,12 @@
 #define ArrayCount(a) (sizeof(a)/sizeof((a)[0]))
 #define Min(A,B) (((A)<(B))?(A):(B))
 #define Max(A,B) (((A)>(B))?(A):(B))
+
+// End: Defines ---------------------
+
+// Start: Types ---------------------
+
+#define null ((void*)0)
 
 typedef unsigned char      u8;
 typedef unsigned short     u16;
@@ -43,9 +51,10 @@ typedef double f64;
 #define F64_MAX 0x1.fffffffffffffp+1023
 #define F64_MIN (-F64_MAX)
 
-typedef s8  b8;
-typedef s16 b16;
 typedef s32 b32;
-typedef s64 b64;
+#define true  ((b32)1)
+#define false ((b32)0)
 
-#endif // FTYPES_H
+// End: Types -----------------------
+
+#endif // FDEFINES_H

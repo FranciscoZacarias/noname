@@ -5,10 +5,12 @@
 // Header to include in projects
 //
 
-#include "ftypes.h"
+#include "fdefines.h"
 
 #include "fmath.h"
+#include "fmemory.h"
 
 #include "fmath.c"
+#include "fmemory.c"
 
 #endif // FINCLUDE_H
