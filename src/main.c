@@ -8,6 +8,9 @@ global s32 WindowWidth  = 1280;
 global s32 WindowHeight = 720;
 #define AspectRatio ((f32)WindowWidth/(f32)WindowHeight)
 
+global f32 NearPlane = 0.1f;
+global f32 FarPlane = 100.0f;
+
 global Camera camera;
 global f32 LastX;
 global f32 LastY;
@@ -228,7 +231,7 @@ int main(void) {
 
 		// Projection 
 		Mat4f32 projection = mat4f32(1.0f);
-		Mat4f32 perspective = perspective_mat4f32(Radians(45), AspectRatio, 0.1f, 100.0f);
+		Mat4f32 perspective = perspective_mat4f32(Radians(45), AspectRatio, NearPlane, FarPlane);
 		projection = mul_mat4f32(perspective, projection);
 
 		// Raycast
