@@ -1,26 +1,10 @@
 
-#ifndef FDEFINES_H
-#define FDEFINES_H
-
-// Start: Defines -------------------
+#ifndef FTYPES_H
+#define FTYPES_H
 
 #define local_persist static
 #define global        static
 #define function      static
-
-#define Min(A,B) (((A)<(B))?(A):(B))
-#define Max(A,B) (((A)>(B))?(A):(B))
-
-#define ArrayCount(a) (sizeof(a)/sizeof((a)[0]))
-#define OffsetOf(s,m) ((size_t)&(((s*)0)->m))
-
-#define Gigabytes(n) (u64)(n*1024*1024*1024)
-#define Megabytes(n) (u64)(n*1024*1024)
-#define Kilobytes(n) (u64)(n*1024)
-
-// End: Defines ---------------------
-
-// Start: Types ---------------------
 
 #define null ((void*)0)
 
@@ -61,6 +45,4 @@ typedef s32 b32;
 #define true  ((b32)1)
 #define false ((b32)0)
 
-// End: Types -----------------------
-
-#endif // FDEFINES_H
+#endif // FTYPES_H
