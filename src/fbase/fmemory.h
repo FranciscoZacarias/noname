@@ -7,14 +7,15 @@
 
 typedef struct Arena {
   u64 capacity;
-  u64 position;
+  u64 commit_position;
+  u64 alloc_position;
   u8* memory;
 } Arena;
 
-function Arena arena_create(u64 size);
+function Arena arena_init();
+function Arena arena_init_sized(u64 size);
 
 function void* arena_push(Arena* arena, u64 size);
-function void* arena_push_zero(Arena* arena, u64 size);
 function void  arena_pop(Arena* arena, u64 pos);
 function void  arena_pop_to(Arena* arena, u64 pos);
 
@@ -25,6 +26,5 @@ typedef struct ArenaTemp {
 
 function ArenaTemp arena_temp_begin(Arena* arena);
 function ArenaTemp arena_temp_end(ArenaTemp* temp);
-
 
 #endif // FMEMORY_H
