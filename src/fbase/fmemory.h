@@ -16,12 +16,14 @@ function Arena arena_init();
 function Arena arena_init_sized(u64 size);
 
 function void* arena_push(Arena* arena, u64 size);
-function void  arena_pop(Arena* arena, u64 pos);
+function void  arena_pop(Arena* arena, u64 size);
 function void  arena_pop_to(Arena* arena, u64 pos);
+function void  arena_clear(Arena* arena);
+function void  arena_free(Arena* arena);
 
 typedef struct ArenaTemp {
   Arena* arena;
-  u64 position;
+  u64 temp_position;
 } ArenaTemp;
 
 function ArenaTemp arena_temp_begin(Arena* arena);
