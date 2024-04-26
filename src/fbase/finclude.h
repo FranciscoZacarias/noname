@@ -7,13 +7,13 @@
 #include "fcore.h"
 
 #include "fmath.h"
+#include "fstring.h"
 #include "os/fos.h"
 #include "fmemory.h"
-#include "fdata_structs.h"
 
 #include "fmath.c"
+#include "fstring.c"
 #include "os/fos.c"
 #include "fmemory.c"
-#include "fdata_structs.c"
 
 #endif // FINCLUDE_H
