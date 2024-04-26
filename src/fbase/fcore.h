@@ -5,9 +5,7 @@
 ////////////////////////////////
 // Context Cracking
 
-
 // Clang OS/Arch Cracking
-
 #if defined(__clang__)
 
 # define COMPILER_CLANG 1
@@ -34,7 +32,6 @@
 # endif
 
 // MSVC OS/Arch Cracking
-
 #elif defined(_MSC_VER)
 
 # define COMPILER_MSVC 1
@@ -79,7 +76,6 @@
 # endif
 
 // GCC OS/Arch Cracking
-
 #elif defined(__GNUC__) || defined(__GNUG__)
 
 # define COMPILER_GCC 1
@@ -106,7 +102,6 @@
 #endif
 
 // Arch Cracking
-
 #if defined(ARCH_X64)
 # define ARCH_64BIT 1
 #elif defined(ARCH_X86)
@@ -120,7 +115,6 @@
 #endif
 
 // Zero All Undefined Options
-
 #if !defined(ARCH_32BIT)
 # define ARCH_32BIT 0
 #endif

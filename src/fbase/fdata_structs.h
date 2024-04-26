@@ -1,0 +1,6 @@
+#ifndef FDATA_STRUCTS_H
+#define FDATA_STRUCTS_H
+
+
+
+#endif // FDATA_STRUCTS_H
