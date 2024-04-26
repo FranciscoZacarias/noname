@@ -168,8 +168,8 @@
 #define Min(A,B) (((A)<(B))?(A):(B))
 #define Max(A,B) (((A)>(B))?(A):(B))
 
-#define IntFromPtr(p) (U64)((U8*)p - (U8*)0)
-#define PtrFromInt(i) (void*)((U8*)0 + (i))
+#define IntFromPtr(p) (u64)((u8*)p - (u8*)0)
+#define PtrFromInt(i) (void*)((u8*)0 + (i))
 #define Member(T,m) (((T*)0)->m)
 #define OffsetOfMember(T,m) IntFromPtr(&Member(T,m))
 
@@ -192,7 +192,7 @@
 #define Glue_(A,B) A##B
 #define Glue(A,B) Glue_(A,B)
 
-#define StaticAssert(c,l) typedef U8 Glue(l,__LINE__) [(c)?1:-1]
+#define StaticAssert(c,l) typedef u8 Glue(l,__LINE__) [(c)?1:-1]
 
 #include <string.h>
 #define MemoryCopy(d,s,z)     memmove((d), (s), (z))
