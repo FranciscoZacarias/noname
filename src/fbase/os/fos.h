@@ -6,7 +6,7 @@ function void os_init(void);
 // Memory ---
 
 function void* os_memory_reserve(u64 size);
-function void  os_memory_commit(void* memory, u64 size);
+function b32   os_memory_commit(void* memory, u64 size);
 function void  os_memory_decommit(void* memory, u64 size);
 function void  os_memory_release(void* memory, u64 size);
 

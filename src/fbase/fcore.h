@@ -94,7 +94,5 @@ typedef double f64;
 #define F64_MIN (-F64_MAX)
 
 typedef s32 b32;
-#define true  ((b32)1)
-#define false ((b32)0)
 
 #endif // FCORE_H

@@ -12,11 +12,13 @@ function void os_init(void) {
 }
 
 function void* os_memory_reserve(u64 size) {
-  return VirtualAlloc(0, size, MEM_RESERVE, PAGE_NOACCESS);
+  void* result = VirtualAlloc(0, size, MEM_RESERVE, PAGE_NOACCESS);
+  return result;
 }
 
-function void  os_memory_commit(void* memory, u64 size) {
-  VirtualAlloc(memory, size, MEM_COMMIT, PAGE_READWRITE);
+function b32 os_memory_commit(void* memory, u64 size) {
+  b32 result = (VirtualAlloc(memory, size, MEM_COMMIT, PAGE_READWRITE) != 0);
+  return result;
 }
 
 function void  os_memory_decommit(void* memory, u64 size) {
