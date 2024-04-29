@@ -31,10 +31,13 @@ function void* arena_push(Arena* arena, u64 size) {
     commit_size += ARENA_COMMIT_SIZE - 1;
     commit_size -= commit_size % ARENA_COMMIT_SIZE;
     if (arena->commit_position >= arena->capacity) {
-      printf("Arena out of memory! Program is a time bomb.\n");
+      printf("ERROR :: Arena :: Arena out of memory! Program is a time bomb.\n");
     } else {
-      os_memory_commit(arena->memory + arena->commit_position, commit_size);
-      arena->commit_position += commit_size;
+      if (os_memory_commit(arena->memory + arena->commit_position, commit_size)) {
+        arena->commit_position += commit_size;
+      } else {
+        printf("Warning :: Arena :: Unable to commit %lld to arena.\n", size);
+      }
     }
   }
   memory = arena->memory + arena->alloc_position;

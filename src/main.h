@@ -8,15 +8,6 @@
 #include <GLFW/glfw3.h>
 
 //////////////////////////////////////////////
-// Windows
-#ifndef _WINDOWS_H
-#define _WINDOWS_H
-# include <windows.h>
-#else
-# error "Only windows platofrm is supported"
-#endif
-
-//////////////////////////////////////////////
 // CLib
 #include <stdlib.h>
 #include <stdio.h>
