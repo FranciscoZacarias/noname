@@ -231,6 +231,7 @@ int main(void) {
 
 		// Projection 
 		Mat4f32 projection = mat4f32(1.0f);
+		// TODO: We could just pass the Window Width and Height directly, instead of having to calc the AspectRatio beforehand
 		Mat4f32 perspective = perspective_mat4f32(Radians(45), AspectRatio, NearPlane, FarPlane);
 		projection = mul_mat4f32(perspective, projection);
 
