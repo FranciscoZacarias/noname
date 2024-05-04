@@ -193,11 +193,10 @@ int main(void) {
 		renderer_set_uniform_mat4fv(renderer.shader_program, "view", view);
 		renderer_set_uniform_mat4fv(renderer.shader_program, "projection", projection);
 
-		for (u32 i = 0; i < LevelCubesIndex; i++) {
-			renderer_push_cube(&renderer, Cubes[i], COLOR_BLACK);
-		}
-
 		find_cube_under_cursor();
+		renderer_push_cube(&renderer, Cubes[0], COLOR_BLACK);
+		
+
 		renderer_end_frame(&renderer, WindowWidth, WindowHeight);
 
 		glfwSwapBuffers(window);

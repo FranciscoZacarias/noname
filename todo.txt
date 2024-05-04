@@ -1,27 +1,29 @@
 
 // Refactor
-[ ] - Cube could be a more generic Shader object, even for this specific context, should still be better
-[ ] - Picking is still a bit buggy. If cubes are slightly inside each other or if a cube is behind you close than the cube in front of you
-[ ] - Create a more robust state about the cubes
-[ ] - Less hacky way of removing cubes
 [ ] - Remove glfw
 
 // noname
-[x] - Add cube on click adjacent to the face that was
-[x] - Add basic Gizmos to selected cube
-[x] - Gizmos should be a rectangle, not a line
+[ ] - Add cube on click adjacent to the face that was
+[ ] - Add basic Gizmos to selected cube
+
+[ ] - Gizmos should be a rectangle, not a line
 [ ] - Gizmos should be selectable while cliking
 [ ] - Gizmos should have an arrow (pyramide?) at the end
+
 [ ] - Actually be able to translate the cube from each axis
-[x] - Remove cube
+[ ] - Remove cube
 [ ] - Know which face of the cube i'm hovering
-[ ] - Add more robust input state.
 [ ] - Select multiple cubes at once
+
 [ ] - Render any form of text to the screen
+[ ] - Add directional light
+[ ] - Add phong light
+
 [x] - Anti alising (MSAA)
 [x] - Post processing pass
 [x] - Face culling
 
 // Base layer
 [x] - Add arena allocator
-[ ] - Add dynamic array 
+[ ] - String type
+[ ] - Add more robust input state.
