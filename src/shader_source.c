@@ -1,41 +1,29 @@
-#define SHADER_SOURCE(code) "#version 330 core\n" #code
-
 // Vertex Shader
 const char *VertexShaderCode = 
 "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
-"layout (location = 1) in vec3 aColor;\n"
+"layout (location = 1) in vec4 aColor;\n"
 "\n"
-"out vec3 line_color;\n"
+"out vec4 vertex_color;\n"
 "\n"
 "uniform mat4 model;\n"
 "uniform mat4 view;\n"
 "uniform mat4 projection;\n"
 "\n"
 "void main() {\n"
-"    gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
-"    line_color = aColor;\n"
+"  gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
+"  vertex_color = aColor;\n"
 "}";
 
 // Fragment Shader
 const char *FragmentShaderCode = 
 "#version 330 core\n"
-"out vec4 FragColor;\n"
+"layout (location = 0) out vec4 FragColor;\n"
 "\n"
-"uniform vec3 color;\n"
-"\n"
-"void main() {\n"
-"    FragColor = vec4(color, 1.0f);\n"
-"}";
-
-// Fragment Shader Line Color from Vertex
-const char *FragmentShaderLineColorFromVertexCode = 
-"#version 330 core\n"
-"out vec4 FragColor;\n"
-"in vec3 line_color;\n"
+"in vec4 vertex_color;\n"
 "\n"
 "void main() {\n"
-"    FragColor = vec4(line_color, 1.0f);\n"
+"  FragColor = vertex_color;\n"
 "}";
 
 // Screen Vertex Shader

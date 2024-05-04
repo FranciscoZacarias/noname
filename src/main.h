@@ -14,18 +14,19 @@
 
 //////////////////////////////////////////////
 // FLayer
-#include "finclude.h"
+#include "f_includes.h"
 
 // *.h
-#include "shader.h"
-#include "camera.h"
 #include "cube.h"
+#include "utils.h"
+#include "renderer.h"
+#include "camera.h"
 
 // *.c
-#include "shader_source.c"
-#include "shader.c"
-#include "camera.c"
 #include "cube.c"
+#include "utils.c"
+#include "renderer.c"
+#include "camera.c"
 
 #define APP_NAME "noname"
 

@@ -52,6 +52,23 @@ function Vec3f32 mul_vec3f32(Vec3f32 a, Vec3f32 b) {
 	return result;
 }
 
+function Vec3f32 mul_vec3f32_mat4f32(Vec3f32 v, Mat4f32 m) {
+	// This is not really a mathematically correct concept, but 
+	// it's handy the way I do things sometimes. We just discard the W values.
+	Vec4f32 mult = { 
+		m.m0*v.x + m.m4*v.y + m.m8 *v.z + m.m12*1.0f,
+		m.m1*v.x + m.m5*v.y + m.m9 *v.z + m.m13*1.0f,
+		m.m2*v.x + m.m6*v.y + m.m10*v.z + m.m14*1.0f,
+		m.m3*v.x + m.m7*v.y + m.m11*v.z + m.m15*1.0f
+	};
+	Vec3f32 result = {
+		mult.x,
+		mult.y,
+		mult.z
+	};
+	return result;
+}
+
 function Vec3f32 div_vec3f32(Vec3f32 a, Vec3f32 b) {
 	Vec3f32 result = {
 		a.x / b.x,
@@ -87,6 +104,15 @@ function Vec3f32 scale_vec3f32(Vec3f32 v, f32 scalar) {
 		v.z*scalar
 	};
 	return result;
+}
+
+function Vec3f32 scale_vec3f32_xyz(Vec3f32 v, f32 scale_x, f32 scale_y, f32 scale_z) {
+	Vec3f32 result = {
+		v.x * scale_x,
+		v.y * scale_y,
+		v.z * scale_z
+	};
+	return result;	
 }
 
 function Vec3f32 normalize_vec3f32(Vec3f32 v) {
@@ -291,8 +317,8 @@ function Vec4f32 vec4f32w(f32 x, f32 y, f32 z, f32 w) {
 	return result;
 }
 
-function Vec4f32 vec4f32_from_vec3f32(Vec3f32 v, f32 w) {
-	Vec4f32 result = {v.x, v.y, v.z, w};
+function Vec4f32 vec4f32_from_vec3f32(Vec3f32 v) {
+	Vec4f32 result = {v.x, v.y, v.z};
 	return result;
 }
 
@@ -688,12 +714,12 @@ function Mat4f32 frustum_mat4f32(f64 left, f64 right, f64 bottom, f64 top, f64 n
 	return result;
 }
 
-function Mat4f32 perspective_mat4f32(f64 fovy, f64 aspect, f64 near_plane, f64 far_plane) {
+function Mat4f32 perspective_mat4f32(f64 fovy, f64 window_width, f64 window_height, f64 near_plane, f64 far_plane) {
 	Mat4f32 result = { 0 };
 
 	f64 top = near_plane*tan(fovy*0.5);
 	f64 bottom = -top;
-	f64 right = top*aspect;
+	f64 right = top*(window_width/window_height);
 	f64 left = -right;
 
 	// MatrixFrustum(-right, right, -top, top, near, far);

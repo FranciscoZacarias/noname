@@ -5,6 +5,30 @@
 ////////////////////////////////
 // Context Cracking
 
+/* 
+  Macro quick look-up:
+
+  COMPILER_CLANG
+  COMPILER_MSVC
+  COMPILER_GCC
+
+  OS_WINDOWS
+  OS_LINUX
+  OS_MAC
+
+  ARCH_X64
+  ARCH_X86
+  ARCH_ARM64
+  ARCH_ARM32
+
+  COMPILER_MSVC_YEAR
+
+  ARCH_32BIT
+  ARCH_64BIT
+
+  ARCH_LITTLE_ENDIAN
+*/
+
 // Clang OS/Arch Cracking
 #if defined(__clang__)
 
@@ -155,6 +179,11 @@
 ////////////////////////////////
 // Core
 
+#define Stringify_(S) #S
+#define Stringify(S) Stringify_(S)
+#define Glue_(A,B) A##B
+#define Glue(A,B) Glue_(A,B)
+
 #if COMPILER_MSVC
 # define Trap() __debugbreak()
 #elif COMPILER_CLANG || COMPILER_GCC
@@ -162,6 +191,20 @@
 #else
 # error Unknown trap intrinsic for this compiler.
 #endif
+
+#define Stmnt(S) do{ S }while(0)
+
+#if !defined(AssertBreak)
+# define AssertBreak() (*(volatile int*)0 = 0)
+#endif
+
+#if ENABLE_ASSERT
+# define Assert(c) Stmnt( if (!(c)){ AssertBreak(); } )
+#else
+# define Assert(c)
+#endif
+
+#define StaticAssert(c,l) typedef U8 Glue(l,__LINE__) [(c)?1:-1]
 
 #define ArrayCount(a) (sizeof(a)/sizeof((a)[0]))
 
@@ -187,13 +230,6 @@
 #define AlignUpPow2(x,p)  (((x) + (p) - 1)&~((p) - 1))
 #define AlignDownPow2(x,p) ((x)&~((p) - 1))
 
-#define Stringify_(S) #S
-#define Stringify(S) Stringify_(S)
-#define Glue_(A,B) A##B
-#define Glue(A,B) Glue_(A,B)
-
-#define StaticAssert(c,l) typedef u8 Glue(l,__LINE__) [(c)?1:-1]
-
 #include <string.h>
 #define MemoryCopy(d,s,z)     memmove((d), (s), (z))
 #define MemoryCopyStruct(d,s) MemoryCopy((d),(s), Min(sizeof(*(d)) , sizeof(*(s))))
@@ -209,6 +245,8 @@
 // Types 
 
 #define null ((void*)0)
+#define true  (1)
+#define false (0)
 
 typedef unsigned char      u8;
 typedef unsigned short     u16;
@@ -243,6 +281,7 @@ typedef double f64;
 #define F64_MAX 0x1.fffffffffffffp+1023
 #define F64_MIN (-F64_MAX)
 
+typedef s8  b8;
 typedef s32 b32;
 
 #endif // FCORE_H

@@ -53,6 +53,13 @@ typedef struct Mat4f32 {
 //////////////////////////////////////////////
 // Generic Math 
 
+typedef struct Quad {
+  Vec3f32 p0;
+  Vec3f32 p1;
+  Vec3f32 p2;
+  Vec3f32 p3;
+} Quad;
+
 typedef struct Line3f32 {
   Vec3f32 point;
   Vec3f32 direction;
@@ -70,10 +77,12 @@ function void print_vec3f32(Vec3f32 v, const char* label);
 function Vec3f32 add_vec3f32(Vec3f32 a, Vec3f32 b);
 function Vec3f32 sub_vec3f32(Vec3f32 a, Vec3f32 b);
 function Vec3f32 mul_vec3f32(Vec3f32 a, Vec3f32 b);
+function Vec3f32 mul_vec3f32_mat4f32(Vec3f32 v, Mat4f32 m);
 function Vec3f32 div_vec3f32(Vec3f32 a, Vec3f32 b);
 
 function Vec3f32 cross_vec3f32(Vec3f32 a, Vec3f32 b);
 function Vec3f32 scale_vec3f32(Vec3f32 v, f32 scalar);
+function Vec3f32 scale_vec3f32_xyz(Vec3f32 v, f32 scale_x, f32 scale_y, f32 scale_z);
 function Vec3f32 normalize_vec3f32(Vec3f32 v);
 function Vec3f32 transform_vec3f32_mat4f32(Vec3f32 v, Mat4f32 m);
 function Vec3f32 rotate_by_axis_vec3f32(Vec3f32 v, Vec3f32 axis, f32 angle);
@@ -90,7 +99,7 @@ function f32 angle_vec3f32(Vec3f32 a, Vec3f32 b);
 
 function Vec4f32 vec4f32 (f32 x, f32 y, f32 z);
 function Vec4f32 vec4f32w(f32 x, f32 y, f32 z, f32 w);
-function Vec4f32 vec4f32_from_vec3f32(Vec3f32 v, f32 w);
+function Vec4f32 vec4f32_from_vec3f32(Vec3f32 v);
 
 function Vec4f32 add_vec4f32(Vec4f32 a, Vec4f32 b);
 function Vec4f32 sub_vec4f32(Vec4f32 a, Vec4f32 b);
@@ -126,7 +135,7 @@ function Mat4f32 rotate_zyx_mat4f32(Vec3f32 radians);
 function Mat4f32 transpose_mat4f32(Mat4f32 m);
 function Mat4f32 scale_mat4f32(f32 x, f32 y, f32 z);
 function Mat4f32 frustum_mat4f32(f64 left, f64 right, f64 bottom, f64 top, f64 near_plane, f64 far_plane);
-function Mat4f32 perspective_mat4f32(f64 fovy, f64 aspect, f64 near_plane, f64 far_plane);
+function Mat4f32 perspective_mat4f32(f64 fovy, f64 window_width, f64 window_height, f64 near_plane, f64 far_plane);
 function Mat4f32 ortographic_mat4f32(f64 left, f64 right, f64 bottom, f64 top, f64 near_plane, f64 far_plane);
 function Mat4f32 look_at_mat4f32(Vec3f32 eye, Vec3f32 target, Vec3f32 up);
 

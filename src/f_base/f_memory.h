@@ -21,6 +21,9 @@ function void  arena_pop_to(Arena* arena, u64 pos);
 function void  arena_clear(Arena* arena);
 function void  arena_free(Arena* arena);
 
+#define push_array_no_zero(a,T,c) (T*)arena_push((a), sizeof(T)*(c))
+#define push_array(a,T,c) (T*)MemoryZero(push_array_no_zero(a,T,c), sizeof(T)*(c))
+
 typedef struct ArenaTemp {
   Arena* arena;
   u64 temp_position;
