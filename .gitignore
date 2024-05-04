@@ -1,3 +1,5 @@
 .vscode/
 build/*
 noname.rdbg
+todo.txt
+opengl_bugs.txt
