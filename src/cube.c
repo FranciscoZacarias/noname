@@ -12,36 +12,32 @@ function Vec3f32 cube_get_position(Cube cube) {
 	return result;
 }
 
-function Quad cube_vertices_get_quad_back(CubeVertices vertices) {
-	Quad result = { vertices.p0, vertices.p1, vertices.p2, vertices.p3 };
+function Quad cube_vertices_get_face(CubeVertices vertices, CubeFace face) {
+	Quad result = { 0 };
+
+	switch(face) {
+		case CubeFace_Back: {
+			result = (Quad){ vertices.p0, vertices.p1, vertices.p2, vertices.p3 };
+		} break;
+		case CubeFace_Front: {
+			result = (Quad){ vertices.p6, vertices.p5, vertices.p4, vertices.p7 };;
+		} break;
+		case CubeFace_Left: {
+			result = (Quad){ vertices.p0, vertices.p3, vertices.p7, vertices.p4 };
+		} break;
+		case CubeFace_Right: {
+			result = (Quad){ vertices.p5, vertices.p6, vertices.p2, vertices.p1 };
+		} break;
+		case CubeFace_Bottom: {
+			result = (Quad){ vertices.p4, vertices.p5, vertices.p1, vertices.p0 };
+		} break;
+		case CubeFace_Top: {
+			result = (Quad){ vertices.p3, vertices.p2, vertices.p6, vertices.p7 };
+		} break;
+	}
+
 	return result;
 }
-
-function Quad cube_vertices_get_quad_front(CubeVertices vertices) {
-	Quad result = { vertices.p6, vertices.p5, vertices.p4, vertices.p7 };;
-	return result;
-}
-
-function Quad cube_vertices_get_quad_left(CubeVertices vertices) {
-	Quad result = { vertices.p0, vertices.p3, vertices.p7, vertices.p4 };
-	return result;
-}
-
-function Quad cube_vertices_get_quad_right(CubeVertices vertices) {
-	Quad result = { vertices.p5, vertices.p6, vertices.p2, vertices.p1 };
-	return result;
-}
-
-function Quad cube_vertices_get_quad_bot(CubeVertices vertices) {
-	Quad result = { vertices.p4, vertices.p5, vertices.p1, vertices.p0 };
-	return result;
-}
-
-function Quad cube_vertices_get_quad_top(CubeVertices vertices) {
-	Quad result = { vertices.p3, vertices.p2, vertices.p6, vertices.p7 };
-	return result;
-}
-
 
 function CubeVertices cube_vertices_apply_transform(CubeVertices vertices, Mat4f32 transform) {
 	CubeVertices result;

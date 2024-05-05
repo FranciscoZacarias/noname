@@ -5,7 +5,9 @@
 #define MSAA_SAMPLES 8
 
 #define MAX_TRIANGLES 2048
-#define MAX_VERTICES (MAX_TRIANGLES * 2)
+#define MAX_TRIANGLES_VERTICES (MAX_TRIANGLES * 3)
+#define MAX_LINES 256
+#define MAX_LINES_VERTICES (MAX_LINES * 2)
 
 typedef struct RendererVertex {
   Vec3f32 position;
@@ -16,7 +18,8 @@ typedef struct Renderer {
   // Default shader program
   u32 shader_program;
   u32 vao;
-  u32 vbo;
+  u32 triangle_vbo;
+  u32 line_vbo;
 
   /* Default program renders to the MSAA offscreen buffer, 
      to apply anti aliasing */
@@ -40,8 +43,11 @@ typedef struct Renderer {
   u32 screen_vao;
   u32 screen_vbo;
 
-  RendererVertex triangle_data[MAX_VERTICES];
+  RendererVertex triangle_data[MAX_TRIANGLES_VERTICES];
   u32 triangle_count;
+
+  RendererVertex line_data[MAX_LINES_VERTICES];
+  u32 line_count;
 } Renderer;
 
 function Renderer renderer_init(s32 window_width, s32 window_height);
@@ -49,8 +55,10 @@ function void renderer_free(Renderer* renderer);
 function void renderer_begin_frame(Renderer* renderer, Vec4f32 background_color);
 function void renderer_end_frame(Renderer* renderer, s32 window_width, s32 window_height);
 function void renderer_push_triangle(Renderer* renderer, Vec3f32 a_position, Vec4f32 a_color, Vec3f32 b_position, Vec4f32 b_color, Vec3f32 c_position, Vec4f32 c_color);
+function void renderer_push_line(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color);
 function void renderer_push_quad(Renderer* renderer, Quad quad, Vec4f32 color);
 function void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_color);
+function void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, Vec4f32 border_color, CubeFace highlight, Vec4f32 highlight_color);
 
 function void renderer_set_uniform_mat4fv(u32 program, const char* uniform, Mat4f32 mat);
 function void renderer_set_uniform_s32(u32 program, const char* uniform, s32 s);

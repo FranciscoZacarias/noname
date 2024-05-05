@@ -54,67 +54,39 @@ global Vec3f32 Raycast = {F32_MAX, F32_MAX, F32_MAX};
 global Cube Cubes[MAX_CUBES];
 global s32 LevelCubesIndex = 0;
 
-function u32 find_cube_under_cursor() {
-	u32 result = -1;
-	for (u32 i = 0; i < LevelCubesIndex; i++) {
-		CubeVertices vertices  = cube_vertices_apply_transform(CubeVerticesLocalSpace, Cubes[i].transform);
-		
-		// Back face
-		{
-			Quad quad = cube_vertices_get_quad_back(vertices);
-			Vec3f32 intersect_back = intersect_line_with_plane(linef32(camera.position, Raycast), quad.p0, quad.p1, quad.p2);
-			if (is_vector_inside_rectangle(intersect_back, quad.p0, quad.p1, quad.p2)) {
-				printf("Back Face hit\n");
+typedef struct CubeUnderCursor {
+	CubeFace hovered_face;
+	u32 index;
+	f32 distance_to_camera;
+} CubeUnderCursor;
+
+function b32 find_cube_under_cursor(CubeUnderCursor* result) {
+	b32 match = false;
+
+	for (u32 cube_index = 0; cube_index < LevelCubesIndex; cube_index++) {
+		CubeVertices vertices = cube_vertices_apply_transform(CubeVerticesLocalSpace, Cubes[cube_index].transform);
+		for(u32 cube_face_enum = 0; cube_face_enum < 6; cube_face_enum++) {
+			Quad face = cube_vertices_get_face(vertices, cube_face_enum);
+			Vec3f32 intersect = intersect_line_with_plane(linef32(camera.position, Raycast), face.p0, face.p1, face.p2);
+			if (is_vector_inside_rectangle(intersect, face.p0, face.p1, face.p2)) {
+				if (!match) {
+					result->hovered_face = cube_face_enum;
+					result->index = cube_index;
+					result->distance_to_camera = distance_vec3f32(intersect, camera.position);
+					match = true;
+				} else {
+					f32 distance = distance_vec3f32(intersect, camera.position);
+					if (distance < result->distance_to_camera) {
+						result->hovered_face = cube_face_enum;
+						result->index = cube_index;
+						result->distance_to_camera = distance;
+					}
+				}
 			}
 		}
-
-		// Front face
-		{
-			Quad quad = cube_vertices_get_quad_front(vertices);
-			Vec3f32 intersect_front = intersect_line_with_plane(linef32(camera.position, Raycast), quad.p0, quad.p1, quad.p2);
-			if (is_vector_inside_rectangle(intersect_front, quad.p0, quad.p1, quad.p2)) {
-				printf("Front Face hit\n");
-			}
-		}
-
-		// Left face
-		{
-			Quad quad = cube_vertices_get_quad_left(vertices);
-			Vec3f32 intersect_front = intersect_line_with_plane(linef32(camera.position, Raycast), quad.p0, quad.p1, quad.p2);
-			if (is_vector_inside_rectangle(intersect_front, quad.p0, quad.p1, quad.p2)) {
-				printf("Left Face hit\n");
-			}
-		}
-
-		// Right face
-		{
-			Quad quad = cube_vertices_get_quad_right(vertices);
-			Vec3f32 intersect_front = intersect_line_with_plane(linef32(camera.position, Raycast), quad.p0, quad.p1, quad.p2);
-			if (is_vector_inside_rectangle(intersect_front, quad.p0, quad.p1, quad.p2)) {
-				printf("Right Face hit\n");
-			}
-		}
-
-		// Bot face
-		{
-			Quad quad = cube_vertices_get_quad_bot(vertices);
-			Vec3f32 intersect_front = intersect_line_with_plane(linef32(camera.position, Raycast), quad.p0, quad.p1, quad.p2);
-			if (is_vector_inside_rectangle(intersect_front, quad.p0, quad.p1, quad.p2)) {
-				printf("Bot Face hit\n");
-			}
-		}
-
-		// Top face
-		{
-			Quad quad = cube_vertices_get_quad_top(vertices);
-			Vec3f32 intersect_front = intersect_line_with_plane(linef32(camera.position, Raycast), quad.p0, quad.p1, quad.p2);
-			if (is_vector_inside_rectangle(intersect_front, quad.p0, quad.p1, quad.p2)) {
-				printf("Top Face hit\n");
-			}
-		}
-
 	}
-	return result;
+
+	return match;
 }
 
 int main(void) {
@@ -171,7 +143,7 @@ int main(void) {
 		}
 
 		process_input(window);
-
+		
 		// View
 		Mat4f32 view = mat4f32(1.0f);
 		Mat4f32 look_at = look_at_mat4f32(camera.position, add_vec3f32(camera.position, camera.front), camera.up);
@@ -183,19 +155,47 @@ int main(void) {
 		projection = mul_mat4f32(perspective, projection);
 
 		// Raycast
-		Vec3f32 unproject_mouse = unproject_vec3f32(vec3f32(Mouse.ndc_x, Mouse.ndc_y, 1.0f), projection, view);
-		Raycast = sub_vec3f32(vec3f32(unproject_mouse.x, unproject_mouse.y, unproject_mouse.z), vec3f32(camera.position.x, camera.position.y, camera.position.z));
+		if (ActiveCameraMode == CameraMode_Select) {
+			Vec3f32 unproject_mouse = unproject_vec3f32(vec3f32(Mouse.ndc_x, Mouse.ndc_y, 1.0f), projection, view);
+			Raycast = sub_vec3f32(vec3f32(unproject_mouse.x, unproject_mouse.y, unproject_mouse.z), vec3f32(camera.position.x, camera.position.y, camera.position.z));
+		} else {
+			Raycast = vec3f32(F32_MAX, F32_MAX, F32_MAX);
+		}
 
 		renderer_begin_frame(&renderer, PALLETE_COLOR_D);
+
+		// Axis
+		{ 
+			f32 size = 20.0f;
+			renderer_push_line(&renderer, vec3f32(-size,   0.0f,   0.0f), vec3f32(size,  0.0f,  0.0f), COLOR_RED);
+			renderer_push_line(&renderer, vec3f32(  0.0f, -size,   0.0f), vec3f32( 0.0f, size,  0.0f), COLOR_GREEN);
+			renderer_push_line(&renderer, vec3f32(  0.0f,   0.0f, -size), vec3f32( 0.0f,  0.0f, size), COLOR_BLUE);
+		}
 
 		Mat4f32 model = mat4f32(1.0f);
 		renderer_set_uniform_mat4fv(renderer.shader_program, "model", model);
 		renderer_set_uniform_mat4fv(renderer.shader_program, "view", view);
 		renderer_set_uniform_mat4fv(renderer.shader_program, "projection", projection);
 
-		find_cube_under_cursor();
-		renderer_push_cube(&renderer, Cubes[0], COLOR_BLACK);
-		
+		CubeUnderCursor cuc;
+		if (find_cube_under_cursor(&cuc)) {
+			printf("\nCubeUnderCursor:\n");
+			printf("  Face: ");
+			switch(cuc.hovered_face) {
+				case CubeFace_Back:   { printf("Back\n");   } break;
+				case CubeFace_Front:  { printf("Front\n");  } break;
+				case CubeFace_Left:   { printf("Left\n");   } break;
+				case CubeFace_Right:  { printf("Right\n");  } break;
+				case CubeFace_Bottom: { printf("Bottom\n"); } break;
+				case CubeFace_Top:    { printf("Top\n");    } break;
+			}
+			printf("  Index: %u\n", cuc.index);
+			printf("  Distance: %.2f\n}\n", cuc.distance_to_camera);
+			printf("\n");
+			renderer_push_cube_highlight_face(&renderer, Cubes[0], COLOR_BLACK, cuc.hovered_face, scale_vec4f32(PALLETE_COLOR_B, 0.90));
+		} else {
+			renderer_push_cube(&renderer, Cubes[0], COLOR_BLACK);
+		}
 
 		renderer_end_frame(&renderer, WindowWidth, WindowHeight);
 

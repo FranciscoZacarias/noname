@@ -61,19 +61,34 @@ function Renderer renderer_init(s32 window_width, s32 window_height) {
 	// --- VAO, VBO
 	glGenVertexArrays(1, &result.vao);
 	glBindVertexArray(result.vao);
-	
-	glGenBuffers(1, &result.vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, result.vbo);
-	glBufferData(GL_ARRAY_BUFFER, MAX_VERTICES * sizeof(RendererVertex), NULL, GL_DYNAMIC_DRAW);
-	
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, sizeof(RendererVertex), (void*) offsetof(RendererVertex, position));
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_False, sizeof(RendererVertex), (void*) offsetof(RendererVertex, color));
-	glEnableVertexAttribArray(1);
-	
+
+	// Triangles vbo
+	{
+		glGenBuffers(1, &result.triangle_vbo);
+		glBindBuffer(GL_ARRAY_BUFFER, result.triangle_vbo);
+		glBufferData(GL_ARRAY_BUFFER, MAX_TRIANGLES_VERTICES * sizeof(RendererVertex), NULL, GL_DYNAMIC_DRAW);
+		
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, sizeof(RendererVertex), (void*) OffsetOfMember(RendererVertex, position));
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(1, 4, GL_FLOAT, GL_False, sizeof(RendererVertex), (void*) OffsetOfMember(RendererVertex, color));
+		glEnableVertexAttribArray(1);
+	}
+
+	// Lines vbo
+	{
+		glGenBuffers(1, &result.line_vbo);
+		glBindBuffer(GL_ARRAY_BUFFER, result.line_vbo);
+		glBufferData(GL_ARRAY_BUFFER, MAX_LINES * sizeof(RendererVertex), NULL, GL_DYNAMIC_DRAW);
+
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_False, sizeof(RendererVertex), (void*) OffsetOfMember(RendererVertex, position));
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(3, 4, GL_FLOAT, GL_False, sizeof(RendererVertex), (void*) OffsetOfMember(RendererVertex, color));
+		glEnableVertexAttribArray(3);
+	}
+
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	
+
 	// --- MSAA: FBO and RBO setup
 	glGenFramebuffers(1, &result.msaa_frame_buffer_object);
 
@@ -197,8 +212,13 @@ function Renderer renderer_init(s32 window_width, s32 window_height) {
 
 function void renderer_free(Renderer* renderer) {
 	glDeleteVertexArrays(1, &renderer->vao);
-	glDeleteBuffers(1, &renderer->vbo);
+	glDeleteBuffers(1, &renderer->triangle_vbo);
+	glDeleteBuffers(1, &renderer->line_vbo);
 	glDeleteProgram(renderer->shader_program);
+
+	glDeleteVertexArrays(1, &renderer->screen_vao);
+	glDeleteBuffers(1, &renderer->screen_vbo);
+	glDeleteProgram(renderer->screen_program);
 }
 
 function void renderer_begin_frame(Renderer* renderer, Vec4f32 background_color) {
@@ -208,20 +228,30 @@ function void renderer_begin_frame(Renderer* renderer, Vec4f32 background_color)
 	glEnable(GL_DEPTH_TEST);
 
 	renderer->triangle_count = 0;
+	renderer->line_count = 0;
 
 	glUseProgram(renderer->shader_program);
 }
 
 void renderer_end_frame(Renderer* renderer, s32 window_width, s32 window_height) {
 	glBindVertexArray(renderer->vao);
-	glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, renderer->triangle_vbo);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, renderer->triangle_count * 3 * sizeof(RendererVertex), renderer->triangle_data);
 
+	renderer_set_uniform_s32(renderer->shader_program, "render_triangles", 1);
   glEnable(GL_CULL_FACE);
   glCullFace(GL_FRONT);
   glFrontFace(GL_CCW);
 	glDrawArrays(GL_TRIANGLES, 0, renderer->triangle_count * 3);
   glDisable(GL_CULL_FACE);
+
+	glBindBuffer(GL_ARRAY_BUFFER, renderer->line_vbo);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, renderer->line_count * 2 * sizeof(RendererVertex), renderer->line_data);
+
+	renderer_set_uniform_s32(renderer->shader_program, "render_triangles", 0);
+	glLineWidth(2.0f);
+	glDrawArrays(GL_LINES, 0, renderer->line_count * 2);
+	glLineWidth(1.0f);
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, renderer->msaa_frame_buffer_object);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderer->postprocessing_fbo);	
@@ -262,6 +292,21 @@ function void renderer_push_triangle(Renderer* renderer, Vec3f32 a_position, Vec
 	renderer->triangle_count += 1;
 }
 
+function void renderer_push_line(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color) {
+	if ((renderer->line_count + 1) > MAX_LINES) {
+		printf("Error :: Renderer :: Too many lines!");
+		Assert(0);
+	}
+
+	s64 index = renderer->line_count * 2;
+	renderer->line_data[index+0].position = a;
+	renderer->line_data[index+0].color = color;
+	renderer->line_data[index+1].position = b;
+	renderer->line_data[index+1].color = color;
+
+	renderer->line_count += 1;
+}
+
 function void renderer_push_quad(Renderer* renderer, Quad quad, Vec4f32 color) {
 	if ((renderer->triangle_count + 2) >= MAX_TRIANGLES) {
 		printf("Error :: Renderer :: Too many triangles!");
@@ -274,6 +319,10 @@ function void renderer_push_quad(Renderer* renderer, Quad quad, Vec4f32 color) {
 }
 
 function void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_color) {
+	renderer_push_cube_highlight_face(renderer, cube, border_color, -1, COLOR_BLACK);
+}
+
+function void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, Vec4f32 border_color, CubeFace highlight, Vec4f32 highlight_color) {
   f32 scale = 1-CubeBorderThickness;
 
 	// On XY Plane
@@ -282,8 +331,9 @@ function void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_c
 		CubeVertices vertices_transformed = cube_vertices_apply_transform(CubeVerticesLocalSpace, final_transform);
 
 	  // ---  Back Quad
-    Quad back = cube_vertices_get_quad_back(vertices_transformed);
-    renderer_push_quad(renderer, back, cube.color);
+    Quad back = cube_vertices_get_face(vertices_transformed, CubeFace_Back);
+		Vec4f32 color_back = (highlight == CubeFace_Back) ? highlight_color : cube.color;
+    renderer_push_quad(renderer, back, color_back);
     
     // --- Borders
     {
@@ -321,8 +371,9 @@ function void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_c
     }
 
 	  // ---  Front Quad
-    Quad front = cube_vertices_get_quad_front(vertices_transformed);
-    renderer_push_quad(renderer, front, cube.color);
+    Quad front = cube_vertices_get_face(vertices_transformed, CubeFace_Front);
+		Vec4f32 color_front = (highlight == CubeFace_Front) ? highlight_color : cube.color;
+    renderer_push_quad(renderer, front, color_front);
 
     // --- Border
     {
@@ -366,8 +417,9 @@ function void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_c
 		CubeVertices vertices_transformed = cube_vertices_apply_transform(CubeVerticesLocalSpace, final_transform);
 
 		// --- Left Quad
-    Quad left = cube_vertices_get_quad_left(vertices_transformed);
-    renderer_push_quad(renderer, left, cube.color);
+    Quad left = cube_vertices_get_face(vertices_transformed, CubeFace_Left);
+		Vec4f32 color_left = (highlight == CubeFace_Left) ? highlight_color : cube.color;
+    renderer_push_quad(renderer, left, color_left);
 
     Quad left_left_border = {
       mul_vec3f32_mat4f32(scale_vec3f32_xyz(P0, 1.0f, scale,   1.0f), cube.transform),
@@ -402,8 +454,9 @@ function void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_c
     renderer_push_quad(renderer, left_bottom_border, border_color);
 
 		// --- Right Quad
-    Quad right = cube_vertices_get_quad_right(vertices_transformed);
-    renderer_push_quad(renderer, right, cube.color);
+    Quad right = cube_vertices_get_face(vertices_transformed, CubeFace_Right);
+		Vec4f32 color_right = (highlight == CubeFace_Right) ? highlight_color : cube.color;
+    renderer_push_quad(renderer, right, color_right);
 
     Quad right_left_border = {
       mul_vec3f32_mat4f32(scale_vec3f32_xyz(P5, 1.0f, scale, -scale), cube.transform),
@@ -444,8 +497,9 @@ function void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_c
 		CubeVertices vertices_transformed = cube_vertices_apply_transform(CubeVerticesLocalSpace, final_transform);
 
 		// ---  Bottom Quad
-    Quad bottom = cube_vertices_get_quad_bot(vertices_transformed);
-    renderer_push_quad(renderer, bottom, cube.color);
+    Quad bottom = cube_vertices_get_face(vertices_transformed, CubeFace_Bottom);
+		Vec4f32 color_bottom = (highlight == CubeFace_Bottom) ? highlight_color : cube.color;
+    renderer_push_quad(renderer, bottom, color_bottom);
 
     Quad bottom_left_border = {
       mul_vec3f32_mat4f32(P4, cube.transform),
@@ -480,8 +534,9 @@ function void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_c
     renderer_push_quad(renderer, bottom_bottom_border, border_color);
 
 		// ---  Top Quad
-    Quad top = cube_vertices_get_quad_top(vertices_transformed);
-    renderer_push_quad(renderer, top, cube.color);
+    Quad top = cube_vertices_get_face(vertices_transformed, CubeFace_Top);
+		Vec4f32 color_top = (highlight == CubeFace_Top) ? highlight_color : cube.color;
+    renderer_push_quad(renderer, top, color_top);
 
     Quad top_left_border = {
       mul_vec3f32_mat4f32(scale_vec3f32_xyz(P3,   1.0f, 1.0f, scale), cube.transform),
