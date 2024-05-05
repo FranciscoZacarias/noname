@@ -1,8 +1,18 @@
 //////////////////////////////////////////////
 // Generic math
 
-function Line3f32 linef32(Vec3f32 point, Vec3f32 direction) {
-	Line3f32 result = {point, direction};
+function Quad transform_quad(Quad q, Mat4f32 m) {
+	Quad result = {
+		mul_vec3f32_mat4f32(q.p0, m),
+		mul_vec3f32_mat4f32(q.p1, m),
+		mul_vec3f32_mat4f32(q.p2, m),
+		mul_vec3f32_mat4f32(q.p3, m),
+	};
+	return result;
+}
+
+function Linef32 linef32(Vec3f32 point, Vec3f32 direction) {
+	Linef32 result = {point, direction};
 	return result;
 }
 
@@ -856,7 +866,7 @@ function b32 is_vector_inside_rectangle(Vec3f32 p, Vec3f32 a, Vec3f32 b, Vec3f32
 	return result;
 }
 
-function Vec3f32 intersect_line_with_plane(Line3f32 line, Vec3f32 point1, Vec3f32 point2, Vec3f32 point3) {
+function Vec3f32 intersect_line_with_plane(Linef32 line, Vec3f32 point1, Vec3f32 point2, Vec3f32 point3) {
 	Vec3f32 result   = vec3f32(F32_MAX, F32_MAX, F32_MAX);
 	Vec3f32 plane_v1 = vec3f32(point2.x-point1.x, point2.y-point1.y, point2.z-point1.z);
 	Vec3f32 plane_v2 = vec3f32(point3.x-point1.x, point3.y-point1.y, point3.z-point1.z);

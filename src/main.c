@@ -1,9 +1,5 @@
 #include "main.h"
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void process_input(GLFWwindow *window);
-void mouse_callback(GLFWwindow* window, f64 xpos, f64 ypos);
-
 global s32 WindowWidth  = 1280;
 global s32 WindowHeight = 720;
 #define AspectRatio ((f32)WindowWidth/(f32)WindowHeight)
@@ -31,6 +27,9 @@ global b32 F_KeyState = 0;
 
 global b32 G_KeyPreviousState = 1;
 global b32 G_KeyState = 0;
+
+global b32 R_KeyPreviousState = 1;
+global b32 R_KeyState = 0;
 /////////////////
 
 typedef enum CameraMode {
@@ -52,7 +51,7 @@ global Vec3f32 Raycast = {F32_MAX, F32_MAX, F32_MAX};
 
 #define MAX_CUBES 1024
 global Cube Cubes[MAX_CUBES];
-global s32 LevelCubesIndex = 0;
+global s32 TotalCubes = 0;
 
 typedef struct CubeUnderCursor {
 	CubeFace hovered_face;
@@ -60,34 +59,11 @@ typedef struct CubeUnderCursor {
 	f32 distance_to_camera;
 } CubeUnderCursor;
 
-function b32 find_cube_under_cursor(CubeUnderCursor* result) {
-	b32 match = false;
+function b32 find_cube_under_cursor(CubeUnderCursor* result);
 
-	for (u32 cube_index = 0; cube_index < LevelCubesIndex; cube_index++) {
-		CubeVertices vertices = cube_vertices_apply_transform(CubeVerticesLocalSpace, Cubes[cube_index].transform);
-		for(u32 cube_face_enum = 0; cube_face_enum < 6; cube_face_enum++) {
-			Quad face = cube_vertices_get_face(vertices, cube_face_enum);
-			Vec3f32 intersect = intersect_line_with_plane(linef32(camera.position, Raycast), face.p0, face.p1, face.p2);
-			if (is_vector_inside_rectangle(intersect, face.p0, face.p1, face.p2)) {
-				if (!match) {
-					result->hovered_face = cube_face_enum;
-					result->index = cube_index;
-					result->distance_to_camera = distance_vec3f32(intersect, camera.position);
-					match = true;
-				} else {
-					f32 distance = distance_vec3f32(intersect, camera.position);
-					if (distance < result->distance_to_camera) {
-						result->hovered_face = cube_face_enum;
-						result->index = cube_index;
-						result->distance_to_camera = distance;
-					}
-				}
-			}
-		}
-	}
-
-	return match;
-}
+function void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+function void process_input(GLFWwindow *window);
+function void mouse_callback(GLFWwindow* window, f64 xpos, f64 ypos);
 
 int main(void) {
 
@@ -124,7 +100,16 @@ int main(void) {
 
 	Renderer renderer = renderer_init(WindowWidth, WindowHeight);
 
-	Cubes[LevelCubesIndex++] = cube_new(vec3f32(0.0f, 0.0f, 0.0f), PALLETE_COLOR_B);
+	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A);
+	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f, -8.0f), PALLETE_COLOR_B);
+	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f, -0.0f,  8.0f), PALLETE_COLOR_C);
+	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  8.0f,  0.0f), PALLETE_COLOR_C);
+	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f, -8.0f,  0.0f), PALLETE_COLOR_A);
+	Cubes[TotalCubes++] = cube_new(vec3f32( 8.0f,  0.0f,  0.0f), PALLETE_COLOR_B);
+	Cubes[TotalCubes++] = cube_new(vec3f32(-8.0f,  0.0f,  0.0f), PALLETE_COLOR_C);
+	Cubes[TotalCubes++] = cube_new(vec3f32( 8.0f,  8.0f,  8.0f), PALLETE_COLOR_C);
+	Cubes[TotalCubes++] = cube_new(vec3f32(-8.0f, -8.0f, -8.0f), PALLETE_COLOR_A);
+	Cubes[TotalCubes++] = cube_new(vec3f32( 8.0f, -8.0f, -8.0f), PALLETE_COLOR_B);
 
 	while(!glfwWindowShouldClose(window)) {
 		f64 currentFrame = (f64)(glfwGetTime());
@@ -155,48 +140,32 @@ int main(void) {
 		projection = mul_mat4f32(perspective, projection);
 
 		// Raycast
-		if (ActiveCameraMode == CameraMode_Select) {
-			Vec3f32 unproject_mouse = unproject_vec3f32(vec3f32(Mouse.ndc_x, Mouse.ndc_y, 1.0f), projection, view);
-			Raycast = sub_vec3f32(vec3f32(unproject_mouse.x, unproject_mouse.y, unproject_mouse.z), vec3f32(camera.position.x, camera.position.y, camera.position.z));
-		} else {
-			Raycast = vec3f32(F32_MAX, F32_MAX, F32_MAX);
-		}
+		Vec3f32 unproject_mouse = unproject_vec3f32(vec3f32(Mouse.ndc_x, Mouse.ndc_y, 1.0f), projection, view);
+		Raycast = normalize_vec3f32(sub_vec3f32(vec3f32(unproject_mouse.x, unproject_mouse.y, unproject_mouse.z), vec3f32(camera.position.x, camera.position.y, camera.position.z)));
 
 		renderer_begin_frame(&renderer, PALLETE_COLOR_D);
+		{
+			renderer_set_uniform_mat4fv(renderer.shader_program, "view", view);
+			renderer_set_uniform_mat4fv(renderer.shader_program, "projection", projection);
 
-		// Axis
-		{ 
-			f32 size = 20.0f;
-			renderer_push_line(&renderer, vec3f32(-size,   0.0f,   0.0f), vec3f32(size,  0.0f,  0.0f), COLOR_RED);
-			renderer_push_line(&renderer, vec3f32(  0.0f, -size,   0.0f), vec3f32( 0.0f, size,  0.0f), COLOR_GREEN);
-			renderer_push_line(&renderer, vec3f32(  0.0f,   0.0f, -size), vec3f32( 0.0f,  0.0f, size), COLOR_BLUE);
-		}
-
-		Mat4f32 model = mat4f32(1.0f);
-		renderer_set_uniform_mat4fv(renderer.shader_program, "model", model);
-		renderer_set_uniform_mat4fv(renderer.shader_program, "view", view);
-		renderer_set_uniform_mat4fv(renderer.shader_program, "projection", projection);
-
-		CubeUnderCursor cuc;
-		if (find_cube_under_cursor(&cuc)) {
-			printf("\nCubeUnderCursor:\n");
-			printf("  Face: ");
-			switch(cuc.hovered_face) {
-				case CubeFace_Back:   { printf("Back\n");   } break;
-				case CubeFace_Front:  { printf("Front\n");  } break;
-				case CubeFace_Left:   { printf("Left\n");   } break;
-				case CubeFace_Right:  { printf("Right\n");  } break;
-				case CubeFace_Bottom: { printf("Bottom\n"); } break;
-				case CubeFace_Top:    { printf("Top\n");    } break;
+			// Axis
+			{ 
+				f32 size = 20.0f;
+				renderer_push_line(&renderer, vec3f32(-size,   0.0f,   0.0f), vec3f32(size,  0.0f,  0.0f), COLOR_RED);
+				renderer_push_line(&renderer, vec3f32(  0.0f, -size,   0.0f), vec3f32( 0.0f, size,  0.0f), COLOR_GREEN);
+				renderer_push_line(&renderer, vec3f32(  0.0f,   0.0f, -size), vec3f32( 0.0f,  0.0f, size), COLOR_BLUE);
 			}
-			printf("  Index: %u\n", cuc.index);
-			printf("  Distance: %.2f\n}\n", cuc.distance_to_camera);
-			printf("\n");
-			renderer_push_cube_highlight_face(&renderer, Cubes[0], COLOR_BLACK, cuc.hovered_face, scale_vec4f32(PALLETE_COLOR_B, 0.90));
-		} else {
-			renderer_push_cube(&renderer, Cubes[0], COLOR_BLACK);
-		}
 
+			for(u32 i = 0; i < TotalCubes; i++) {
+				renderer_set_uniform_mat4fv(renderer.shader_program, "model", mat4f32(1.0f));
+				CubeUnderCursor cuc;
+				if (find_cube_under_cursor(&cuc) && cuc.index == i) {
+					renderer_push_cube_highlight_face(&renderer, Cubes[i], vec4f32(0.5+0.5*sin(4*glfwGetTime()), 0.5+0.5*sin(4*glfwGetTime()), 0.0f), cuc.hovered_face, scale_vec4f32(Cubes[i].color, 0.80));
+				} else {
+					renderer_push_cube(&renderer, Cubes[i], COLOR_BLACK);	
+				}
+			}
+		}
 		renderer_end_frame(&renderer, WindowWidth, WindowHeight);
 
 		glfwSwapBuffers(window);
@@ -260,6 +229,7 @@ void process_input(GLFWwindow *window) {
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 			glfwSetCursorPos(window, Mouse.screen_space_x, Mouse.screen_space_y);
 		}
+
 		if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
 			if (G_KeyState == 0 && G_KeyPreviousState == 1) {
 				G_KeyPreviousState = 0;
@@ -282,6 +252,18 @@ void process_input(GLFWwindow *window) {
 		} else {
 			F_KeyPreviousState = 1;
 			F_KeyState = 0;
+		}
+
+		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+			if (R_KeyState == 0 && R_KeyPreviousState == 1) {
+				R_KeyPreviousState = 0;
+				R_KeyState = 1;
+			} else {
+				R_KeyState = 0;
+			}
+		} else {
+			R_KeyPreviousState = 1;
+			R_KeyState = 0;
 		}
 	}
 }
@@ -312,4 +294,32 @@ void mouse_callback(GLFWwindow* window, f64 xposIn, f64 yposIn) {
 			Mouse.ndc_x = (2.0f * xposIn) / WindowWidth - 1.0f;
 			Mouse.ndc_y = 1.0f - (2.0f * yposIn) / WindowHeight;
 	}
+}
+
+function b32 find_cube_under_cursor(CubeUnderCursor* result) {
+	b32 match = false;
+	for (u32 i = 0; i < TotalCubes; i++) {
+		Cube it = Cubes[i];
+		for(u32 j = 0; j < 6; j++) {
+			Quad face = transform_quad(cube_get_local_space_face_quad(j), it.transform);
+			Vec3f32 intersection = intersect_line_with_plane(linef32(camera.position, Raycast), face.p0, face.p1, face.p2);
+			if (is_vector_inside_rectangle(intersection, face.p0, face.p1, face.p2)) {
+				if (!match) {
+					result->hovered_face = j;
+					result->index = i;
+					result->distance_to_camera = distance_vec3f32(intersection, camera.position);
+					match = true;
+				} else {
+					f32 distance = distance_vec3f32(intersection, camera.position);
+					if (distance < result->distance_to_camera) {
+						result->hovered_face = j;
+						result->index = i;
+						result->distance_to_camera = distance;
+					}
+				}
+			}
+		}
+	}
+
+	return match;
 }

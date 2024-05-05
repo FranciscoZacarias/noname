@@ -13,7 +13,7 @@
   in any implementation logic for this Cube structure
 */
 
-global f32 CubeBorderThickness = 0.05f;
+global f32 CubeBorderThickness = 0.02f;
 
 typedef enum CubeFace {
   CubeFace_Back,
@@ -66,8 +66,6 @@ function Cube cube_new(Vec3f32 transform, Vec4f32 color);
 function Vec3f32 cube_get_position(Cube cube);
 function void cube_print(Cube cube);
 
-function Quad cube_vertices_get_face(CubeVertices vertices, CubeFace face);
-
-function CubeVertices cube_vertices_apply_transform(CubeVertices vertices, Mat4f32 transform);
+function Quad cube_get_local_space_face_quad(CubeFace face);
 
 #endif // CUBE_H

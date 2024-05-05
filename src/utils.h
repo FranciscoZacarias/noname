@@ -6,9 +6,6 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-
-// Default colors
-
 #define COLOR_WHITE vec4f32(1.0f, 1.0f, 1.0f)
 #define COLOR_BLACK vec4f32(0.0f, 0.0f, 0.0f)
 

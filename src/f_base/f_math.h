@@ -60,12 +60,14 @@ typedef struct Quad {
   Vec3f32 p3;
 } Quad;
 
-typedef struct Line3f32 {
+function Quad transform_quad(Quad q, Mat4f32 m);
+
+typedef struct Linef32 {
   Vec3f32 point;
   Vec3f32 direction;
-} Line3f32;
+} Linef32;
 
-function Line3f32 linef32(Vec3f32 point, Vec3f32 direction);
+function Linef32 linef32(Vec3f32 point, Vec3f32 direction);
 
 //////////////////////////////////////////////
 // Vector3 f32 
@@ -144,6 +146,6 @@ function Mat4f32 look_at_mat4f32(Vec3f32 eye, Vec3f32 target, Vec3f32 up);
 function f32 clampf32(f32 value, f32 min, f32 max);
 function f32 lerpf32(f32 start, f32 end, f32 t);
 function b32 is_vector_inside_rectangle(Vec3f32 p, Vec3f32 a, Vec3f32 b, Vec3f32 c);
-function Vec3f32 intersect_line_with_plane(Line3f32 line, Vec3f32 point1, Vec3f32 point2, Vec3f32 point3);
+function Vec3f32 intersect_line_with_plane(Linef32 line, Vec3f32 point1, Vec3f32 point2, Vec3f32 point3);
 
 #endif // FMATH_H
