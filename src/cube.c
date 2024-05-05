@@ -6,12 +6,6 @@ function Cube cube_new(Vec3f32 position, Vec4f32 color) {
   return result;
 }
 
-function Vec3f32 cube_get_position(Cube cube) {
-	Vec4f32 transformed_center = mul_vec4f32_mat4f32(vec4f32(0.0f, 0.0f, 0.0f), cube.transform);
-	Vec3f32 result = vec3f32_from_vec4f32(transformed_center);
-	return result;
-}
-
 function Quad cube_get_local_space_face_quad(CubeFace face) {
 	Quad result = { 0 };
 

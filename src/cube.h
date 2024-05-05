@@ -63,9 +63,6 @@ typedef struct Cube {
 } Cube;
 
 function Cube cube_new(Vec3f32 transform, Vec4f32 color);
-function Vec3f32 cube_get_position(Cube cube);
-function void cube_print(Cube cube);
-
 function Quad cube_get_local_space_face_quad(CubeFace face);
 
 #endif // CUBE_H
