@@ -1,5 +1,5 @@
-#ifndef FOS_H
-#define FOS_H
+#ifndef F_OS_H
+#define F_OS_H
 
 function void os_init(void);
 
@@ -28,4 +28,4 @@ function void     os_thread_wait_for_join(OSThread* other);
 function void     os_thread_wait_for_join_all(OSThread** threads, u32 count);
 function void     os_thread_wait_for_join_any(OSThread** threads, u32 count);
 
-#endif // FOS_H
+#endif // F_OS_H

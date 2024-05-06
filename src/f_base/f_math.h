@@ -1,5 +1,5 @@
-#ifndef FMATH_H
-#define FMATH_H
+#ifndef F_MATH_H
+#define F_MATH_H
 
 #define PI 3.14159265358979323846f
 #define Degrees(r) (r * (180 / PI))
@@ -148,4 +148,4 @@ function f32 lerpf32(f32 start, f32 end, f32 t);
 function b32 is_vector_inside_rectangle(Vec3f32 p, Vec3f32 a, Vec3f32 b, Vec3f32 c);
 function Vec3f32 intersect_line_with_plane(Linef32 line, Vec3f32 point1, Vec3f32 point2, Vec3f32 point3);
 
-#endif // FMATH_H
+#endif // F_MATH_H

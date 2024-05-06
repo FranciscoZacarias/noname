@@ -1,6 +1,6 @@
 
-#ifndef FMEMORY_H
-#define FMEMORY_H
+#ifndef F_MEMORY_H
+#define F_MEMORY_H
 
 #define ARENA_MAX_MEMORY Gigabytes(1)
 #define ARENA_COMMIT_SIZE Kilobytes(8)
@@ -32,4 +32,4 @@ typedef struct ArenaTemp {
 function ArenaTemp arena_temp_begin(Arena* arena);
 function ArenaTemp arena_temp_end(ArenaTemp* temp);
 
-#endif // FMEMORY_H
+#endif // F_MEMORY_H

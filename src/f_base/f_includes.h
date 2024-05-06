@@ -1,5 +1,5 @@
-#ifndef FINCLUDE_H
-#define FINCLUDE_H
+#ifndef F_INCLUDE_H
+#define F_INCLUDE_H
 
 //////////////////////////////////
 // Header to include in projects
@@ -14,4 +14,4 @@
 #include "f_os/f_os.c"
 #include "f_memory.c"
 
-#endif // FINCLUDE_H
+#endif // F_INCLUDE_H
