@@ -216,10 +216,10 @@
 #define Member(T,m) (((T*)0)->m)
 #define OffsetOfMember(T,m) IntFromPtr(&Member(T,m))
 
-#define Kilobytes(n) (((u64)(n)) << 10)
-#define Megabytes(n) (((u64)(n)) << 20)
-#define Gigabytes(n) (((u64)(n)) << 30)
-#define Terabytes(n) (((u64)(n)) << 40)
+#define Kilobytes(n) ((u64)(n * 1024))
+#define Megabytes(n) ((u64)(n * 1024 * 1024))
+#define Gigabytes(n) ((u64)(n * 1024 * 1024 * 1024))
+#define Terabytes(n) ((u64)(n * 1024 * 1024 * 1024 * 1024))
 
 #define Thousand(n) ((n)*1000)
 #define Million(n)  ((n)*1000000llu)
