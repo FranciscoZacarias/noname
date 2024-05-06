@@ -1,7 +1,5 @@
 #include "main.h"
 
-ArrayType(Cube);
-
 global s32 WindowWidth  = 1280;
 global s32 WindowHeight = 720;
 #define AspectRatio ((f32)WindowWidth/(f32)WindowHeight)
@@ -57,7 +55,10 @@ typedef struct CubeUnderCursor {
 	f32 distance_to_camera;
 } CubeUnderCursor;
 
-Array(Cube) Cubes;
+
+Renderer renderer;
+global Cube Cubes[1024];
+global u32 TotalCubes = 0;
 
 function b32 find_cube_under_cursor(CubeUnderCursor* result);
 
@@ -88,7 +89,6 @@ int main(void) {
 		return -1;
 	}
 
-
 	// Camera and Mouse -----------
 	camera = camera_create();
 	LastX  = WindowWidth / 2.0f;
@@ -99,24 +99,23 @@ int main(void) {
 	Mouse.ndc_x = LastX;
 	Mouse.ndc_y = LastY;
 
-	Renderer renderer = renderer_init(WindowWidth, WindowHeight);
+	renderer = renderer_init(WindowWidth, WindowHeight);
 
-	array_reserve(Cube, &Cubes, Kilobytes(8));
-	array_add(Cube, &Cubes, cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A));
-	array_add(Cube, &Cubes, cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A));
-	array_add(Cube, &Cubes, cube_new(vec3f32( 0.0f,  0.0f, -8.0f), PALLETE_COLOR_B));
-	array_add(Cube, &Cubes, cube_new(vec3f32( 2.0f,  0.0f, -8.0f), PALLETE_COLOR_B));
-	array_add(Cube, &Cubes, cube_new(vec3f32( 4.0f,  2.0f, -8.0f), PALLETE_COLOR_B));
-	array_add(Cube, &Cubes, cube_new(vec3f32( 6.0f,  0.0f, -8.0f), PALLETE_COLOR_B));
-	array_add(Cube, &Cubes, cube_new(vec3f32( 0.0f,  0.0f, -8.0f), PALLETE_COLOR_B));
-	array_add(Cube, &Cubes, cube_new(vec3f32( 0.0f, -0.0f,  8.0f), PALLETE_COLOR_C));
-	array_add(Cube, &Cubes, cube_new(vec3f32( 0.0f,  8.0f,  0.0f), PALLETE_COLOR_C));
-	array_add(Cube, &Cubes, cube_new(vec3f32( 0.0f, -8.0f,  0.0f), PALLETE_COLOR_A));
-	array_add(Cube, &Cubes, cube_new(vec3f32( 8.0f,  0.0f,  0.0f), PALLETE_COLOR_B));
-	array_add(Cube, &Cubes, cube_new(vec3f32(-8.0f,  0.0f,  0.0f), PALLETE_COLOR_C));
-	array_add(Cube, &Cubes, cube_new(vec3f32( 8.0f,  8.0f,  8.0f), PALLETE_COLOR_C));
-	array_add(Cube, &Cubes, cube_new(vec3f32(-8.0f, -8.0f, -8.0f), PALLETE_COLOR_A));
-	array_add(Cube, &Cubes, cube_new(vec3f32( 8.0f, -8.0f, -8.0f), PALLETE_COLOR_B));
+	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A);
+	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A);
+	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f, -8.0f), PALLETE_COLOR_B);
+	Cubes[TotalCubes++] = cube_new(vec3f32( 2.0f,  0.0f, -8.0f), PALLETE_COLOR_B);
+	Cubes[TotalCubes++] = cube_new(vec3f32( 4.0f,  2.0f, -8.0f), PALLETE_COLOR_B);
+	Cubes[TotalCubes++] = cube_new(vec3f32( 6.0f,  0.0f, -8.0f), PALLETE_COLOR_B);
+	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f, -8.0f), PALLETE_COLOR_B);
+	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f, -0.0f,  8.0f), PALLETE_COLOR_C);
+	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  8.0f,  0.0f), PALLETE_COLOR_C);
+	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f, -8.0f,  0.0f), PALLETE_COLOR_A);
+	Cubes[TotalCubes++] = cube_new(vec3f32( 8.0f,  0.0f,  0.0f), PALLETE_COLOR_B);
+	Cubes[TotalCubes++] = cube_new(vec3f32(-8.0f,  0.0f,  0.0f), PALLETE_COLOR_C);
+	Cubes[TotalCubes++] = cube_new(vec3f32( 8.0f,  8.0f,  8.0f), PALLETE_COLOR_C);
+	Cubes[TotalCubes++] = cube_new(vec3f32(-8.0f, -8.0f, -8.0f), PALLETE_COLOR_A);
+	Cubes[TotalCubes++] = cube_new(vec3f32( 8.0f, -8.0f, -8.0f), PALLETE_COLOR_B);
 
 	while(!glfwWindowShouldClose(window)) {
 		f64 currentFrame = (f64)(glfwGetTime());
@@ -163,13 +162,13 @@ int main(void) {
 				renderer_push_line(&renderer, vec3f32(  0.0f,   0.0f, -size), vec3f32( 0.0f,  0.0f, size), COLOR_BLUE);
 			}
 
-			for(u32 i = 0; i < Cubes.length; i++) {
+			for(u32 i = 0; i < TotalCubes; i++) {
 				renderer_set_uniform_mat4fv(renderer.shader_program, "model", mat4f32(1.0f));
 				CubeUnderCursor cuc;
 				if (find_cube_under_cursor(&cuc) && cuc.index == i) {
-					renderer_push_cube_highlight_face(&renderer, array_get(Cube, &Cubes, i), vec4f32(0.5+0.5*sin(4*glfwGetTime()), 0.5+0.5*sin(4*glfwGetTime()), 0.0f), cuc.hovered_face, scale_vec4f32(array_get(Cube, &Cubes, i).color, 0.80));
+					renderer_push_cube_highlight_face(&renderer, Cubes[i], vec4f32(0.5+0.5*sin(4*glfwGetTime()), 0.5+0.5*sin(4*glfwGetTime()), 0.0f), cuc.hovered_face, scale_vec4f32(Cubes[i].color, 0.80));
 				} else {
-					renderer_push_cube(&renderer, array_get(Cube, &Cubes, i), COLOR_BLACK);	
+					renderer_push_cube(&renderer, Cubes[i], COLOR_BLACK);	
 				}
 			}
 		}
@@ -305,8 +304,8 @@ void mouse_callback(GLFWwindow* window, f64 xposIn, f64 yposIn) {
 
 function b32 find_cube_under_cursor(CubeUnderCursor* result) {
 	b32 match = false;
-	for (u32 i = 0; i < Cubes.length; i++) {
-		Cube it = array_get(Cube, &Cubes, i);
+	for (u32 i = 0; i < TotalCubes; i++) {
+		Cube it = Cubes[i];
 		for(u32 j = 0; j < 6; j++) {
 			Quad face = transform_quad(cube_get_local_space_face_quad(j), it.transform);
 			Vec3f32 intersection = intersect_line_with_plane(linef32(camera.position, Raycast), face.p0, face.p1, face.p2);
