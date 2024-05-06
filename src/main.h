@@ -8,11 +8,6 @@
 #include <GLFW/glfw3.h>
 
 //////////////////////////////////////////////
-// CLib
-#include <stdlib.h>
-#include <stdio.h>
-
-//////////////////////////////////////////////
 // FLayer
 #include "f_includes.h"
 
@@ -27,6 +22,8 @@
 #include "utils.c"
 #include "renderer.c"
 #include "camera.c"
+
+#define ENABLE_ASSERT 1
 
 #define APP_NAME "noname"
 

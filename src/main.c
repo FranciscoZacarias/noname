@@ -55,7 +55,6 @@ typedef struct CubeUnderCursor {
 	f32 distance_to_camera;
 } CubeUnderCursor;
 
-
 Renderer renderer;
 global Cube Cubes[1024];
 global u32 TotalCubes = 0;
@@ -101,8 +100,6 @@ int main(void) {
 
 	renderer = renderer_init(WindowWidth, WindowHeight);
 
-	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A);
-	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A);
 	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f, -8.0f), PALLETE_COLOR_B);
 	Cubes[TotalCubes++] = cube_new(vec3f32( 2.0f,  0.0f, -8.0f), PALLETE_COLOR_B);
 	Cubes[TotalCubes++] = cube_new(vec3f32( 4.0f,  2.0f, -8.0f), PALLETE_COLOR_B);
@@ -158,6 +155,8 @@ int main(void) {
 			renderer_set_uniform_mat4fv(renderer.shader_program, "model", mat4f32(1.0f));
 			renderer_set_uniform_mat4fv(renderer.shader_program, "view", view);
 			renderer_set_uniform_mat4fv(renderer.shader_program, "projection", projection);
+
+			renderer_push_arrow(&renderer, vec3f32(2.0f, 2.0f, 2.0f), vec3f32(5.0f, 5.0f, 5.0f), vec4f32(0.0f, 1.0f, 1.0f));
 
 			// Axis
 			{ 

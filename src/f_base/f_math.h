@@ -4,8 +4,6 @@
 #define PI 3.14159265358979323846f
 #define Degrees(r) (r * (180 / PI))
 #define Radians(d) (d * (PI / 180))
-
-#include <math.h> // Required for: sinf(), cosf(), tan(), atan2f(), sqrtf(), floor(), fminf(), fmaxf(), fabsf()
  
 //////////////////////////////////////////////
 // Vector3 f32

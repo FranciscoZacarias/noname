@@ -230,7 +230,6 @@
 #define AlignUpPow2(x,p)  (((x) + (p) - 1)&~((p) - 1))
 #define AlignDownPow2(x,p) ((x)&~((p) - 1))
 
-#include <string.h>
 #define MemoryCopy(d,s,z)     memmove((d), (s), (z))
 #define MemoryCopyStruct(d,s) MemoryCopy((d),(s), Min(sizeof(*(d)) , sizeof(*(s))))
 #define MemoryZero(d,z)       memset((d), 0, (z))

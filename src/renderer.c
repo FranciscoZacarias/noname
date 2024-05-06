@@ -239,6 +239,7 @@ void renderer_end_frame(Renderer* renderer, s32 window_width, s32 window_height)
 	glBufferSubData(GL_ARRAY_BUFFER, 0, renderer->triangle_count * 3 * sizeof(RendererVertex), renderer->triangle_data);
 
 	renderer_set_uniform_s32(renderer->shader_program, "render_triangles", 1);
+
   glEnable(GL_CULL_FACE);
   glCullFace(GL_FRONT);
   glFrontFace(GL_CCW);
@@ -308,17 +309,35 @@ function void renderer_push_line(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f
 }
 
 function void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color) {
+	f32 size = 0.1f;
+	
 	Vec3f32 direction = normalize_vec3f32(sub_vec3f32(b, a));
-	Vec3f32 top   = vec3f32(0.0f, 0.2f, 0.0);
-	Vec3f32 base0 = vec3f32( 0.0f, -0.2f,  0.2f);
-	Vec3f32 base1 = vec3f32( 0.2f, -0.2f, -0.2f);
-	Vec3f32 base2 = vec3f32(-0.2f, -0.2f, -0.2f);
 
-  renderer_push_triangle(renderer, base1, color, base0, color, top, COLOR_YELLOW);
-  renderer_push_triangle(renderer, base2, color, base1, color, top, COLOR_YELLOW);
-  renderer_push_triangle(renderer, base0, color, base2, color, top, COLOR_YELLOW);
+	Vec3f32 c = vec3f32(0.0f, size, 0.0f);
+  Quad base = {
+		vec3f32(-size, -size,  size),
+		vec3f32( size, -size,  size),
+		vec3f32( size, -size, -size),
+		vec3f32(-size, -size, -size),
+	};
 
-  renderer_push_triangle(renderer, base0, color, base1, color, base2, color);
+	Mat4f32 r = rotate_x_mat4f32(Radians(60));
+	Mat4f32 t = translate_mat4f32(b.x, b.y, b.z);
+
+	base = transform_quad(base, r);
+	c    = mul_vec3f32_mat4f32(c, r);
+
+	base = transform_quad(base, t);
+	c    = mul_vec3f32_mat4f32(c, t);
+
+
+
+	renderer_push_triangle(renderer, base.p0, COLOR_GREEN, c, vec4f32(1.0f, 0.0f, 1.0f), base.p1, COLOR_GREEN);
+	renderer_push_triangle(renderer, base.p1, COLOR_GREEN, c, vec4f32(1.0f, 0.0f, 1.0f), base.p2, COLOR_GREEN);
+	renderer_push_triangle(renderer, base.p2, COLOR_GREEN, c, vec4f32(1.0f, 0.0f, 1.0f), base.p3, COLOR_GREEN);
+	renderer_push_triangle(renderer, base.p3, COLOR_GREEN, c, vec4f32(1.0f, 0.0f, 1.0f), base.p0, COLOR_GREEN);
+
+	renderer_push_quad(renderer, base, COLOR_RED);
 
 	renderer_push_line(renderer, a, b, color);
 }
@@ -329,7 +348,6 @@ function void renderer_push_quad(Renderer* renderer, Quad quad, Vec4f32 color) {
 		Assert(0);
 	}
 
-  // renderer_push_triangle(renderer, quad.p0, color, quad.p1, color, quad.p2, color);
   renderer_push_triangle(renderer, quad.p0, color, quad.p1, color, quad.p2, color);
   renderer_push_triangle(renderer, quad.p0, color, quad.p2, color, quad.p3, color);
 }
