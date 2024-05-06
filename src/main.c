@@ -146,11 +146,16 @@ int main(void) {
 		projection = mul_mat4f32(perspective, projection);
 
 		// Raycast
-		Vec3f32 unproject_mouse = unproject_vec3f32(vec3f32(Mouse.ndc_x, Mouse.ndc_y, 1.0f), projection, view);
-		Raycast = normalize_vec3f32(sub_vec3f32(vec3f32(unproject_mouse.x, unproject_mouse.y, unproject_mouse.z), vec3f32(camera.position.x, camera.position.y, camera.position.z)));
+		if (ActiveCameraMode == CameraMode_Select) {
+			Vec3f32 unproject_mouse = unproject_vec3f32(vec3f32(Mouse.ndc_x, Mouse.ndc_y, 1.0f), projection, view);
+			Raycast = normalize_vec3f32(sub_vec3f32(vec3f32(unproject_mouse.x, unproject_mouse.y, unproject_mouse.z), vec3f32(camera.position.x, camera.position.y, camera.position.z)));
+		} else {
+			Raycast = vec3f32(F32_MAX, F32_MAX, F32_MAX);
+		}
 
 		renderer_begin_frame(&renderer, PALLETE_COLOR_D);
 		{
+			renderer_set_uniform_mat4fv(renderer.shader_program, "model", mat4f32(1.0f));
 			renderer_set_uniform_mat4fv(renderer.shader_program, "view", view);
 			renderer_set_uniform_mat4fv(renderer.shader_program, "projection", projection);
 
@@ -162,11 +167,12 @@ int main(void) {
 				renderer_push_line(&renderer, vec3f32(  0.0f,   0.0f, -size), vec3f32( 0.0f,  0.0f, size), COLOR_BLUE);
 			}
 
+			// renderer_push_arrow(&renderer, vec3f32(-10.0f, 0.0f, 0.0f), vec3f32(5.0f, 4.0f, 0.0f), vec4f32(1.0f, 0.5f, 0.0f));
+
 			for(u32 i = 0; i < TotalCubes; i++) {
-				renderer_set_uniform_mat4fv(renderer.shader_program, "model", mat4f32(1.0f));
 				CubeUnderCursor cuc;
 				if (find_cube_under_cursor(&cuc) && cuc.index == i) {
-					renderer_push_cube_highlight_face(&renderer, Cubes[i], vec4f32(0.5+0.5*sin(4*glfwGetTime()), 0.5+0.5*sin(4*glfwGetTime()), 0.0f), cuc.hovered_face, scale_vec4f32(Cubes[i].color, 0.80));
+					renderer_push_cube_highlight_face(&renderer, Cubes[i], vec4f32(0.5+0.5*sin(5*glfwGetTime()), 0.5+0.5*sin(5*glfwGetTime()), 0.0f), cuc.hovered_face, scale_vec4f32(Cubes[i].color, 0.80));
 				} else {
 					renderer_push_cube(&renderer, Cubes[i], COLOR_BLACK);	
 				}

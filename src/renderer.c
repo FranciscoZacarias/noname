@@ -307,6 +307,22 @@ function void renderer_push_line(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f
 	renderer->line_count += 1;
 }
 
+function void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color) {
+	Vec3f32 direction = normalize_vec3f32(sub_vec3f32(b, a));
+	Vec3f32 top   = vec3f32(0.0f, 0.2f, 0.0);
+	Vec3f32 base0 = vec3f32( 0.0f, -0.2f,  0.2f);
+	Vec3f32 base1 = vec3f32( 0.2f, -0.2f, -0.2f);
+	Vec3f32 base2 = vec3f32(-0.2f, -0.2f, -0.2f);
+
+  renderer_push_triangle(renderer, base1, color, base0, color, top, COLOR_YELLOW);
+  renderer_push_triangle(renderer, base2, color, base1, color, top, COLOR_YELLOW);
+  renderer_push_triangle(renderer, base0, color, base2, color, top, COLOR_YELLOW);
+
+  renderer_push_triangle(renderer, base0, color, base1, color, base2, color);
+
+	renderer_push_line(renderer, a, b, color);
+}
+
 function void renderer_push_quad(Renderer* renderer, Quad quad, Vec4f32 color) {
 	if ((renderer->triangle_count + 2) >= MAX_TRIANGLES) {
 		printf("Error :: Renderer :: Too many triangles!");
