@@ -309,11 +309,11 @@ function void renderer_push_line(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f
 }
 
 function void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color) {
-	f32 size = 0.1f;
+	f32 size = 0.05f;
 	
 	Vec3f32 direction = normalize_vec3f32(sub_vec3f32(b, a));
 
-	Vec3f32 c = vec3f32(0.0f, size, 0.0f);
+	Vec3f32 c = vec3f32(0.0f, size*10, 0.0f);
   Quad base = {
 		vec3f32(-size, -size,  size),
 		vec3f32( size, -size,  size),
@@ -321,23 +321,26 @@ function void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4
 		vec3f32(-size, -size, -size),
 	};
 
-	Mat4f32 r = rotate_x_mat4f32(Radians(60));
-	Mat4f32 t = translate_mat4f32(b.x, b.y, b.z);
+	Vec3f32 vvv  = vec3f32(0.0f, 1.0f, 0.0f);
+	Vec3f32 axis = cross_vec3f32(direction, vvv);
 
-	base = transform_quad(base, r);
+	f64 angle = acos(dot_vec3f32(direction, vvv) / (len_vec3f32(direction) * len_vec3f32(vvv)));
+
+	Mat4f32 r = rotate_axis_mat4f32(axis, -angle);
+
 	c    = mul_vec3f32_mat4f32(c, r);
+	base = transform_quad(base, r);
 
+	Mat4f32 t = translate_mat4f32(b.x, b.y, b.z);
 	base = transform_quad(base, t);
 	c    = mul_vec3f32_mat4f32(c, t);
 
+	renderer_push_triangle(renderer, base.p0, color, c, color, base.p1, color);
+	renderer_push_triangle(renderer, base.p1, color, c, color, base.p2, color);
+	renderer_push_triangle(renderer, base.p2, color, c, color, base.p3, color);
+	renderer_push_triangle(renderer, base.p3, color, c, color, base.p0, color);
 
-
-	renderer_push_triangle(renderer, base.p0, COLOR_GREEN, c, vec4f32(1.0f, 0.0f, 1.0f), base.p1, COLOR_GREEN);
-	renderer_push_triangle(renderer, base.p1, COLOR_GREEN, c, vec4f32(1.0f, 0.0f, 1.0f), base.p2, COLOR_GREEN);
-	renderer_push_triangle(renderer, base.p2, COLOR_GREEN, c, vec4f32(1.0f, 0.0f, 1.0f), base.p3, COLOR_GREEN);
-	renderer_push_triangle(renderer, base.p3, COLOR_GREEN, c, vec4f32(1.0f, 0.0f, 1.0f), base.p0, COLOR_GREEN);
-
-	renderer_push_quad(renderer, base, COLOR_RED);
+	renderer_push_quad(renderer, base, color);
 
 	renderer_push_line(renderer, a, b, color);
 }

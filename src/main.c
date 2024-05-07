@@ -161,12 +161,10 @@ int main(void) {
 			// Axis
 			{ 
 				f32 size = 20.0f;
-				renderer_push_line(&renderer, vec3f32(-size,   0.0f,   0.0f), vec3f32(size,  0.0f,  0.0f), COLOR_RED);
-				renderer_push_line(&renderer, vec3f32(  0.0f, -size,   0.0f), vec3f32( 0.0f, size,  0.0f), COLOR_GREEN);
-				renderer_push_line(&renderer, vec3f32(  0.0f,   0.0f, -size), vec3f32( 0.0f,  0.0f, size), COLOR_BLUE);
+				renderer_push_arrow(&renderer, vec3f32(-size,   0.0f,   0.0f), vec3f32(size,  0.0f,  0.0f), COLOR_RED);
+				renderer_push_arrow(&renderer, vec3f32(  0.0f, -size,   0.0f), vec3f32( 0.0f, size,  0.0f), COLOR_GREEN);
+				renderer_push_arrow(&renderer, vec3f32(  0.0f,   0.0f, -size), vec3f32( 0.0f,  0.0f, size), COLOR_BLUE);
 			}
-
-			// renderer_push_arrow(&renderer, vec3f32(-10.0f, 0.0f, 0.0f), vec3f32(5.0f, 4.0f, 0.0f), vec4f32(1.0f, 0.5f, 0.0f));
 
 			for(u32 i = 0; i < TotalCubes; i++) {
 				CubeUnderCursor cuc;
