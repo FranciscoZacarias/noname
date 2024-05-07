@@ -62,7 +62,7 @@ function void renderer_begin_frame(Renderer* renderer, Vec4f32 background_color)
 function void renderer_end_frame(Renderer* renderer, s32 window_width, s32 window_height);
 function void renderer_push_triangle(Renderer* renderer, Vec3f32 a_position, Vec4f32 a_color, Vec3f32 b_position, Vec4f32 b_color, Vec3f32 c_position, Vec4f32 c_color);
 function void renderer_push_line(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color);
-function void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color);
+function void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color, f32 scale);
 function void renderer_push_quad(Renderer* renderer, Quad quad, Vec4f32 color);
 function void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_color);
 function void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, Vec4f32 border_color, CubeFace highlight, Vec4f32 highlight_color);

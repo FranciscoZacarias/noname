@@ -308,24 +308,21 @@ function void renderer_push_line(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f
 	renderer->line_count += 1;
 }
 
-function void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color) {
-	f32 size = 0.05f;
-	
+function void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color, f32 scale) {
 	Vec3f32 direction = normalize_vec3f32(sub_vec3f32(b, a));
 
-	Vec3f32 c = vec3f32(0.0f, size*10, 0.0f);
+	Vec3f32 c = vec3f32(0.0f, scale*5, 0.0f);
   Quad base = {
-		vec3f32(-size, -size,  size),
-		vec3f32( size, -size,  size),
-		vec3f32( size, -size, -size),
-		vec3f32(-size, -size, -size),
+		vec3f32(-scale, -scale,  scale),
+		vec3f32( scale, -scale,  scale),
+		vec3f32( scale, -scale, -scale),
+		vec3f32(-scale, -scale, -scale),
 	};
 
-	Vec3f32 vvv  = vec3f32(0.0f, 1.0f, 0.0f);
-	Vec3f32 axis = cross_vec3f32(direction, vvv);
+	Vec3f32 up  = vec3f32(0.0f, 1.0f, 0.0f);
+	Vec3f32 axis = cross_vec3f32(direction, up);
 
-	f64 angle = acos(dot_vec3f32(direction, vvv) / (len_vec3f32(direction) * len_vec3f32(vvv)));
-
+	f64 angle = acos(dot_vec3f32(direction, up) / (len_vec3f32(direction) * len_vec3f32(up)));
 	Mat4f32 r = rotate_axis_mat4f32(axis, -angle);
 
 	c    = mul_vec3f32_mat4f32(c, r);
