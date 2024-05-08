@@ -5,9 +5,6 @@
 #define Degrees(r) (r * (180 / PI))
 #define Radians(d) (d * (PI / 180))
  
-//////////////////////////////////////////////
-// Vector3 f32
-
 typedef struct Vec3f32 {
   union {
     f32 data[3];
@@ -18,9 +15,6 @@ typedef struct Vec3f32 {
     };
   };
 } Vec3f32;
-
-//////////////////////////////////////////////
-// Vector4 f32
 
 typedef struct Vec4f32 {
   union {
@@ -34,8 +28,6 @@ typedef struct Vec4f32 {
   };
 } Vec4f32;
 
-//////////////////////////////////////////////
-// Matrix4 f32
 typedef struct Mat4f32 {
   union {
     f32 data[4][4];
@@ -48,9 +40,6 @@ typedef struct Mat4f32 {
   };
 } Mat4f32;
 
-//////////////////////////////////////////////
-// Generic Math 
-
 typedef struct Quad {
   Vec3f32 p0;
   Vec3f32 p1;
@@ -58,20 +47,17 @@ typedef struct Quad {
   Vec3f32 p3;
 } Quad;
 
-function Quad transform_quad(Quad q, Mat4f32 m);
 
 typedef struct Linef32 {
   Vec3f32 point;
   Vec3f32 direction;
 } Linef32;
 
+function Quad transform_quad(Quad q, Mat4f32 m);
 function Linef32 linef32(Vec3f32 point, Vec3f32 direction);
 
-//////////////////////////////////////////////
-// Vector3 f32 
-
 function Vec3f32 vec3f32(f32 x, f32 y, f32 z);
-function Vec3f32 vec3f32_from_vec4f32(Vec4f32 v);
+function Vec3f32 vec3f32_from_vec4f32(Vec4f32 v); /* Discards the w value */
 function void print_vec3f32(Vec3f32 v, const char* label);
 
 function Vec3f32 add_vec3f32(Vec3f32 a, Vec3f32 b);
@@ -94,9 +80,6 @@ function f32 len_vec3f32(Vec3f32 v);
 function f32 distance_vec3f32(Vec3f32 a, Vec3f32 b);
 function f32 angle_vec3f32(Vec3f32 a, Vec3f32 b);
 
-//////////////////////////////////////////////
-// Vector4 f32
-
 function Vec4f32 vec4f32 (f32 x, f32 y, f32 z);
 function Vec4f32 vec4f32w(f32 x, f32 y, f32 z, f32 w);
 function Vec4f32 vec4f32_from_vec3f32(Vec3f32 v);
@@ -115,13 +98,9 @@ function f32 dot_vec4f32(Vec4f32 a, Vec4f32 b);
 function f32 len_vec4f32(Vec4f32 v);
 function f32 distance_vec4f32(Vec4f32 a, Vec4f32 b);
 
-//////////////////////////////////////////////
-// Matrix4 f32
 function Mat4f32 mat4f32(f32 diag);
-
 function Mat4f32 add_mat4f32(Mat4f32 left, Mat4f32 right);
-function Mat4f32 sub_mat4f32(Mat4f32 left, Mat4f32 right);
-/* Apply the left matrix to the right matrix*/
+function Mat4f32 sub_mat4f32(Mat4f32 left, Mat4f32 right); /* Apply the left matrix to the right matrix*/
 function Mat4f32 mul_mat4f32(Mat4f32 left, Mat4f32 right); 
 
 function Mat4f32 translate_mat4f32(f32 x, f32 y, f32 z);
@@ -139,8 +118,6 @@ function Mat4f32 perspective_mat4f32(f64 fovy, f64 window_width, f64 window_heig
 function Mat4f32 ortographic_mat4f32(f64 left, f64 right, f64 bottom, f64 top, f64 near_plane, f64 far_plane);
 function Mat4f32 look_at_mat4f32(Vec3f32 eye, Vec3f32 target, Vec3f32 up);
 
-//////////////////////////////////////////////
-// Math utils
 function f32 clampf32(f32 value, f32 min, f32 max);
 function f32 lerpf32(f32 start, f32 end, f32 t);
 function b32 is_vector_inside_rectangle(Vec3f32 p, Vec3f32 a, Vec3f32 b, Vec3f32 c);
@@ -150,9 +127,6 @@ function Vec3f32 intersect_line_with_plane(Linef32 line, Vec3f32 point1, Vec3f32
 #endif // F_MATH_HEADER
 
 #ifdef F_MATH_IMPLEMENTATION
-
-//////////////////////////////////////////////
-// Generic math
 
 function Quad transform_quad(Quad q, Mat4f32 m) {
 	Quad result = {
@@ -169,15 +143,11 @@ function Linef32 linef32(Vec3f32 point, Vec3f32 direction) {
 	return result;
 }
 
-//////////////////////////////////////////////
-// Vector3 f32
-
 function Vec3f32 vec3f32(f32 x, f32 y, f32 z) {
 	Vec3f32 result = {x, y, z};
 	return result;
 }
 
-// Discards the w value
 function Vec3f32 vec3f32_from_vec4f32(Vec4f32 v) {
 	Vec3f32 result = { v.x, v.y, v.z };
 	return result;
@@ -216,8 +186,6 @@ function Vec3f32 mul_vec3f32(Vec3f32 a, Vec3f32 b) {
 }
 
 function Vec3f32 mul_vec3f32_mat4f32(Vec3f32 v, Mat4f32 m) {
-	// This is not really a mathematically correct concept, but 
-	// it's handy the way I do things sometimes. We just discard the W values.
 	Vec4f32 mult = { 
 		m.m0*v.x + m.m4*v.y + m.m8 *v.z + m.m12*1.0f,
 		m.m1*v.x + m.m5*v.y + m.m9 *v.z + m.m13*1.0f,
@@ -466,9 +434,6 @@ function f32 angle_vec3f32(Vec3f32 a, Vec3f32 b) {
 	result  = atan2f(len, dot);
 	return result;
 }
-
-//////////////////////////////////////////////
-// Vector4 f32
 
 function Vec4f32 vec4f32 (f32 x, f32 y, f32 z) {
 	Vec4f32 result = {x, y, z, 1.0f};
@@ -980,9 +945,6 @@ function Mat4f32 look_at_mat4f32(Vec3f32 eye, Vec3f32 target, Vec3f32 up) {
 
 	return result;
 }
-
-//////////////////////////////////////////////
-// Math utils
 
 function f32 clampf32(f32 value, f32 min, f32 max) {
 	f32 result = value;
