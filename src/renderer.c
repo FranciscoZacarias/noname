@@ -311,33 +311,36 @@ function void renderer_push_line(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f
 function void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color, f32 scale) {
 	Vec3f32 direction = normalize_vec3f32(sub_vec3f32(b, a));
 
-	Vec3f32 c = vec3f32(0.0f, scale*5, 0.0f);
-  Quad base = {
-		vec3f32(-scale, -scale,  scale),
-		vec3f32( scale, -scale,  scale),
-		vec3f32( scale, -scale, -scale),
-		vec3f32(-scale, -scale, -scale),
-	};
 
-	Vec3f32 up  = vec3f32(0.0f, 1.0f, 0.0f);
-	Vec3f32 axis = cross_vec3f32(direction, up);
+	// Draw the end of the arrow
+	{
+		Vec3f32 arrow_top = vec3f32(0.0f, scale*5, 0.0f);
+		Quad base = {
+			vec3f32(-scale, -scale,  scale),
+			vec3f32( scale, -scale,  scale),
+			vec3f32( scale, -scale, -scale),
+			vec3f32(-scale, -scale, -scale),
+		};
 
-	f64 angle = acos(dot_vec3f32(direction, up) / (len_vec3f32(direction) * len_vec3f32(up)));
-	Mat4f32 r = rotate_axis_mat4f32(axis, -angle);
+		Vec3f32 up   = vec3f32(0.0f, 1.0f, 0.0f);
+		Vec3f32 axis = cross_vec3f32(direction, up);
 
-	c    = mul_vec3f32_mat4f32(c, r);
-	base = transform_quad(base, r);
+		f64 angle = acos(dot_vec3f32(direction, up) / (len_vec3f32(direction) * len_vec3f32(up)));
+		Mat4f32 r = rotate_axis_mat4f32(axis, -angle);
 
-	Mat4f32 t = translate_mat4f32(b.x, b.y, b.z);
-	base = transform_quad(base, t);
-	c    = mul_vec3f32_mat4f32(c, t);
+		arrow_top = mul_vec3f32_mat4f32(arrow_top, r);
+		base = transform_quad(base, r);
 
-	renderer_push_triangle(renderer, base.p0, color, c, color, base.p1, color);
-	renderer_push_triangle(renderer, base.p1, color, c, color, base.p2, color);
-	renderer_push_triangle(renderer, base.p2, color, c, color, base.p3, color);
-	renderer_push_triangle(renderer, base.p3, color, c, color, base.p0, color);
+		Mat4f32 t = translate_mat4f32(b.x, b.y, b.z);
+		base = transform_quad(base, t);
+		arrow_top = mul_vec3f32_mat4f32(arrow_top, t);
 
-	renderer_push_quad(renderer, base, color);
+		renderer_push_triangle(renderer, base.p0, color, arrow_top, color, base.p1, color);
+		renderer_push_triangle(renderer, base.p1, color, arrow_top, color, base.p2, color);
+		renderer_push_triangle(renderer, base.p2, color, arrow_top, color, base.p3, color);
+		renderer_push_triangle(renderer, base.p3, color, arrow_top, color, base.p0, color);
+		renderer_push_quad(renderer, base, color);
+	}
 
 	renderer_push_line(renderer, a, b, color);
 }
