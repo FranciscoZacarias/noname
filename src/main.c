@@ -156,14 +156,14 @@ int main(void) {
 			renderer_set_uniform_mat4fv(renderer.shader_program, "view", view);
 			renderer_set_uniform_mat4fv(renderer.shader_program, "projection", projection);
 
-			renderer_push_arrow(&renderer, vec3f32(2.0f, 2.0f, 2.0f), vec3f32(5.0f, 5.0f, 5.0f), vec4f32(0.0f, 1.0f, 1.0f), 0.03f);
+			renderer_push_arrow(&renderer, vec3f32(2.0f, 2.0f, 2.0f), vec3f32(7.0f, 7.0f, 7.0f), vec4f32(0.0f, 1.0f, 1.0f), 0.5f);
 
 			// Axis
 			{ 
 				f32 size = 20.0f;
-				renderer_push_arrow(&renderer, vec3f32(-size,   0.0f,   0.0f), vec3f32(size,  0.0f,  0.0f), COLOR_RED, 0.08f);
-				renderer_push_arrow(&renderer, vec3f32(  0.0f, -size,   0.0f), vec3f32( 0.0f, size,  0.0f), COLOR_GREEN, 0.08f);
-				renderer_push_arrow(&renderer, vec3f32(  0.0f,   0.0f, -size), vec3f32( 0.0f,  0.0f, size), COLOR_BLUE, 0.08f);
+				renderer_push_arrow(&renderer, vec3f32(-size,   0.0f,   0.0f), vec3f32(size,  0.0f,  0.0f), COLOR_RED, 0.5f);
+				renderer_push_arrow(&renderer, vec3f32(  0.0f, -size,   0.0f), vec3f32( 0.0f, size,  0.0f), COLOR_GREEN, 0.5f);
+				renderer_push_arrow(&renderer, vec3f32(  0.0f,   0.0f, -size), vec3f32( 0.0f,  0.0f, size), COLOR_BLUE, 0.5f);
 			}
 
 			for(u32 i = 0; i < TotalCubes; i++) {

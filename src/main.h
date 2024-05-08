@@ -11,6 +11,9 @@
 // FLayer
 #include "f_includes.h"
 
+#define ENABLE_CULL 0
+#define ENABLE_ASSERT 1
+
 // *.h
 #include "cube.h"
 #include "utils.h"
@@ -23,7 +26,6 @@
 #include "renderer.c"
 #include "camera.c"
 
-#define ENABLE_ASSERT 1
 
 #define APP_NAME "noname"
 

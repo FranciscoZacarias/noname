@@ -240,9 +240,11 @@ void renderer_end_frame(Renderer* renderer, s32 window_width, s32 window_height)
 
 	renderer_set_uniform_s32(renderer->shader_program, "render_triangles", 1);
 
+#if ENABLE_CULL
   glEnable(GL_CULL_FACE);
   glCullFace(GL_FRONT);
   glFrontFace(GL_CCW);
+#endif
 	glDrawArrays(GL_TRIANGLES, 0, renderer->triangle_count * 3);
   glDisable(GL_CULL_FACE);
 
@@ -309,40 +311,71 @@ function void renderer_push_line(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f
 }
 
 function void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color, f32 scale) {
+	scale = scale * 0.1; // Makes this scale factor less sensitive on user level
 	Vec3f32 direction = normalize_vec3f32(sub_vec3f32(b, a));
+	Vec3f32 up   = vec3f32(0.0f, 1.0f, 0.0f);
+	Vec3f32 axis = cross_vec3f32(direction, up);
+	f64 angle = acos(dot_vec3f32(direction, up) / (length_vec3f32(direction) * length_vec3f32(up)));
+	Mat4f32 r = rotate_axis_mat4f32(axis, -angle);
+	Mat4f32 t = translate_mat4f32(b.x, b.y, b.z);
+	f32 arrow_height = 0.5;
 
-
-	// Draw the end of the arrow
 	{
-		Vec3f32 arrow_top = vec3f32(0.0f, scale*5, 0.0f);
-		Quad base = {
+		Vec3f32 arrow_top = vec3f32(0.0f, scale, 0.0f);
+		Quad base_a = {
 			vec3f32(-scale, -scale,  scale),
 			vec3f32( scale, -scale,  scale),
 			vec3f32( scale, -scale, -scale),
 			vec3f32(-scale, -scale, -scale),
 		};
-
-		Vec3f32 up   = vec3f32(0.0f, 1.0f, 0.0f);
-		Vec3f32 axis = cross_vec3f32(direction, up);
-
-		f64 angle = acos(dot_vec3f32(direction, up) / (len_vec3f32(direction) * len_vec3f32(up)));
-		Mat4f32 r = rotate_axis_mat4f32(axis, -angle);
+		base_a = transform_quad(base_a, r);
+		base_a = transform_quad(base_a, t);
+		base_a.p0 = sub_vec3f32(base_a.p0, scale_vec3f32(direction, arrow_height));
+		base_a.p1 = sub_vec3f32(base_a.p1, scale_vec3f32(direction, arrow_height));
+		base_a.p2 = sub_vec3f32(base_a.p2, scale_vec3f32(direction, arrow_height));
+		base_a.p3 = sub_vec3f32(base_a.p3, scale_vec3f32(direction, arrow_height));
 
 		arrow_top = mul_vec3f32_mat4f32(arrow_top, r);
-		base = transform_quad(base, r);
-
-		Mat4f32 t = translate_mat4f32(b.x, b.y, b.z);
-		base = transform_quad(base, t);
 		arrow_top = mul_vec3f32_mat4f32(arrow_top, t);
+		f32 top_extra = distance_vec3f32(arrow_top, b);
+		arrow_top = sub_vec3f32(arrow_top, scale_vec3f32(direction, top_extra));
 
-		renderer_push_triangle(renderer, base.p0, color, arrow_top, color, base.p1, color);
-		renderer_push_triangle(renderer, base.p1, color, arrow_top, color, base.p2, color);
-		renderer_push_triangle(renderer, base.p2, color, arrow_top, color, base.p3, color);
-		renderer_push_triangle(renderer, base.p3, color, arrow_top, color, base.p0, color);
-		renderer_push_quad(renderer, base, color);
+		renderer_push_quad(renderer, base_a, color);
+		renderer_push_triangle(renderer, base_a.p0, color, arrow_top, COLOR_BLACK, base_a.p1, color);
+		renderer_push_triangle(renderer, base_a.p1, color, arrow_top, COLOR_BLACK, base_a.p2, color);
+		renderer_push_triangle(renderer, base_a.p2, color, arrow_top, COLOR_BLACK, base_a.p3, color);
+		renderer_push_triangle(renderer, base_a.p3, color, arrow_top, COLOR_BLACK, base_a.p0, color);
 	}
 
-	renderer_push_line(renderer, a, b, color);
+	{
+		scale = scale*0.5;
+		Quad base_a = {
+			vec3f32(-scale, -scale,  scale),
+			vec3f32( scale, -scale,  scale),
+			vec3f32( scale, -scale, -scale),
+			vec3f32(-scale, -scale, -scale),
+		};
+		base_a = transform_quad(base_a, r);
+		base_a = transform_quad(base_a, t);
+		base_a.p0 = sub_vec3f32(base_a.p0, scale_vec3f32(direction, arrow_height));
+		base_a.p1 = sub_vec3f32(base_a.p1, scale_vec3f32(direction, arrow_height));
+		base_a.p2 = sub_vec3f32(base_a.p2, scale_vec3f32(direction, arrow_height));
+		base_a.p3 = sub_vec3f32(base_a.p3, scale_vec3f32(direction, arrow_height));
+		
+		Quad base_b = {
+			sub_vec3f32(base_a.p0, scale_vec3f32(direction, distance_vec3f32(a, b))),
+			sub_vec3f32(base_a.p1, scale_vec3f32(direction, distance_vec3f32(a, b))),
+			sub_vec3f32(base_a.p2, scale_vec3f32(direction, distance_vec3f32(a, b))),
+			sub_vec3f32(base_a.p3, scale_vec3f32(direction, distance_vec3f32(a, b))),
+		};
+
+		color = scale_vec4f32(color, 0.7);
+		renderer_push_quad(renderer, base_b, color);
+		renderer_push_quad(renderer, (Quad){ base_a.p1, base_b.p1, base_b.p0, base_a.p0 }, color);
+		renderer_push_quad(renderer, (Quad){ base_a.p2, base_b.p2, base_b.p1, base_a.p1 }, color);
+		renderer_push_quad(renderer, (Quad){ base_a.p3, base_b.p3, base_b.p2, base_a.p2 }, color);
+		renderer_push_quad(renderer, (Quad){ base_b.p3, base_a.p3, base_a.p0, base_b.p0 }, color);
+	}
 }
 
 function void renderer_push_quad(Renderer* renderer, Quad quad, Vec4f32 color) {

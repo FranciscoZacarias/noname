@@ -54,6 +54,7 @@ typedef struct Linef32 {
 } Linef32;
 
 function Quad transform_quad(Quad q, Mat4f32 m);
+function Quad scale_quad(Quad q, f32 scale);
 function Linef32 linef32(Vec3f32 point, Vec3f32 direction);
 
 function Vec3f32 vec3f32(f32 x, f32 y, f32 z);
@@ -76,7 +77,7 @@ function Vec3f32 lerp_vec3f32(Vec3f32 a, Vec3f32 b, f32 t);
 function Vec3f32 unproject_vec3f32(Vec3f32 source, Mat4f32 projection, Mat4f32 view);
 
 function f32 dot_vec3f32(Vec3f32 a, Vec3f32 b);
-function f32 len_vec3f32(Vec3f32 v);
+function f32 length_vec3f32(Vec3f32 v);
 function f32 distance_vec3f32(Vec3f32 a, Vec3f32 b);
 function f32 angle_vec3f32(Vec3f32 a, Vec3f32 b);
 
@@ -134,6 +135,16 @@ function Quad transform_quad(Quad q, Mat4f32 m) {
 		mul_vec3f32_mat4f32(q.p1, m),
 		mul_vec3f32_mat4f32(q.p2, m),
 		mul_vec3f32_mat4f32(q.p3, m),
+	};
+	return result;
+}
+
+function Quad scale_quad(Quad q, f32 scale) {
+	Quad result = {
+		scale_vec3f32(q.p0, scale),
+		scale_vec3f32(q.p1, scale),
+		scale_vec3f32(q.p2, scale),
+		scale_vec3f32(q.p3, scale)
 	};
 	return result;
 }
@@ -412,7 +423,7 @@ function f32 dot_vec3f32(Vec3f32 a, Vec3f32 b) {
 	return result;
 }
 
-function f32 len_vec3f32(Vec3f32 v) {
+function f32 length_vec3f32(Vec3f32 v) {
 	f32 result = sqrtf(v.x*v.x + v.y*v.y + v.z*v.z);
 	return result;
 }
