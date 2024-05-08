@@ -357,10 +357,6 @@ function void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4
 		};
 		base_a = transform_quad(base_a, r);
 		base_a = transform_quad(base_a, t);
-		base_a.p0 = sub_vec3f32(base_a.p0, scale_vec3f32(direction, arrow_height));
-		base_a.p1 = sub_vec3f32(base_a.p1, scale_vec3f32(direction, arrow_height));
-		base_a.p2 = sub_vec3f32(base_a.p2, scale_vec3f32(direction, arrow_height));
-		base_a.p3 = sub_vec3f32(base_a.p3, scale_vec3f32(direction, arrow_height));
 		
 		Quad base_b = {
 			sub_vec3f32(base_a.p0, scale_vec3f32(direction, distance_vec3f32(a, b))),
@@ -368,9 +364,14 @@ function void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4
 			sub_vec3f32(base_a.p2, scale_vec3f32(direction, distance_vec3f32(a, b))),
 			sub_vec3f32(base_a.p3, scale_vec3f32(direction, distance_vec3f32(a, b))),
 		};
+		
+		base_a.p0 = sub_vec3f32(base_a.p0, scale_vec3f32(direction, arrow_height));
+		base_a.p1 = sub_vec3f32(base_a.p1, scale_vec3f32(direction, arrow_height));
+		base_a.p2 = sub_vec3f32(base_a.p2, scale_vec3f32(direction, arrow_height));
+		base_a.p3 = sub_vec3f32(base_a.p3, scale_vec3f32(direction, arrow_height));
 
 		color = scale_vec4f32(color, 0.7);
-		renderer_push_quad(renderer, base_b, color);
+		renderer_push_quad(renderer, base_b, COLOR_GREEN);
 		renderer_push_quad(renderer, (Quad){ base_a.p1, base_b.p1, base_b.p0, base_a.p0 }, color);
 		renderer_push_quad(renderer, (Quad){ base_a.p2, base_b.p2, base_b.p1, base_a.p1 }, color);
 		renderer_push_quad(renderer, (Quad){ base_a.p3, base_b.p3, base_b.p2, base_a.p2 }, color);

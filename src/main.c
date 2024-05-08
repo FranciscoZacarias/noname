@@ -156,7 +156,7 @@ int main(void) {
 			renderer_set_uniform_mat4fv(renderer.shader_program, "view", view);
 			renderer_set_uniform_mat4fv(renderer.shader_program, "projection", projection);
 
-			renderer_push_arrow(&renderer, vec3f32(2.0f, 2.0f, 2.0f), vec3f32(7.0f, 7.0f, 7.0f), vec4f32(0.0f, 1.0f, 1.0f), 0.5f);
+			renderer_push_arrow(&renderer, vec3f32(0.0f, 0.0f, 0.0f), vec3f32(7.0f, 7.0f, 7.0f), vec4f32(0.0f, 1.0f, 1.0f), 0.5f);
 
 			// Axis
 			{ 
