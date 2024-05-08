@@ -1,5 +1,4 @@
-#ifndef F_OS_H
-#define F_OS_H
+#ifdef F_OS_HEADER
 
 function void os_init(void);
 
@@ -28,4 +27,20 @@ function void     os_thread_wait_for_join(OSThread* other);
 function void     os_thread_wait_for_join_all(OSThread** threads, u32 count);
 function void     os_thread_wait_for_join_any(OSThread** threads, u32 count);
 
-#endif // F_OS_H
+#undef F_OS_HEADER
+#endif // F_OS_HEADER
+
+#ifdef F_OS_IMPLEMENTATION
+
+#if defined(OS_WINDOWS)
+# include <Windows.h>
+# include <userenv.h>
+# include "f_os/f_os_win32.c"
+#elif defined(OS_LINUX)
+# error "OS_LINUX Not supported"
+#elif defined(OS_MAC)
+# error "OS_MAC Not supported"
+#endif // defined(OS_WINDOWS)
+
+#undef F_OS_IMPLEMENTATION
+#endif // F_OS_IMPLEMENTATION

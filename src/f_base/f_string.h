@@ -1,5 +1,4 @@
-#ifndef F_STRING_H
-#define F_STRING_H
+#ifdef F_STRING_HEADER
 
 typedef struct String8Const {
   u64 size;
@@ -22,4 +21,15 @@ typedef struct String8List {
 function String8Const string8(u64 size, u8* str);
 #define StringLiteral(s) string8(sizeof(s)-1, (u8*)(s))
 
-#endif // F_STRING_H
+#undef F_STRING_HEADER
+#endif // F_STRING_HEADER
+
+#ifdef F_STRING_IMPLEMENTATION
+
+function String8Const string8(u64 size, u8* str) {
+  String8Const result = { size, str };
+  return result;
+}
+
+#undef F_STRING_IMPLEMENTATION
+#endif // F_STRING_IMPLEMENTATION

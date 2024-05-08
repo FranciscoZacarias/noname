@@ -13,14 +13,22 @@
 
 #include "f_core.h"
 
-#include "f_math.h"
-#include "f_os/f_os.h"
-#include "f_memory.h"
-#include "f_string.h"
+#define F_MATH_HEADER
+# include "f_math.h"
+#define F_OS_HEADER
+# include "f_os/f_os.h"
+#define F_MEMORY_HEADER
+# include "f_memory.h"
+#define F_STRING_HEADER
+# include "f_string.h"
 
-#include "f_math.c"
-#include "f_os/f_os.c"
-#include "f_memory.c"
-#include "f_string.c"
+#define F_MATH_IMPLEMENTATION
+# include "f_math.h"
+#define F_OS_IMPLEMENTATION
+# include "f_os/f_os.h"
+#define F_MEMORY_IMPLEMENTATION
+# include "f_memory.h"
+#define F_STRING_IMPLEMENTATION
+# include "f_string.h"
 
 #endif // F_INCLUDE_H
