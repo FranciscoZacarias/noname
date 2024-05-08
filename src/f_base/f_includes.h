@@ -1,5 +1,5 @@
-#ifndef F_INCLUDE_H
-#define F_INCLUDE_H
+#ifndef F_INCLUDES_H
+#define F_INCLUDES_H
 
 //////////////////////////////////////////////
 // CLib
@@ -11,7 +11,8 @@
 //////////////////////////////////
 // Header to include in projects
 
-#include "f_core.h"
+#define F_CORE_HEADER
+# include "f_core.h"
 
 #define F_MATH_HEADER
 # include "f_math.h"
@@ -31,4 +32,4 @@
 #define F_STRING_IMPLEMENTATION
 # include "f_string.h"
 
-#endif // F_INCLUDE_H
+#endif // F_INCLUDES_H
