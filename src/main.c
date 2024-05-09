@@ -131,7 +131,7 @@ int main(void) {
 		}
 
 		process_input(window);
-		
+
 		// View
 		Mat4f32 view = mat4f32(1.0f);
 		Mat4f32 look_at = look_at_mat4f32(camera.position, add_vec3f32(camera.position, camera.front), camera.up);
@@ -182,6 +182,7 @@ int main(void) {
 	}
 
 	renderer_free(&renderer);
+
 	glfwTerminate();
 	return 0;
 }

@@ -8,8 +8,12 @@
 #include <string.h>
 #include <math.h> // Required for: sinf(), cosf(), tan(), atan2f(), sqrtf(), floor(), fminf(), fmaxf(), fabsf()
 
+//////////////////////////////////////////////
+// Third-party headers
+#include "external/stb_truetype.h"
+
 //////////////////////////////////
-// Header to include in projects
+// Headers
 
 #define F_CORE_HEADER
 # include "f_core.h"
@@ -22,6 +26,12 @@
 # include "f_memory.h"
 #define F_STRING_HEADER
 # include "f_string.h"
+
+//////////////////////////////////////////////
+// Third-party source
+
+//////////////////////////////////
+// Headers
 
 #define F_MATH_IMPLEMENTATION
 # include "f_math.h"

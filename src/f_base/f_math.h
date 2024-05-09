@@ -4,7 +4,17 @@
 #define PI 3.14159265358979323846f
 #define Degrees(r) (r * (180 / PI))
 #define Radians(d) (d * (PI / 180))
- 
+
+typedef struct Vec2f32 {
+	union {
+		f32 data[2];
+		struct {
+			f32 x;
+			f32 y;
+		};
+	};
+} Vec2f32;
+
 typedef struct Vec3f32 {
   union {
     f32 data[3];
@@ -56,6 +66,8 @@ typedef struct Linef32 {
 function Quad transform_quad(Quad q, Mat4f32 m);
 function Quad scale_quad(Quad q, f32 scale);
 function Linef32 linef32(Vec3f32 point, Vec3f32 direction);
+
+function Vec2f32 vec2f32(f32 x, f32 y);
 
 function Vec3f32 vec3f32(f32 x, f32 y, f32 z);
 function Vec3f32 vec3f32_from_vec4f32(Vec4f32 v); /* Discards the w value */
@@ -151,6 +163,11 @@ function Quad scale_quad(Quad q, f32 scale) {
 
 function Linef32 linef32(Vec3f32 point, Vec3f32 direction) {
 	Linef32 result = {point, direction};
+	return result;
+}
+
+function Vec2f32 vec2f32(f32 x, f32 y) {
+	Vec2f32 result = {x, y};
 	return result;
 }
 

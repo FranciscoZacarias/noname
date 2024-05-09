@@ -9,11 +9,15 @@
 #define MAX_LINES 256
 #define MAX_LINES_VERTICES (MAX_LINES * 2)
 
-typedef struct Pyramid {
-  Quad base;
-  Vec3f32 top;
-  Vec4f32 color;
-} Pyramid;
+typedef struct RendererFontInfo {
+	u32 font_texture;
+  stbtt_packedchar cdata[95];
+  f32 scale;
+  f32 font_size;
+  s32 ascent;
+  s32 descent;
+  s32 baseline;
+} RendererFontInfo;
 
 typedef struct RendererVertex {
   Vec3f32 position;
@@ -58,8 +62,14 @@ typedef struct Renderer {
 
 function Renderer renderer_init(s32 window_width, s32 window_height);
 function void renderer_free(Renderer* renderer);
+
 function void renderer_begin_frame(Renderer* renderer, Vec4f32 background_color);
 function void renderer_end_frame(Renderer* renderer, s32 window_width, s32 window_height);
+
+function void renderer_font_load(RendererFontInfo* font_info, String filename, u32 size);
+function void renderer_font_free(RendererFontInfo* font_info);
+
+function void renderer_push_string(Renderer* renderer, RendererFontInfo* font_info, String str, Vec2f32 pos, Vec4f32 color);
 function void renderer_push_triangle(Renderer* renderer, Vec3f32 a_position, Vec4f32 a_color, Vec3f32 b_position, Vec4f32 b_color, Vec3f32 c_position, Vec4f32 c_color);
 function void renderer_push_line(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color);
 function void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color, f32 scale);
