@@ -11,13 +11,13 @@
 //////////////////////////////////////////////
 // Third-party headers
 #include "external/stb_truetype.h"
+#include "external/stb_image.h"
 
 //////////////////////////////////
 // Headers
 
 #define F_CORE_HEADER
 # include "f_core.h"
-
 #define F_MATH_HEADER
 # include "f_math.h"
 #define F_OS_HEADER
@@ -29,6 +29,10 @@
 
 //////////////////////////////////////////////
 // Third-party source
+#define STB_TRUETYPE_IMPLEMENTATION
+#include "external/stb_truetype.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "external/stb_image.h"
 
 //////////////////////////////////
 // Headers
