@@ -69,7 +69,8 @@ function void* arena_push(Arena* arena, u64 size) {
     commit_size += ARENA_COMMIT_SIZE - 1;
     commit_size -= commit_size % ARENA_COMMIT_SIZE;
     if (arena->commit_position >= arena->capacity) {
-      printf("ERROR :: Arena :: Arena out of memory! Program is a time bomb.\n");
+      printf("ERROR :: Arena :: Arena out of memory!\n");
+      Assert(0);
     } else {
       if (os_memory_commit(arena->memory + arena->commit_position, commit_size)) {
         arena->commit_position += commit_size;
@@ -100,6 +101,7 @@ function void  arena_pop_to(Arena* arena, u64 pos) {
     printf("Warning :: Arena :: Trying to pop negative values. Will pop to 0");
     pos = 0;
   }
+  MemoryZero(arena->memory + pos, arena->alloc_position);
   arena->alloc_position = pos;
 }
 

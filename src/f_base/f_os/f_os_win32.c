@@ -1,3 +1,5 @@
+#include <Windows.h>
+#include <userenv.h>
 
 global u64 Win32TicksOerSec = 1;
 global u32 Win32ThreadContextIndex;
@@ -35,4 +37,89 @@ function void  os_thread_context_set(void* ctx) {
 
 function void* os_thread_context_get() {
 	return TlsGetValue(Win32ThreadContextIndex);
+}
+
+function HANDLE _win32_get_file_handle(String file_name) {
+  HANDLE file_handle = CreateFileA(file_name.str, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+  if (file_handle == INVALID_HANDLE_VALUE) {
+    DWORD error = GetLastError();
+    printf("Error: Failed to open file %s. Error: %lu\n", file_name.str, error);
+    return null;
+  }
+  return file_handle;
+}
+
+function b32 os_file_create(String file_name) {
+  b32 result = false;
+  HANDLE file = CreateFileA(file_name.str, GENERIC_READ, 0, 0, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, 0);
+  DWORD error = GetLastError();  
+  if (error == ERROR_SUCCESS || error == ERROR_FILE_EXISTS) {
+    result = true;
+  } else {
+    // TODO(fz): We should send this error to user space
+    printf("Error creating file %s with error: %lu\n", file_name.str, error);
+  }
+  CloseHandle(file);
+  return result;
+}
+
+function u64 os_file_get_last_modified_time(String file_name) {
+  u32 result = 0;
+  if (!os_file_exists(file_name)) {
+    printf("Error: os_file_get_last_modified_time failed because file %s doesn't exist\n", file_name.str);
+    return result;
+  }
+  WIN32_FILE_ATTRIBUTE_DATA file_attribute_data;
+  if (GetFileAttributesExA(file_name.str, GetFileExInfoStandard, &file_attribute_data)) {
+    FILETIME last_write_time = file_attribute_data.ftLastWriteTime;
+    result = ((u64)last_write_time.dwHighDateTime << 32) | ((u64)last_write_time.dwLowDateTime);
+  } 
+  return result;
+}
+
+function b32 os_file_exists(String file_name) {
+  b32 result = false;
+  DWORD file_attributes = GetFileAttributesA(file_name.str);
+  result = (file_attributes != INVALID_FILE_ATTRIBUTES && !(file_attributes & FILE_ATTRIBUTE_DIRECTORY));
+  return result;
+}
+
+function u32 os_file_size(String file_name) {
+  u32 result = 0;
+  if (!os_file_exists(file_name)) {
+    printf("Error: os_file_exists failed because file %s doesn't exist\n", file_name.str);
+    return result;
+  }
+  WIN32_FILE_ATTRIBUTE_DATA file_attribute_data;
+  if (GetFileAttributesExA(file_name.str, GetFileExInfoStandard, &file_attribute_data)) {
+    result = ((u64)file_attribute_data.nFileSizeHigh << 32) | ((u64)file_attribute_data.nFileSizeLow);
+  }
+  return result;
+}
+
+function OSFile os_file_load_entire_file(Arena* arena, String file_name) {
+  OSFile os_file = { 0 };
+  if (!os_file_exists(file_name)) {
+    printf("Error: os_file_load_entire_file failed because file %s doesn't exist\n", file_name.str);
+    return os_file;
+  }
+
+  u64 size = os_file_size(file_name);
+
+  os_file.size = size;
+  os_file.cursor = 0;
+  os_file.data = (u8*)arena_push(arena, size);
+  MemoryZero(os_file.data, os_file.size);
+
+  HANDLE file_handle = _win32_get_file_handle(file_name);
+  if (file_handle == null) {
+    return os_file;
+  }
+  if (!ReadFile(file_handle, os_file.data, size, NULL, NULL)) {
+    DWORD error = GetLastError();  
+    printf("Error: %lu in os_file_load_entire_file::ReadFile\n", error);
+  }
+
+  CloseHandle(file_handle);
+  return os_file;
 }

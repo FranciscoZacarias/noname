@@ -20,12 +20,12 @@
 # include "f_core.h"
 #define F_MATH_HEADER
 # include "f_math.h"
+#define F_STRING_HEADER
+# include "f_string.h"
 #define F_OS_HEADER
 # include "f_os/f_os.h"
 #define F_MEMORY_HEADER
 # include "f_memory.h"
-#define F_STRING_HEADER
-# include "f_string.h"
 
 //////////////////////////////////////////////
 // Third-party source
@@ -39,11 +39,11 @@
 
 #define F_MATH_IMPLEMENTATION
 # include "f_math.h"
+#define F_STRING_IMPLEMENTATION
+# include "f_string.h"
 #define F_OS_IMPLEMENTATION
 # include "f_os/f_os.h"
 #define F_MEMORY_IMPLEMENTATION
 # include "f_memory.h"
-#define F_STRING_IMPLEMENTATION
-# include "f_string.h"
 
 #endif // F_INCLUDES_H

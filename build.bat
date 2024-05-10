@@ -13,6 +13,7 @@ set linker_flags= user32.lib ^
 									gdi32.lib ^
 									Shell32.lib ^
 									opengl32.lib ^
+									winmm.lib ^
 									"..\src\external\glfw-3.3.9\lib\glfw3.lib"
 
 if not exist build mkdir build

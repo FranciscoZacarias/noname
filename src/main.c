@@ -2,7 +2,6 @@
 
 global s32 WindowWidth  = 1280;
 global s32 WindowHeight = 720;
-#define AspectRatio ((f32)WindowWidth/(f32)WindowHeight)
 
 global f32 NearPlane = 0.1f;
 global f32 FarPlane = 100.0f;
@@ -59,11 +58,16 @@ Renderer renderer;
 global Cube Cubes[1024];
 global u32 TotalCubes = 0;
 
-function b32 find_cube_under_cursor(CubeUnderCursor* result);
+#define VARIABLES_TWEAK_FILE "D:\\C\\noname\\Variables.tweak"
+u64 VariablesTweakFileLastModified = 0;
 
+function b32 find_cube_under_cursor(CubeUnderCursor* result);
 function void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 function void process_input(GLFWwindow *window);
 function void mouse_callback(GLFWwindow* window, f64 xpos, f64 ypos);
+function void hotload_tweak_variables(Arena* arena, String file_name);
+
+Arena GlobalArena;
 
 int main(void) {
 
@@ -87,6 +91,12 @@ int main(void) {
 		printf("Failed to initialize GLAD");
 		return -1;
 	}
+
+	GlobalArena = arena_init();
+
+	os_init();
+	os_file_create(StringLiteral(VARIABLES_TWEAK_FILE));
+	VariablesTweakFileLastModified = os_file_get_last_modified_time(StringLiteral(VARIABLES_TWEAK_FILE));
 
 	// Camera and Mouse -----------
 	camera = camera_create();
@@ -131,6 +141,7 @@ int main(void) {
 		}
 
 		process_input(window);
+		hotload_tweak_variables(&GlobalArena, StringLiteral(VARIABLES_TWEAK_FILE));
 
 		// View
 		Mat4f32 view = mat4f32(1.0f);
@@ -182,6 +193,7 @@ int main(void) {
 	}
 
 	renderer_free(&renderer);
+	arena_free(&GlobalArena);
 
 	glfwTerminate();
 	return 0;
@@ -332,4 +344,20 @@ function b32 find_cube_under_cursor(CubeUnderCursor* result) {
 	}
 
 	return match;
+}
+
+function void hotload_tweak_variables(Arena* arena, String file_name) {
+	u64 variables_tweak_last_modified = os_file_get_last_modified_time(StringLiteral(VARIABLES_TWEAK_FILE));
+	if (VariablesTweakFileLastModified == variables_tweak_last_modified) {
+		return;
+	}
+	VariablesTweakFileLastModified = variables_tweak_last_modified;
+
+	u64 size = os_file_size(StringLiteral(VARIABLES_TWEAK_FILE));
+	u64 arena_pos = arena->alloc_position;
+	OSFile file = os_file_load_entire_file(arena, StringLiteral(VARIABLES_TWEAK_FILE));
+
+	printf("File data:\n%s\n", file.data);
+
+	arena_pop_to(arena, arena_pos);
 }
