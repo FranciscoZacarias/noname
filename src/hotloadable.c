@@ -34,29 +34,28 @@ function String _file_get_next_line(OSFile file, u32* cursor) {
 	return result;
 }
 
-function f32 cast_string_to_f32(String str) {
-	f32 result = 0.0f;
+function f32 cast_string_to_f32(String str, f32* value) {
+	*value = 0.0f;
 	s32 decimal_position = -1;
 
 	for (u64 i = 0; i < str.size; i++) {
 		if (str.str[i] >= '0'  && str.str[i] <= '9') {
-			result = result * 10.0f + (str.str[i] - '0');
+			*value = *value * 10.0f + (str.str[i] - '0');
 			if (decimal_position != -1) {
 				decimal_position += 1;
 			}
 		} else if (str.str[i] == '.') {
 			decimal_position = 0;
 		} else {
-			printf("String was casted to f32 but invalid character was found. String: %s\n", str.str);
-			Assert(0);
+			return false;
 		}
 	}
 
 	if (decimal_position != -1) {
-		result = result / (f32)pow(10, decimal_position);
+		*value = *value / (f32)pow(10, decimal_position);
 	}
 
-	return result;
+	return true;
 }
 
 function void hotload_variables(Arena* arena) {
@@ -76,7 +75,9 @@ function void hotload_variables(Arena* arena) {
 	}
 
 	u32 cursor = 0;
+	u32 line_count = 0;
 	while (true) {
+		line_count += 1;
 		String line = _file_get_next_line(file, &cursor);
 
 		if (line.str[0] == '#') {
@@ -87,8 +88,16 @@ function void hotload_variables(Arena* arena) {
 		String key   = list.first->value;
 		String value = string_pop_left(list.last->value);
 
+		while(value.size > 0 && value.str[0] == ' ') {
+			value = string_pop_left(value);
+		}
+
 		if (strings_match(key, StringLiteral("camera_speed"))) {
-			f32 parsed_value = cast_string_to_f32(value);
+			f32 parsed_value;
+			if (!cast_string_to_f32(value, &parsed_value)) {
+				printf("Parsing error. Line: %lu. Value: '%s' :: %s.\n \n", line_count, value.str, VARIABLES_TWEAK_FILE);
+				break;
+			}
 			CAMERA_SPEED = parsed_value;
 		}
 
