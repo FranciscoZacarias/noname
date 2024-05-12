@@ -1,6 +1,9 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+#define ENABLE_CULL 1
+#define ENABLE_ASSERT 1
+
 //////////////////////////////////////////////
 // Opengl(Glad) and GLFW Includes
 #include <glad/glad.h>
@@ -11,14 +14,13 @@
 // FLayer
 #include "f_includes.h"
 
-#define ENABLE_CULL 0
-#define ENABLE_ASSERT 1
-
 // *.h
 #include "cube.h"
 #include "utils.h"
 #include "renderer.h"
 #include "camera.h"
+
+#include "hotloadable.h"
 
 // *.c
 #include "cube.c"
@@ -26,6 +28,7 @@
 #include "renderer.c"
 #include "camera.c"
 
+#include "hotloadable.c"
 
 #define APP_NAME "noname"
 

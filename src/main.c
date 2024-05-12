@@ -58,14 +58,10 @@ Renderer renderer;
 global Cube Cubes[1024];
 global u32 TotalCubes = 0;
 
-#define VARIABLES_TWEAK_FILE "D:\\C\\noname\\Variables.tweak"
-u64 VariablesTweakFileLastModified = 0;
-
 function b32 find_cube_under_cursor(CubeUnderCursor* result);
 function void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 function void process_input(GLFWwindow *window);
 function void mouse_callback(GLFWwindow* window, f64 xpos, f64 ypos);
-function void hotload_tweak_variables(Arena* arena, String file_name);
 
 Arena GlobalArena;
 
@@ -95,8 +91,9 @@ int main(void) {
 	GlobalArena = arena_init();
 
 	os_init();
-	os_file_create(StringLiteral(VARIABLES_TWEAK_FILE));
-	VariablesTweakFileLastModified = os_file_get_last_modified_time(StringLiteral(VARIABLES_TWEAK_FILE));
+	if (!os_file_create(StringLiteral(VARIABLES_TWEAK_FILE))) {
+		Assert(0);
+	}
 
 	// Camera and Mouse -----------
 	camera = camera_create();
@@ -108,7 +105,7 @@ int main(void) {
 	Mouse.ndc_x = LastX;
 	Mouse.ndc_y = LastY;
 
-	renderer = renderer_init(WindowWidth, WindowHeight);
+	renderer = renderer_init(&GlobalArena, WindowWidth, WindowHeight);
 
 	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f, -8.0f), PALLETE_COLOR_B);
 	Cubes[TotalCubes++] = cube_new(vec3f32( 2.0f,  0.0f, -8.0f), PALLETE_COLOR_B);
@@ -141,7 +138,10 @@ int main(void) {
 		}
 
 		process_input(window);
-		hotload_tweak_variables(&GlobalArena, StringLiteral(VARIABLES_TWEAK_FILE));
+
+		// TODO(fz): We don't need to do this every frame.
+		hotload_variables(&GlobalArena);
+		hotload_shader_programs(&GlobalArena);
 
 		// View
 		Mat4f32 view = mat4f32(1.0f);
@@ -344,20 +344,4 @@ function b32 find_cube_under_cursor(CubeUnderCursor* result) {
 	}
 
 	return match;
-}
-
-function void hotload_tweak_variables(Arena* arena, String file_name) {
-	u64 variables_tweak_last_modified = os_file_get_last_modified_time(StringLiteral(VARIABLES_TWEAK_FILE));
-	if (VariablesTweakFileLastModified == variables_tweak_last_modified) {
-		return;
-	}
-	VariablesTweakFileLastModified = variables_tweak_last_modified;
-
-	u64 size = os_file_size(StringLiteral(VARIABLES_TWEAK_FILE));
-	u64 arena_pos = arena->alloc_position;
-	OSFile file = os_file_load_entire_file(arena, StringLiteral(VARIABLES_TWEAK_FILE));
-
-	printf("File data:\n%s\n", file.data);
-
-	arena_pop_to(arena, arena_pos);
 }

@@ -1,4 +1,5 @@
-#ifdef F_CORE_HEADER
+#ifndef F_CORE_H
+#define F_CORE_H
 
 ////////////////////////////////
 // Context Cracking
@@ -281,5 +282,4 @@ typedef double f64;
 typedef s8  b8;
 typedef s32 b32;
 
-#undef F_CORE_HEADER
-#endif // F_CORE_HEADER
+#endif // F_CORE_H

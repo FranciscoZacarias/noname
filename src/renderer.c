@@ -1,15 +1,16 @@
-#include "shader_source.c"
 
-function Renderer renderer_init(s32 window_width, s32 window_height) {
+function Renderer renderer_init(Arena* arena, s32 window_width, s32 window_height) {
+	ArenaTemp arena_temp = arena_temp_begin(arena);
   Renderer result = { 0 };
 
   // --- Compile shader
   u32 vertex_shader = glCreateShader(GL_VERTEX_SHADER);
 	{
-		glShaderSource(vertex_shader, 1, &VertexShaderCode, NULL);
+		OSFile vertex_shader_source = os_file_load_entire_file(arena_temp.arena, StringLiteral(DEFAULT_SHADER_VERTEX));
+		glShaderSource(vertex_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
 		glCompileShader(vertex_shader);
 		{
-			s32  success;
+			s32 success;
 			glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
 			if (!success) {
 				char infoLog[1024];
@@ -22,10 +23,11 @@ function Renderer renderer_init(s32 window_width, s32 window_height) {
 
 	u32 fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
 	{
-		glShaderSource(fragment_shader, 1, &FragmentShaderCode, NULL);
+		OSFile vertex_shader_source = os_file_load_entire_file(arena_temp.arena, StringLiteral(DEFAULT_SHADER_FRAGMENT));
+		glShaderSource(fragment_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
 		glCompileShader(fragment_shader);
 		{
-			s32  success;
+			s32 success;
 			glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
 			if (!success) {
 				char infoLog[1024];
@@ -137,10 +139,11 @@ function Renderer renderer_init(s32 window_width, s32 window_height) {
 	// --- Screen shader
   u32 screen_vertex_shader = glCreateShader(GL_VERTEX_SHADER);
 	{
-		glShaderSource(screen_vertex_shader, 1, &ScreenVertexShaderCode, NULL);
+		OSFile vertex_shader_source = os_file_load_entire_file(arena_temp.arena, StringLiteral(SCREEN_SHADER_VERTEX));
+		glShaderSource(screen_vertex_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
 		glCompileShader(screen_vertex_shader);
 		{
-			s32  success;
+			s32 success;
 			glGetShaderiv(screen_vertex_shader, GL_COMPILE_STATUS, &success);
 			if (!success) {
 				char infoLog[1024];
@@ -153,10 +156,11 @@ function Renderer renderer_init(s32 window_width, s32 window_height) {
 
 	u32 screen_fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
 	{
-		glShaderSource(screen_fragment_shader, 1, &ScreenFragmentShaderCode, NULL);
+		OSFile vertex_shader_source = os_file_load_entire_file(arena_temp.arena, StringLiteral(SCREEN_SHADER_FRAGMENT));
+		glShaderSource(screen_fragment_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
 		glCompileShader(screen_fragment_shader);
 		{
-			s32  success;
+			s32 success;
 			glGetShaderiv(screen_fragment_shader, GL_COMPILE_STATUS, &success);
 			if (!success) {
 				char infoLog[1024];
@@ -206,6 +210,8 @@ function Renderer renderer_init(s32 window_width, s32 window_height) {
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	arena_temp_end(&arena_temp);
 
 	return result;
 }

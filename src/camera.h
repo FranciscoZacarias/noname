@@ -3,9 +3,10 @@
 
 #define CAMERA_YAW         -90.0f
 #define CAMERA_PITCH        0.0f
-#define CAMERA_SPEED        8.0f
 #define CAMERA_SENSITIVITY  0.1f
 #define WORLD_UP            vec3f32(0.0f, 1.0f, 0.0f)
+
+global f32 CAMERA_SPEED = 8.0f;
 
 typedef enum CameraMovement {
 	CameraMovement_Front,

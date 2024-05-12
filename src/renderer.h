@@ -60,7 +60,7 @@ typedef struct Renderer {
   u32 line_count;
 } Renderer;
 
-function Renderer renderer_init(s32 window_width, s32 window_height);
+function Renderer renderer_init(Arena* arena, s32 window_width, s32 window_height);
 function void renderer_free(Renderer* renderer);
 
 function void renderer_begin_frame(Renderer* renderer, Vec4f32 background_color);

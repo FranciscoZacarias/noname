@@ -1,4 +1,5 @@
-#ifdef F_OS_HEADER
+#ifndef F_OS_H
+#define F_OS_H
 
 function void os_init(void);
 
@@ -31,7 +32,6 @@ function void* os_thread_context_get();
 
 typedef struct OSFile {
 	u64 size;
-	u64 cursor;
 	u8* data;
 } OSFile;
 
@@ -40,18 +40,8 @@ function b32 os_file_exists(String file_name);
 function u32 os_file_size(String file_name);
 function u64 os_file_get_last_modified_time(String file_name);
 
-#undef F_OS_HEADER
-#endif // F_OS_HEADER
+// Logging ---
 
-#ifdef F_OS_IMPLEMENTATION
+function void os_print_string(String string);
 
-#if defined(OS_WINDOWS)
-# include "f_os/f_os_win32.c"
-#elif defined(OS_LINUX)
-# error "OS_LINUX Not supported"
-#elif defined(OS_MAC)
-# error "OS_MAC Not supported"
-#endif // defined(OS_WINDOWS)
-
-#undef F_OS_IMPLEMENTATION
-#endif // F_OS_IMPLEMENTATION
+#endif // F_OS_H

@@ -1,35 +1,32 @@
-#ifdef F_STRING_HEADER
+#ifndef F_STRING_H
+#define F_STRING_H
 
-typedef struct String8Const {
+typedef struct String {
   u64 size;
   u8* str;
-} String8Const;
-typedef String8Const String;
+} String;
 
-typedef struct String8Node {
-  struct String8Node* next;
-  String8Const string;
-} String8Node;
+typedef struct StringNode {
+  struct StringNode* next;
+  String value;
+} StringNode;
 
-typedef struct String8List {
-  String8Node* first;
-  String8Node* last;
+typedef struct StringList {
+  StringNode* first;
+  StringNode* last;
   u64 node_count;
   u64 total_size;
-} String8List;
+} StringList;
 
-function String8Const string8(u64 size, u8* str);
-#define StringLiteral(s) string8(sizeof(s)-1, (u8*)(s))
+#define StringLiteral(s) (String){sizeof(s)-1, (u8*)(s)}
+function String string_new(u64 size, u8* str);
+function String string_range(u8* first, u8* range);
+function String string_pop_left(String str);
+function b32 strings_match(String a, String b);
 
-#undef F_STRING_HEADER
-#endif // F_STRING_HEADER
+function StringList string_split(Arena* arena, String str, String split_character);
+function void string_list_push(Arena* arena, StringList* list, String str);
 
-#ifdef F_STRING_IMPLEMENTATION
+function void print(String string);
 
-function String string8(u64 size, u8* str) {
-  String result = { size, str };
-  return result;
-}
-
-#undef F_STRING_IMPLEMENTATION
-#endif // F_STRING_IMPLEMENTATION
+#endif // F_STRING_H

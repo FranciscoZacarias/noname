@@ -104,17 +104,16 @@ function OSFile os_file_load_entire_file(Arena* arena, String file_name) {
     return os_file;
   }
 
-  u64 size = os_file_size(file_name);
-
-  os_file.size = size;
-  os_file.cursor = 0;
-  os_file.data = (u8*)arena_push(arena, size);
-  MemoryZero(os_file.data, os_file.size);
-
   HANDLE file_handle = _win32_get_file_handle(file_name);
   if (file_handle == null) {
     return os_file;
   }
+
+  u64 size = os_file_size(file_name);
+  os_file.size = size;
+  os_file.data = (u8*)arena_push(arena, size);
+  MemoryZero(os_file.data, os_file.size);
+
   if (!ReadFile(file_handle, os_file.data, size, NULL, NULL)) {
     DWORD error = GetLastError();  
     printf("Error: %lu in os_file_load_entire_file::ReadFile\n", error);
@@ -122,4 +121,11 @@ function OSFile os_file_load_entire_file(Arena* arena, String file_name) {
 
   CloseHandle(file_handle);
   return os_file;
+}
+
+function void os_print_string(String string) {
+  HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+  WriteFile(handle, string.str, string.size, NULL, NULL);
+  char newline = '\n';
+  WriteFile(handle, &newline, 1, NULL, NULL);
 }
