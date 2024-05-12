@@ -9,6 +9,11 @@
 #define MAX_LINES 256
 #define MAX_LINES_VERTICES (MAX_LINES * 2)
 
+#define DEFAULT_SHADER_VERTEX   "D:\\work\\noname\\src\\shaders\\default_vertex_shader.glsl"
+#define DEFAULT_SHADER_FRAGMENT "D:\\work\\noname\\src\\shaders\\default_fragment_shader.glsl"
+#define SCREEN_SHADER_VERTEX    "D:\\work\\noname\\src\\shaders\\screen_vertex_shader.glsl"
+#define SCREEN_SHADER_FRAGMENT  "D:\\work\\noname\\src\\shaders\\screen_fragment_shader.glsl"
+
 typedef struct RendererFontInfo {
 	u32 font_texture;
   stbtt_packedchar cdata[95];
