@@ -12,7 +12,7 @@ global u64 ScreenFragmentShaderLastModified  = 0;
 function void hotload_shader_programs(Arena* arena, Renderer* renderer);
 
 // Variables ---
-#define VARIABLES_TWEAK_FILE "D:\\C\\noname\\Variables.hotload"
+#define VARIABLES_TWEAK_FILE "D:\\work\\noname\\Variables.hotload"
 global u64 VariablesTweakFileLastModified = 0;
 
 function void hotload_variables(Arena* arena);

@@ -122,11 +122,10 @@ int main(void) {
 	Cubes[TotalCubes++] = cube_new(vec3f32( 8.0f, -8.0f, -8.0f), PALLETE_COLOR_B);
 
 	while(!glfwWindowShouldClose(window)) {
-		f64 currentFrame = (f64)(glfwGetTime());
-		DeltaTime = currentFrame - LastFrame;
-		LastFrame = currentFrame;
+		CurrentTime = glfwGetTime();
+		DeltaTime = CurrentTime - LastFrame;
+		LastFrame = CurrentTime;
 
-		CurrentTime   = glfwGetTime();
 		f64 time_diff = CurrentTime - PreviousTime;
 		FrameCounter++;
 		if (time_diff >= (1.0f/30.0f)) {
@@ -139,9 +138,12 @@ int main(void) {
 
 		process_input(window);
 
-		// TODO(fz): We don't need to do this every frame.
-		hotload_variables(&GlobalArena);
-		hotload_shader_programs(&GlobalArena, &ProgramRenderer);
+		local_persist f64 last_hotload_time = -1;
+		if (CurrentTime - last_hotload_time > 1) {
+			hotload_variables(&GlobalArena);
+			hotload_shader_programs(&GlobalArena, &ProgramRenderer);
+			last_hotload_time = CurrentTime;
+		}
 
 		// View
 		Mat4f32 view = mat4f32(1.0f);
