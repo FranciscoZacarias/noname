@@ -126,7 +126,7 @@ function void hotload_variables(Arena* arena) {
 				printf("Parsing error. Line: %lu. Value: '%s' :: %s.\n \n", line_count, value.str, VARIABLES_TWEAK_FILE);
 				break;
 			}
-			CAMERA_SPEED = parsed_value;
+			CameraSpeed = parsed_value;
 		}
 
 		if (cursor >= file.size) {

@@ -6,7 +6,7 @@
 #define CAMERA_SENSITIVITY  0.1f
 #define WORLD_UP            vec3f32(0.0f, 1.0f, 0.0f)
 
-global f32 CAMERA_SPEED = 8.0f;
+global f32 CameraSpeed = 8.0f;
 
 typedef enum Camera_Movement {
 	CameraMovement_Front,

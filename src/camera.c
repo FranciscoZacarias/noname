@@ -29,7 +29,7 @@ function void camera_mouse_callback(Camera* camera, f64 x_pos, f64 y_pos) {
 }
 
 function void camera_keyboard_callback(Camera* camera, Camera_Movement movement, f32 delta_time) {
-	f32 cameraSpeed = (f32)(CAMERA_SPEED * delta_time);
+	f32 cameraSpeed = (f32)(CameraSpeed * delta_time);
 
   if (movement == CameraMovement_Front) {
     Vec3f32 delta = scale_vec3f32(camera->front, cameraSpeed);

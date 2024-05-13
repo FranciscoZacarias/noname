@@ -54,7 +54,7 @@ typedef struct CubeUnderCursor {
 	f32 distance_to_camera;
 } CubeUnderCursor;
 
-Renderer renderer;
+Renderer ProgramRenderer;
 global Cube Cubes[1024];
 global u32 TotalCubes = 0;
 
@@ -76,7 +76,7 @@ int main(void) {
 	if (window == NULL) {
 		printf("Failed to create GLFW window");
 		glfwTerminate();
-		return -1;
+		Assert(0);
 	}
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -85,7 +85,7 @@ int main(void) {
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		printf("Failed to initialize GLAD");
-		return -1;
+		Assert(0);
 	}
 
 	GlobalArena = arena_init();
@@ -105,7 +105,7 @@ int main(void) {
 	Mouse.ndc_x = LastX;
 	Mouse.ndc_y = LastY;
 
-	renderer = renderer_init(&GlobalArena, WindowWidth, WindowHeight);
+	ProgramRenderer = renderer_init(&GlobalArena, WindowWidth, WindowHeight);
 
 	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f, -8.0f), PALLETE_COLOR_B);
 	Cubes[TotalCubes++] = cube_new(vec3f32( 2.0f,  0.0f, -8.0f), PALLETE_COLOR_B);
@@ -141,7 +141,7 @@ int main(void) {
 
 		// TODO(fz): We don't need to do this every frame.
 		hotload_variables(&GlobalArena);
-		hotload_shader_programs(&GlobalArena, &renderer);
+		hotload_shader_programs(&GlobalArena, &ProgramRenderer);
 
 		// View
 		Mat4f32 view = mat4f32(1.0f);
@@ -161,38 +161,38 @@ int main(void) {
 			Raycast = vec3f32(F32_MAX, F32_MAX, F32_MAX);
 		}
 
-		renderer_begin_frame(&renderer, PALLETE_COLOR_D);
+		renderer_begin_frame(&ProgramRenderer, PALLETE_COLOR_D);
 		{
-			renderer_set_uniform_mat4fv(renderer.shader_program, "model", mat4f32(1.0f));
-			renderer_set_uniform_mat4fv(renderer.shader_program, "view", view);
-			renderer_set_uniform_mat4fv(renderer.shader_program, "projection", projection);
+			renderer_set_uniform_mat4fv(ProgramRenderer.shader_program, "model", mat4f32(1.0f));
+			renderer_set_uniform_mat4fv(ProgramRenderer.shader_program, "view", view);
+			renderer_set_uniform_mat4fv(ProgramRenderer.shader_program, "projection", projection);
 
-			renderer_push_arrow(&renderer, vec3f32(0.0f, 0.0f, 0.0f), vec3f32(7.0f, 7.0f, 7.0f), vec4f32(0.0f, 1.0f, 1.0f), 0.5f);
+			renderer_push_arrow(&ProgramRenderer, vec3f32(0.0f, 0.0f, 0.0f), vec3f32(7.0f, 7.0f, 7.0f), vec4f32(0.0f, 1.0f, 1.0f), 0.5f);
 
 			// Axis
 			{ 
 				f32 size = 20.0f;
-				renderer_push_arrow(&renderer, vec3f32(-size,   0.0f,   0.0f), vec3f32(size,  0.0f,  0.0f), COLOR_RED, 0.5f);
-				renderer_push_arrow(&renderer, vec3f32(  0.0f, -size,   0.0f), vec3f32( 0.0f, size,  0.0f), COLOR_GREEN, 0.5f);
-				renderer_push_arrow(&renderer, vec3f32(  0.0f,   0.0f, -size), vec3f32( 0.0f,  0.0f, size), COLOR_BLUE, 0.5f);
+				renderer_push_arrow(&ProgramRenderer, vec3f32(-size,   0.0f,   0.0f), vec3f32(size,  0.0f,  0.0f), COLOR_RED, 0.5f);
+				renderer_push_arrow(&ProgramRenderer, vec3f32(  0.0f, -size,   0.0f), vec3f32( 0.0f, size,  0.0f), COLOR_GREEN, 0.5f);
+				renderer_push_arrow(&ProgramRenderer, vec3f32(  0.0f,   0.0f, -size), vec3f32( 0.0f,  0.0f, size), COLOR_BLUE, 0.5f);
 			}
 
 			for(u32 i = 0; i < TotalCubes; i++) {
 				CubeUnderCursor cuc;
 				if (find_cube_under_cursor(&cuc) && cuc.index == i) {
-					renderer_push_cube_highlight_face(&renderer, Cubes[i], vec4f32(0.5+0.5*sin(5*glfwGetTime()), 0.5+0.5*sin(5*glfwGetTime()), 0.0f), cuc.hovered_face, scale_vec4f32(Cubes[i].color, 0.80));
+					renderer_push_cube_highlight_face(&ProgramRenderer, Cubes[i], vec4f32(0.5+0.5*sin(5*glfwGetTime()), 0.5+0.5*sin(5*glfwGetTime()), 0.0f), cuc.hovered_face, scale_vec4f32(Cubes[i].color, 0.80));
 				} else {
-					renderer_push_cube(&renderer, Cubes[i], COLOR_BLACK);	
+					renderer_push_cube(&ProgramRenderer, Cubes[i], COLOR_BLACK);	
 				}
 			}
 		}
-		renderer_end_frame(&renderer, WindowWidth, WindowHeight);
+		renderer_end_frame(&ProgramRenderer, WindowWidth, WindowHeight);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 
-	renderer_free(&renderer);
+	renderer_free(&ProgramRenderer);
 	arena_free(&GlobalArena);
 
 	glfwTerminate();
