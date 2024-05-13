@@ -203,7 +203,7 @@
 # define Assert(c)
 #endif
 
-#define StaticAssert(c,l) typedef U8 Glue(l,__LINE__) [(c)?1:-1]
+#define StaticAssert(c,l) typedef u8 Glue(l,__LINE__) [(c)?1:-1]
 
 #define ArrayCount(a) (sizeof(a)/sizeof((a)[0]))
 
