@@ -18,5 +18,10 @@ set linker_flags= user32.lib ^
 
 if not exist build mkdir build
 pushd build
-%compiler_and_entry% %cl_default_flags% %external_include% %static_include% %linker_flags% /Fe"noname.exe"
+	set start=%time%
+		%compiler_and_entry% %cl_default_flags% %external_include% %linker_flags% /Fe"noname.exe"
+	set end=%time%
+	set /a elapsed_seconds=(%end:~0,2%-%start:~0,2%)*60 + (%end:~3,2%-%start:~3,2%)
+	set /a milliseconds=(%end:~9,2%-%start:~9,2%)
+	echo Compile time: %elapsed_seconds%.%milliseconds%s
 popd
