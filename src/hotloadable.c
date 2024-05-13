@@ -124,9 +124,17 @@ function void hotload_variables(Arena* arena) {
 			f32 parsed_value;
 			if (!cast_string_to_f32(value, &parsed_value)) {
 				printf("Parsing error. Line: %lu. Value: '%s' :: %s.\n \n", line_count, value.str, VARIABLES_TWEAK_FILE);
-				break;
+				continue;
 			}
 			CameraSpeed = parsed_value;
+		} else
+		if (strings_match(key, StringLiteral("cube_border_thickness"))) {
+			f32 parsed_value;
+			if (!cast_string_to_f32(value, &parsed_value)) {
+				printf("Parsing error. Line: %lu. Value: '%s' :: %s.\n \n", line_count, value.str, VARIABLES_TWEAK_FILE);
+				continue;
+			}
+			CubeBorderThickness = parsed_value;
 		}
 
 		if (cursor >= file.size) {

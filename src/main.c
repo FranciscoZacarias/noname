@@ -107,6 +107,8 @@ int main(void) {
 
 	ProgramRenderer = renderer_init(&GlobalArena, WindowWidth, WindowHeight);
 
+	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A);
+	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A);
 	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f, -8.0f), PALLETE_COLOR_B);
 	Cubes[TotalCubes++] = cube_new(vec3f32( 2.0f,  0.0f, -8.0f), PALLETE_COLOR_B);
 	Cubes[TotalCubes++] = cube_new(vec3f32( 4.0f,  2.0f, -8.0f), PALLETE_COLOR_B);
@@ -163,13 +165,25 @@ int main(void) {
 			Raycast = vec3f32(F32_MAX, F32_MAX, F32_MAX);
 		}
 
+		Mat4f32 r = rotate_axis_mat4f32(vec3f32(-1.0f, 1.0f, 1.0f), glfwGetTime());
+		Mat4f32 t = translate_mat4f32(3.0f, 3.0f, 3.0f);
+		Mat4f32 trans = mul_mat4f32(t, r);
+		trans = mul_mat4f32(r, trans);
+		Cubes[0].transform = trans;
+
+		r = rotate_axis_mat4f32(vec3f32(1.0f, -1.0f, 1.0f), glfwGetTime());
+		t = translate_mat4f32(-3.0f, 3.0f, 3.0f);
+		trans = mul_mat4f32(t, r);
+		Cubes[1].transform = trans;
+
 		renderer_begin_frame(&ProgramRenderer, PALLETE_COLOR_D);
 		{
 			renderer_set_uniform_mat4fv(ProgramRenderer.shader_program, "model", mat4f32(1.0f));
 			renderer_set_uniform_mat4fv(ProgramRenderer.shader_program, "view", view);
 			renderer_set_uniform_mat4fv(ProgramRenderer.shader_program, "projection", projection);
 
-			renderer_push_arrow(&ProgramRenderer, vec3f32(0.0f, 0.0f, 0.0f), vec3f32(7.0f, 7.0f, 7.0f), vec4f32(0.0f, 1.0f, 1.0f), 0.5f);
+			renderer_push_arrow(&ProgramRenderer, vec3f32(0.0f, 0.0f, 0.0f), scale_vec3f32(vec3f32(Cubes[0].transform.m12, Cubes[0].transform.m13, Cubes[0].transform.m14), 0.5), vec4f32(0.0f, 1.0f, 1.0f), 0.5f);
+			renderer_push_arrow(&ProgramRenderer, vec3f32(0.0f, 0.0f, 0.0f), scale_vec3f32(vec3f32(Cubes[1].transform.m12, Cubes[1].transform.m13, Cubes[1].transform.m14), 0.5), vec4f32(1.0f, 1.0f, 0.0f), 0.5f);
 
 			// Axis
 			{ 
@@ -179,6 +193,7 @@ int main(void) {
 				renderer_push_arrow(&ProgramRenderer, vec3f32(  0.0f,   0.0f, -size), vec3f32( 0.0f,  0.0f, size), COLOR_BLUE, 0.5f);
 			}
 
+			// Render cubes and highlight if cursor on top
 			for(u32 i = 0; i < TotalCubes; i++) {
 				CubeUnderCursor cuc;
 				if (find_cube_under_cursor(&cuc) && cuc.index == i) {
