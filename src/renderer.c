@@ -277,6 +277,79 @@ function void renderer_recompile_default_shader(Arena* arena, Renderer* renderer
 	arena_temp_end(&arena_temp);
 }
 
+function void renderer_recompile_screen_shader(Arena* arena, Renderer* renderer) {
+	Arena_Temp arena_temp = arena_temp_begin(arena);
+
+  u32 vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+	{
+		OS_File vertex_shader_source = os_file_load_entire_file(arena_temp.arena, StringLiteral(SCREEN_VERTEX_SHADER));
+		glShaderSource(vertex_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
+		glCompileShader(vertex_shader);
+		{
+			s32 success;
+			glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
+			if (!success) {
+				char infoLog[1024];
+				glGetShaderInfoLog(vertex_shader, 1024, NULL, infoLog);
+				printf("Error %d re-compiling screen vertex shader. Log: %s", success, infoLog);
+				return;
+			}
+		}
+	}
+
+	u32 fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+	{
+		OS_File vertex_shader_source = os_file_load_entire_file(arena_temp.arena, StringLiteral(SCREEN_FRAGMENT_SHADER));
+		glShaderSource(fragment_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
+		glCompileShader(fragment_shader);
+		{
+			s32 success;
+			glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
+			if (!success) {
+				char infoLog[1024];
+				glGetShaderInfoLog(fragment_shader, 1024, NULL, infoLog);
+				printf("Error %d compiling screen fragment shader. Log: %s", success, infoLog);
+				glDeleteShader(vertex_shader);
+				return;
+			}
+		}
+	}
+
+	u32 screen_program = glCreateProgram();
+	{
+		glAttachShader(screen_program, vertex_shader);
+		glAttachShader(screen_program, fragment_shader);
+		glLinkProgram(screen_program);
+		{
+			s32 success;
+			glGetProgramiv(screen_program, GL_LINK_STATUS, &success);
+			if(!success) {
+				char infoLog[1024];
+				glGetProgramInfoLog(screen_program, 1024, NULL, infoLog);
+				printf("Error %d linking shader program. Log: %s", success, infoLog);
+				glDeleteShader(vertex_shader);
+				glDeleteShader(fragment_shader);
+				return;
+			}
+		}
+	}
+
+	// If we got to this point, everything was recompiled and attached successfully.
+	// Just replace them in the renderer.
+	glDeleteProgram(renderer->screen_program);
+
+	renderer->screen_program = screen_program;
+
+	glDetachShader(renderer->screen_program, vertex_shader);
+	glDetachShader(renderer->screen_program, fragment_shader);
+	glDeleteShader(vertex_shader);
+	glDeleteShader(fragment_shader);
+
+	printf("Screen shader re-compiled!\n");
+
+	arena_temp_end(&arena_temp);
+}
+
 function void renderer_free(Renderer* renderer) {
 	glDeleteVertexArrays(1, &renderer->vao);
 	glDeleteBuffers(1, &renderer->triangle_vbo);

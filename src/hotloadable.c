@@ -1,27 +1,43 @@
 function void hotload_shader_programs(Arena* arena, Renderer* renderer) {
+	if (FirstEntry) {
+		DefaultVertexShaderLastModified   = os_file_get_last_modified_time(StringLiteral(DEFAULT_VERTEX_SHADER));
+		DefaultFragmentShaderLastModified = os_file_get_last_modified_time(StringLiteral(DEFAULT_FRAGMENT_SHADER));
+		ScreenVertexShaderLastModified    = os_file_get_last_modified_time(StringLiteral(SCREEN_VERTEX_SHADER));
+		ScreenFragmentShaderLastModified  = os_file_get_last_modified_time(StringLiteral(SCREEN_FRAGMENT_SHADER));
+		FirstEntry = false;
+		return;
+	}
+
 	Arena_Temp arena_temp = arena_temp_begin(arena);
 
 	// Default shader 
 	{
-		String default_vertex_shader_path = StringLiteral(DEFAULT_VERTEX_SHADER);
-		u64 default_vertex_shader_last_moditifed = os_file_get_last_modified_time(default_vertex_shader_path);
-
-		String default_fragment_shader_path = StringLiteral(DEFAULT_FRAGMENT_SHADER);
-		u64 default_fragment_shader_last_modified = os_file_get_last_modified_time(default_fragment_shader_path);
+		u64 default_vertex_shader_last_moditifed  = os_file_get_last_modified_time(StringLiteral(DEFAULT_VERTEX_SHADER));
+		u64 default_fragment_shader_last_modified = os_file_get_last_modified_time(StringLiteral(DEFAULT_FRAGMENT_SHADER));
 
 		if (DefaultVertexShaderLastModified   != default_vertex_shader_last_moditifed || 
 				DefaultFragmentShaderLastModified != default_fragment_shader_last_modified) {
 
 			renderer_recompile_default_shader(arena, renderer);
 
-			DefaultVertexShaderLastModified = default_vertex_shader_last_moditifed;
+			DefaultVertexShaderLastModified   = default_vertex_shader_last_moditifed;
 			DefaultFragmentShaderLastModified = default_fragment_shader_last_modified;
 		}
 	}
 
 	// Screen shader
 	{
+		u64 screen_vertex_shader_last_moditifed = os_file_get_last_modified_time(StringLiteral(SCREEN_VERTEX_SHADER));
+		u64 screen_fragment_shader_last_modified = os_file_get_last_modified_time(StringLiteral(SCREEN_FRAGMENT_SHADER));
 
+		if (ScreenVertexShaderLastModified   != screen_vertex_shader_last_moditifed || 
+				ScreenFragmentShaderLastModified != screen_fragment_shader_last_modified) {
+
+			renderer_recompile_screen_shader(arena, renderer);
+
+			ScreenVertexShaderLastModified   = screen_vertex_shader_last_moditifed;
+			ScreenFragmentShaderLastModified = screen_fragment_shader_last_modified;
+		}
 	}
 
 	arena_temp_end(&arena_temp);

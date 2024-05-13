@@ -3,6 +3,7 @@
 
 // Shader programs ---
 
+global b32 FirstEntry = true; // To setup the hotload_shader_programs function.
 global u64 DefaultVertexShaderLastModified   = 0;
 global u64 DefaultFragmentShaderLastModified = 0;
 global u64 ScreenVertexShaderLastModified    = 0;

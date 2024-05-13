@@ -65,6 +65,7 @@ function Renderer renderer_init(Arena* arena, s32 window_width, s32 window_heigh
 function void renderer_free(Renderer* renderer);
 
 function void renderer_recompile_default_shader(Arena* arena, Renderer* renderer);
+function void renderer_recompile_screen_shader(Arena* arena, Renderer* renderer);
 
 function void renderer_begin_frame(Renderer* renderer, Vec4f32 background_color);
 function void renderer_end_frame(Renderer* renderer, s32 window_width, s32 window_height);
