@@ -49,7 +49,7 @@ u32 FrameCounter;
 global Vec3f32 Raycast = {F32_MAX, F32_MAX, F32_MAX};
 
 typedef struct CubeUnderCursor {
-	CubeFace hovered_face;
+	Cube_Face hovered_face;
 	u32 index;
 	f32 distance_to_camera;
 } CubeUnderCursor;
@@ -141,7 +141,7 @@ int main(void) {
 
 		// TODO(fz): We don't need to do this every frame.
 		hotload_variables(&GlobalArena);
-		hotload_shader_programs(&GlobalArena);
+		hotload_shader_programs(&GlobalArena, &renderer);
 
 		// View
 		Mat4f32 view = mat4f32(1.0f);
@@ -207,6 +207,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 
 void process_input(GLFWwindow *window) {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+		printf("Program existed from pressing Escape!\n");
 		glfwSetWindowShouldClose(window, 1);
 	}
 

@@ -7,17 +7,11 @@ layout (location = 3) in vec4 bColor;
 
 out vec4 vertex_color;
 
-uniform int render_triangles;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
 void main() {
-  if (render_triangles == 1) {
-    gl_Position = projection * view * model * vec4(aPos, 1.0);
-    vertex_color = aColor;
-  } else {
-    gl_Position = projection * view * model * vec4(bPos, 1.0);
-    vertex_color = bColor;
-  }
+  gl_Position = projection * view * model * vec4(aPos, 1.0);
+  vertex_color = aColor;
 }

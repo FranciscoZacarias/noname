@@ -97,8 +97,8 @@ function u32 os_file_size(String file_name) {
   return result;
 }
 
-function OSFile os_file_load_entire_file(Arena* arena, String file_name) {
-  OSFile os_file = { 0 };
+function OS_File os_file_load_entire_file(Arena* arena, String file_name) {
+  OS_File os_file = { 0 };
   if (!os_file_exists(file_name)) {
     printf("Error: os_file_load_entire_file failed because file %s doesn't exist\n", file_name.str);
     return os_file;

@@ -6,17 +6,17 @@ typedef struct String {
   u8* str;
 } String;
 
-typedef struct StringNode {
-  struct StringNode* next;
+typedef struct String_Node {
+  struct String_Node* next;
   String value;
-} StringNode;
+} String_Node;
 
-typedef struct StringList {
-  StringNode* first;
-  StringNode* last;
+typedef struct String_List {
+  String_Node* first;
+  String_Node* last;
   u64 node_count;
   u64 total_size;
-} StringList;
+} String_List;
 
 #define StringLiteral(s) (String){sizeof(s)-1, (u8*)(s)}
 function String string_new(u64 size, u8* str);
@@ -24,8 +24,8 @@ function String string_range(u8* first, u8* range);
 function String string_pop_left(String str);
 function b32 strings_match(String a, String b);
 
-function StringList string_split(Arena* arena, String str, String split_character);
-function void string_list_push(Arena* arena, StringList* list, String str);
+function String_List string_split(Arena* arena, String str, String split_character);
+function void string_list_push(Arena* arena, String_List* list, String str);
 
 function void print(String string);
 

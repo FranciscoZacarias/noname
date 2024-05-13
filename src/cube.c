@@ -6,7 +6,7 @@ function Cube cube_new(Vec3f32 position, Vec4f32 color) {
   return result;
 }
 
-function Quad cube_get_local_space_face_quad(CubeFace face) {
+function Quad cube_get_local_space_face_quad(Cube_Face face) {
 	Quad result = { 0 };
 
 	switch(face) {

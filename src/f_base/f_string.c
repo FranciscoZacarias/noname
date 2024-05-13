@@ -25,8 +25,8 @@ function b32 strings_match(String a, String b) {
   return true;
 }
 
-function StringList string_split(Arena* arena, String str, String split_character) {
-  StringList result = { 0 };
+function String_List string_split(Arena* arena, String str, String split_character) {
+  String_List result = { 0 };
 
   if (split_character.size != 1) {
     printf("string_split expects only one character in split_character. It got %s of size %llu\n", split_character.str, split_character.size);
@@ -47,8 +47,8 @@ function StringList string_split(Arena* arena, String str, String split_characte
   return result;
 }
 
-function void string_list_push(Arena* arena, StringList* list, String str) {
-  StringNode* node = (StringNode*)arena_push(arena, sizeof(StringNode));
+function void string_list_push(Arena* arena, String_List* list, String str) {
+  String_Node* node = (String_Node*)arena_push(arena, sizeof(String_Node));
   
   node->value = str;
   if (!list->first && !list->last) {

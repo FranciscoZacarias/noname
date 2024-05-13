@@ -1,12 +1,12 @@
 
 function Renderer renderer_init(Arena* arena, s32 window_width, s32 window_height) {
-	ArenaTemp arena_temp = arena_temp_begin(arena);
+	Arena_Temp arena_temp = arena_temp_begin(arena);
   Renderer result = { 0 };
 
   // --- Compile shader
   u32 vertex_shader = glCreateShader(GL_VERTEX_SHADER);
 	{
-		OSFile vertex_shader_source = os_file_load_entire_file(arena_temp.arena, StringLiteral(DEFAULT_SHADER_VERTEX));
+		OS_File vertex_shader_source = os_file_load_entire_file(arena_temp.arena, StringLiteral(DEFAULT_VERTEX_SHADER));
 		glShaderSource(vertex_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
 		glCompileShader(vertex_shader);
 		{
@@ -15,7 +15,7 @@ function Renderer renderer_init(Arena* arena, s32 window_width, s32 window_heigh
 			if (!success) {
 				char infoLog[1024];
 				glGetShaderInfoLog(vertex_shader, 1024, NULL, infoLog);
-				printf("Error %d compiling vertex shader. Log: %s", success, infoLog);
+				printf("Error %d compiling default vertex shader. Log: %s", success, infoLog);
 				Assert(0);
 			}
 		}
@@ -23,8 +23,8 @@ function Renderer renderer_init(Arena* arena, s32 window_width, s32 window_heigh
 
 	u32 fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
 	{
-		OSFile vertex_shader_source = os_file_load_entire_file(arena_temp.arena, StringLiteral(DEFAULT_SHADER_FRAGMENT));
-		glShaderSource(fragment_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
+		OS_File fragment_shader_source = os_file_load_entire_file(arena_temp.arena, StringLiteral(DEFAULT_FRAGMENT_SHADER));
+		glShaderSource(fragment_shader, 1, &fragment_shader_source.data, &(GLint)fragment_shader_source.size);
 		glCompileShader(fragment_shader);
 		{
 			s32 success;
@@ -32,7 +32,7 @@ function Renderer renderer_init(Arena* arena, s32 window_width, s32 window_heigh
 			if (!success) {
 				char infoLog[1024];
 				glGetShaderInfoLog(fragment_shader, 1024, NULL, infoLog);
-				printf("Error %d compiling fragment shader. Log: %s", success, infoLog);
+				printf("Error %d compiling default fragment shader. Log: %s", success, infoLog);
 				Assert(0);
 			}
 		}
@@ -68,24 +68,12 @@ function Renderer renderer_init(Arena* arena, s32 window_width, s32 window_heigh
 	{
 		glGenBuffers(1, &result.triangle_vbo);
 		glBindBuffer(GL_ARRAY_BUFFER, result.triangle_vbo);
-		glBufferData(GL_ARRAY_BUFFER, MAX_TRIANGLES_VERTICES * sizeof(RendererVertex), NULL, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, MAX_TRIANGLES_VERTICES * sizeof(Renderer_Vertex), NULL, GL_DYNAMIC_DRAW);
 		
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, sizeof(RendererVertex), (void*) OffsetOfMember(RendererVertex, position));
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, sizeof(Renderer_Vertex), (void*) OffsetOfMember(Renderer_Vertex, position));
 		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(1, 4, GL_FLOAT, GL_False, sizeof(RendererVertex), (void*) OffsetOfMember(RendererVertex, color));
+		glVertexAttribPointer(1, 4, GL_FLOAT, GL_False, sizeof(Renderer_Vertex), (void*) OffsetOfMember(Renderer_Vertex, color));
 		glEnableVertexAttribArray(1);
-	}
-
-	// Lines vbo
-	{
-		glGenBuffers(1, &result.line_vbo);
-		glBindBuffer(GL_ARRAY_BUFFER, result.line_vbo);
-		glBufferData(GL_ARRAY_BUFFER, MAX_LINES * sizeof(RendererVertex), NULL, GL_DYNAMIC_DRAW);
-
-		glVertexAttribPointer(2, 3, GL_FLOAT, GL_False, sizeof(RendererVertex), (void*) OffsetOfMember(RendererVertex, position));
-		glEnableVertexAttribArray(2);
-		glVertexAttribPointer(3, 4, GL_FLOAT, GL_False, sizeof(RendererVertex), (void*) OffsetOfMember(RendererVertex, color));
-		glEnableVertexAttribArray(3);
 	}
 
 	glBindVertexArray(0);
@@ -139,7 +127,7 @@ function Renderer renderer_init(Arena* arena, s32 window_width, s32 window_heigh
 	// --- Screen shader
   u32 screen_vertex_shader = glCreateShader(GL_VERTEX_SHADER);
 	{
-		OSFile vertex_shader_source = os_file_load_entire_file(arena_temp.arena, StringLiteral(SCREEN_SHADER_VERTEX));
+		OS_File vertex_shader_source = os_file_load_entire_file(arena_temp.arena, StringLiteral(SCREEN_VERTEX_SHADER));
 		glShaderSource(screen_vertex_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
 		glCompileShader(screen_vertex_shader);
 		{
@@ -148,7 +136,7 @@ function Renderer renderer_init(Arena* arena, s32 window_width, s32 window_heigh
 			if (!success) {
 				char infoLog[1024];
 				glGetShaderInfoLog(screen_vertex_shader, 1024, NULL, infoLog);
-				printf("Error %d compiling vertex shader. Log: %s", success, infoLog);
+				printf("Error %d compiling screen vertex shader. Log: %s", success, infoLog);
 				Assert(0);
 			}
 		}
@@ -156,7 +144,7 @@ function Renderer renderer_init(Arena* arena, s32 window_width, s32 window_heigh
 
 	u32 screen_fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
 	{
-		OSFile vertex_shader_source = os_file_load_entire_file(arena_temp.arena, StringLiteral(SCREEN_SHADER_FRAGMENT));
+		OS_File vertex_shader_source = os_file_load_entire_file(arena_temp.arena, StringLiteral(SCREEN_FRAGMENT_SHADER));
 		glShaderSource(screen_fragment_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
 		glCompileShader(screen_fragment_shader);
 		{
@@ -165,7 +153,7 @@ function Renderer renderer_init(Arena* arena, s32 window_width, s32 window_heigh
 			if (!success) {
 				char infoLog[1024];
 				glGetShaderInfoLog(screen_fragment_shader, 1024, NULL, infoLog);
-				printf("Error %d compiling fragment shader. Log: %s", success, infoLog);
+				printf("Error %d compiling screen fragment shader. Log: %s", success, infoLog);
 				Assert(0);
 			}
 		}
@@ -216,10 +204,82 @@ function Renderer renderer_init(Arena* arena, s32 window_width, s32 window_heigh
 	return result;
 }
 
+function void renderer_recompile_default_shader(Arena* arena, Renderer* renderer) {
+	Arena_Temp arena_temp = arena_temp_begin(arena);
+
+  u32 vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+	{
+		OS_File vertex_shader_source = os_file_load_entire_file(arena_temp.arena, StringLiteral(DEFAULT_VERTEX_SHADER));
+		glShaderSource(vertex_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
+		glCompileShader(vertex_shader);
+		{
+			s32 success;
+			glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
+			if (!success) {
+				char infoLog[1024];
+				glGetShaderInfoLog(vertex_shader, 1024, NULL, infoLog);
+				printf("Error %d while re-compiling default vertex shader. Log: %s", success, infoLog);
+				return;
+			}
+		}
+	}
+
+	u32 fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+	{
+		OS_File fragment_shader_source = os_file_load_entire_file(arena_temp.arena, StringLiteral(DEFAULT_FRAGMENT_SHADER));
+		glShaderSource(fragment_shader, 1, &fragment_shader_source.data, &(GLint)fragment_shader_source.size);
+		glCompileShader(fragment_shader);
+		{
+			s32 success;
+			glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
+			if (!success) {
+				char infoLog[1024];
+				glGetShaderInfoLog(fragment_shader, 1024, NULL, infoLog);
+				printf("Error %d while re-compiling default fragment shader. Log: %s", success, infoLog);
+				glDeleteShader(vertex_shader);
+				return;
+			}
+		}
+	}
+
+	u32 shader_program = glCreateProgram();
+	{
+		glAttachShader(shader_program, vertex_shader);
+		glAttachShader(shader_program, fragment_shader);
+		glLinkProgram(shader_program);
+		{
+			s32 success;
+			glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
+			if(!success) {
+				char infoLog[1024];
+				glGetProgramInfoLog(shader_program, 1024, NULL, infoLog);
+				printf("Error %d linking re-compiled default shader program. Log: %s", success, infoLog);
+				glDeleteShader(vertex_shader);
+				glDeleteShader(fragment_shader);
+				return;
+			}
+		}
+	}
+	
+	// If we got to this point, everything was recompiled and attached successfully.
+	// Just replace them in the renderer.
+	glDeleteProgram(renderer->shader_program);
+
+	renderer->shader_program = shader_program;
+
+	glDetachShader(renderer->shader_program, vertex_shader);
+	glDetachShader(renderer->shader_program, fragment_shader);
+	glDeleteShader(vertex_shader);
+	glDeleteShader(fragment_shader);
+
+	printf("Default shader re-compiled!\n");
+
+	arena_temp_end(&arena_temp);
+}
+
 function void renderer_free(Renderer* renderer) {
 	glDeleteVertexArrays(1, &renderer->vao);
 	glDeleteBuffers(1, &renderer->triangle_vbo);
-	glDeleteBuffers(1, &renderer->line_vbo);
 	glDeleteProgram(renderer->shader_program);
 
 	glDeleteVertexArrays(1, &renderer->screen_vao);
@@ -234,7 +294,6 @@ function void renderer_begin_frame(Renderer* renderer, Vec4f32 background_color)
 	glEnable(GL_DEPTH_TEST);
 
 	renderer->triangle_count = 0;
-	renderer->line_count = 0;
 
 	glUseProgram(renderer->shader_program);
 }
@@ -242,9 +301,7 @@ function void renderer_begin_frame(Renderer* renderer, Vec4f32 background_color)
 void renderer_end_frame(Renderer* renderer, s32 window_width, s32 window_height) {
 	glBindVertexArray(renderer->vao);
 	glBindBuffer(GL_ARRAY_BUFFER, renderer->triangle_vbo);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, renderer->triangle_count * 3 * sizeof(RendererVertex), renderer->triangle_data);
-
-	renderer_set_uniform_s32(renderer->shader_program, "render_triangles", 1);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, renderer->triangle_count * 3 * sizeof(Renderer_Vertex), renderer->triangle_data);
 
 #if ENABLE_CULL
   glEnable(GL_CULL_FACE);
@@ -253,14 +310,6 @@ void renderer_end_frame(Renderer* renderer, s32 window_width, s32 window_height)
 #endif
 	glDrawArrays(GL_TRIANGLES, 0, renderer->triangle_count * 3);
   glDisable(GL_CULL_FACE);
-
-	glBindBuffer(GL_ARRAY_BUFFER, renderer->line_vbo);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, renderer->line_count * 2 * sizeof(RendererVertex), renderer->line_data);
-
-	renderer_set_uniform_s32(renderer->shader_program, "render_triangles", 0);
-	glLineWidth(2.0f);
-	glDrawArrays(GL_LINES, 0, renderer->line_count * 2);
-	glLineWidth(1.0f);
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, renderer->msaa_frame_buffer_object);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderer->postprocessing_fbo);	
@@ -299,21 +348,6 @@ function void renderer_push_triangle(Renderer* renderer, Vec3f32 a_position, Vec
 	renderer->triangle_data[index+2].color = c_color;
 
 	renderer->triangle_count += 1;
-}
-
-function void renderer_push_line(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color) {
-	if ((renderer->line_count + 1) > MAX_LINES) {
-		printf("Error :: Renderer :: Too many lines!");
-		Assert(0);
-	}
-
-	s64 index = renderer->line_count * 2;
-	renderer->line_data[index+0].position = a;
-	renderer->line_data[index+0].color = color;
-	renderer->line_data[index+1].position = b;
-	renderer->line_data[index+1].color = color;
-
-	renderer->line_count += 1;
 }
 
 function void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color, f32 scale) {
@@ -399,7 +433,7 @@ function void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_c
 	renderer_push_cube_highlight_face(renderer, cube, border_color, -1, COLOR_BLACK);
 }
 
-function void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, Vec4f32 border_color, CubeFace highlight, Vec4f32 highlight_color) {
+function void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, Vec4f32 border_color, Cube_Face highlight, Vec4f32 highlight_color) {
   f32 scale = 1-CubeBorderThickness;
 
 	// On XY Plane

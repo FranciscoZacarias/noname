@@ -24,12 +24,12 @@ function void  arena_free(Arena* arena);
 #define push_array_no_zero(a,T,c) (T*)arena_push((a), sizeof(T)*(c))
 #define push_array(a,T,c) (T*)MemoryZero(push_array_no_zero(a,T,c), sizeof(T)*(c))
 
-typedef struct ArenaTemp {
+typedef struct Arena_Temp {
   Arena* arena;
   u64 temp_position;
-} ArenaTemp;
+} Arena_Temp;
 
-function ArenaTemp arena_temp_begin(Arena* arena);
-function void      arena_temp_end(ArenaTemp* temp);
+function Arena_Temp arena_temp_begin(Arena* arena);
+function void       arena_temp_end(Arena_Temp* temp);
 
 #endif // F_MEMORY_H

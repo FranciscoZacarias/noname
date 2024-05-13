@@ -76,13 +76,13 @@ function void  arena_free(Arena* arena) {
   os_memory_release(arena->memory, arena->capacity);
 }
 
-function ArenaTemp arena_temp_begin(Arena* arena) {
-  ArenaTemp temp;
+function Arena_Temp arena_temp_begin(Arena* arena) {
+  Arena_Temp temp;
   temp.arena = arena;
   temp.temp_position = arena->alloc_position;
   return temp;
 }
 
-function void arena_temp_end(ArenaTemp* temp) {
+function void arena_temp_end(Arena_Temp* temp) {
   arena_pop_to(temp->arena, temp->temp_position);
 }

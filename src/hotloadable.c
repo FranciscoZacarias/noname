@@ -1,22 +1,34 @@
-function void hotload_shader_programs(Arena* arena) {
-	ArenaTemp arena_temp = arena_temp_begin(arena);
+function void hotload_shader_programs(Arena* arena, Renderer* renderer) {
+	Arena_Temp arena_temp = arena_temp_begin(arena);
 
-	// Default shader vertex
-	String default_shader_vertex_path = StringLiteral(DEFAULT_SHADER_VERTEX);
-	u64 default_shader_vertex_last_modified = os_file_get_last_modified_time(default_shader_vertex_path);
-	if (DefaultShaderVertexLastModified != default_shader_vertex_last_modified) {
-		OSFile default_shader_vertex = os_file_load_entire_file(arena_temp.arena, default_shader_vertex_path);
+	// Default shader 
+	{
+		String default_vertex_shader_path = StringLiteral(DEFAULT_VERTEX_SHADER);
+		u64 default_vertex_shader_last_moditifed = os_file_get_last_modified_time(default_vertex_shader_path);
 
-		printf("Vertex shader changed!\n");
+		String default_fragment_shader_path = StringLiteral(DEFAULT_FRAGMENT_SHADER);
+		u64 default_fragment_shader_last_modified = os_file_get_last_modified_time(default_fragment_shader_path);
 
-		DefaultShaderVertexLastModified = default_shader_vertex_last_modified;
+		if (DefaultVertexShaderLastModified   != default_vertex_shader_last_moditifed || 
+				DefaultFragmentShaderLastModified != default_fragment_shader_last_modified) {
+
+			renderer_recompile_default_shader(arena, renderer);
+
+			DefaultVertexShaderLastModified = default_vertex_shader_last_moditifed;
+			DefaultFragmentShaderLastModified = default_fragment_shader_last_modified;
+		}
+	}
+
+	// Screen shader
+	{
+
 	}
 
 	arena_temp_end(&arena_temp);
 }
 
-// Assumes OSFile is allocated
-function String _file_get_next_line(OSFile file, u32* cursor) {
+// Assumes OS_File is allocated
+function String _file_get_next_line(OS_File file, u32* cursor) {
 	String result;
 	result.size = 0;
 	result.str  = file.data + *cursor;
@@ -59,7 +71,7 @@ function f32 cast_string_to_f32(String str, f32* value) {
 }
 
 function void hotload_variables(Arena* arena) {
-	ArenaTemp arena_temp = arena_temp_begin(arena);
+	Arena_Temp arena_temp = arena_temp_begin(arena);
 
 	u64 variables_tweak_last_modified = os_file_get_last_modified_time(StringLiteral(VARIABLES_TWEAK_FILE));
 	if (VariablesTweakFileLastModified == variables_tweak_last_modified) {
@@ -68,7 +80,7 @@ function void hotload_variables(Arena* arena) {
 	VariablesTweakFileLastModified = variables_tweak_last_modified;
 
 	u64 size = os_file_size(StringLiteral(VARIABLES_TWEAK_FILE));
-	OSFile file = os_file_load_entire_file(arena_temp.arena, StringLiteral(VARIABLES_TWEAK_FILE));
+	OS_File file = os_file_load_entire_file(arena_temp.arena, StringLiteral(VARIABLES_TWEAK_FILE));
 	if (file.size == 0) {
 		printf("Variables not loaded.\n");
 		return;
@@ -84,7 +96,7 @@ function void hotload_variables(Arena* arena) {
 			continue;
 		}
 
-		StringList list = string_split(arena_temp.arena, line, StringLiteral(":"));
+		String_List list = string_split(arena_temp.arena, line, StringLiteral(":"));
 		String key   = list.first->value;
 		String value = string_pop_left(list.last->value);
 

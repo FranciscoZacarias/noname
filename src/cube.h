@@ -15,16 +15,16 @@
 
 global f32 CubeBorderThickness = 0.02f;
 
-typedef enum CubeFace {
+typedef enum Cube_Face {
   CubeFace_Back,
   CubeFace_Front,
   CubeFace_Left,
   CubeFace_Right,
   CubeFace_Bottom,
   CubeFace_Top
-} CubeFace;
+} Cube_Face;
 
-typedef struct CubeVertices {
+typedef struct Cube_Vertices {
   Vec3f32 p0;
   Vec3f32 p1;
   Vec3f32 p2;
@@ -33,9 +33,9 @@ typedef struct CubeVertices {
   Vec3f32 p5;
   Vec3f32 p6;
   Vec3f32 p7;
-} CubeVertices;
+} Cube_Vertices;
 
-global CubeVertices CubeVerticesLocalSpace = {
+global Cube_Vertices CubeVerticesLocalSpace = {
   { -1.0f, -1.0f, -1.0f },
   {  1.0f, -1.0f, -1.0f },
   {  1.0f,  1.0f, -1.0f },
@@ -63,6 +63,6 @@ typedef struct Cube {
 } Cube;
 
 function Cube cube_new(Vec3f32 transform, Vec4f32 color);
-function Quad cube_get_local_space_face_quad(CubeFace face);
+function Quad cube_get_local_space_face_quad(Cube_Face face);
 
 #endif // CUBE_H
