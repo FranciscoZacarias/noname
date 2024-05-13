@@ -205,6 +205,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
 	WindowWidth  = width;
 	WindowHeight = height;
+
+	renderer_generate_msaa_and_intermidiate_buffers(&ProgramRenderer, WindowWidth, WindowHeight);
 }
 
 void process_input(GLFWwindow *window) {

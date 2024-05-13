@@ -64,6 +64,7 @@ typedef struct Renderer {
 function Renderer renderer_init(Arena* arena, s32 window_width, s32 window_height);
 function void renderer_free(Renderer* renderer);
 
+function void renderer_generate_msaa_and_intermidiate_buffers(Renderer* renderer, s32 window_width, s32 window_height);
 function void renderer_recompile_default_shader(Arena* arena, Renderer* renderer);
 function void renderer_recompile_screen_shader(Arena* arena, Renderer* renderer);
 

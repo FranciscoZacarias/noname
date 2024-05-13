@@ -204,6 +204,59 @@ function Renderer renderer_init(Arena* arena, s32 window_width, s32 window_heigh
 	return result;
 }
 
+function void renderer_generate_msaa_and_intermidiate_buffers(Renderer* renderer, s32 window_width, s32 window_height) {
+	// Delete and recreate MSAA framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, renderer->msaa_frame_buffer_object);
+	glDeleteTextures(1, &renderer->msaa_texture_color_buffer_multisampled);
+	glDeleteRenderbuffers(1, &renderer->msaa_render_buffer_object);
+
+	// Regen MSAA buffer
+	glGenFramebuffers(1, &renderer->msaa_frame_buffer_object);
+
+	glGenTextures(1, &renderer->msaa_texture_color_buffer_multisampled);
+	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, renderer->msaa_texture_color_buffer_multisampled);
+	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, MSAA_SAMPLES, GL_RGB, window_width, window_height, GL_True);
+	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+
+	glGenRenderbuffers(1, &renderer->msaa_render_buffer_object);
+	glBindRenderbuffer(GL_RENDERBUFFER, renderer->msaa_render_buffer_object);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, MSAA_SAMPLES, GL_DEPTH24_STENCIL8, window_width, window_height);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderer->msaa_frame_buffer_object);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, renderer->msaa_texture_color_buffer_multisampled, 0);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderer->msaa_render_buffer_object);
+
+	u32 msaa_fbo_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (msaa_fbo_status != GL_FRAMEBUFFER_COMPLETE) {
+		printf("ERROR::GL_FRAMEBUFFER:: Render Buffer Object is not complete. Value: %u. ", msaa_fbo_status);
+		Assert(0);
+	}
+
+	// --- Intermidiate fbo for post processing
+	glGenFramebuffers(1, &renderer->postprocessing_fbo);
+	glDeleteTextures(1, &renderer->screen_texture);
+
+	// create color attachment texture
+	glGenTextures(1, &renderer->screen_texture);
+	glBindTexture(GL_TEXTURE_2D, renderer->screen_texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window_width, window_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	// attach to intermidiate_fbo
+	glBindFramebuffer(GL_FRAMEBUFFER, renderer->postprocessing_fbo);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderer->screen_texture, 0);
+
+	u32 postprocessing_fbo = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (postprocessing_fbo != GL_FRAMEBUFFER_COMPLETE) {
+		printf("ERROR::GL_FRAMEBUFFER:: Render Buffer Object is not complete. Value: %u. ", postprocessing_fbo);
+		Assert(0);
+	}
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
 function void renderer_recompile_default_shader(Arena* arena, Renderer* renderer) {
 	Arena_Temp arena_temp = arena_temp_begin(arena);
 
