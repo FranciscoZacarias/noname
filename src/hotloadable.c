@@ -62,7 +62,19 @@ function String _file_get_next_line(OS_File file, u32* cursor) {
 	return result;
 }
 
-function f32 cast_string_to_f32(String str, f32* value) {
+function b32 cast_string_to_b32(String str, b32* value) {
+	b32 result = true;
+	if (strings_match(str, StringLiteral("false"))) {
+		*value = false;
+	} else if (strings_match(str, StringLiteral("true"))) {
+		*value = true;
+	} else {
+		result = false;
+	}
+	return result;
+}
+
+function b32 cast_string_to_f32(String str, f32* value) {
 	*value = 0.0f;
 	s32 decimal_position = -1;
 
@@ -108,7 +120,7 @@ function void hotload_variables(Arena* arena) {
 		line_count += 1;
 		String line = _file_get_next_line(file, &cursor);
 
-		if (line.str[0] == '#') {
+		if (line.size == 0 || line.str[0] == '#') {
 			continue;
 		}
 
@@ -123,18 +135,31 @@ function void hotload_variables(Arena* arena) {
 		if (strings_match(key, StringLiteral("camera_speed"))) {
 			f32 parsed_value;
 			if (!cast_string_to_f32(value, &parsed_value)) {
-				printf("Parsing error. Line: %lu. Value: '%s' :: %s.\n \n", line_count, value.str, VARIABLES_TWEAK_FILE);
+				printf("Error parsing f32. Line: %lu. Value: '%s' :: %s.\n \n", line_count, value.str, VARIABLES_TWEAK_FILE);
 				continue;
 			}
-			CameraSpeed = parsed_value;
-		} else
-		if (strings_match(key, StringLiteral("cube_border_thickness"))) {
+			HotloadableCameraSpeed = parsed_value;
+		} else if (strings_match(key, StringLiteral("cube_border_thickness"))) {
 			f32 parsed_value;
 			if (!cast_string_to_f32(value, &parsed_value)) {
-				printf("Parsing error. Line: %lu. Value: '%s' :: %s.\n \n", line_count, value.str, VARIABLES_TWEAK_FILE);
+				printf("Error parsing f32. Line: %lu. Value: '%s' :: %s.\n \n", line_count, value.str, VARIABLES_TWEAK_FILE);
 				continue;
 			}
-			CubeBorderThickness = parsed_value;
+			HotloadableCubeBorderThickness = parsed_value;
+		} else if (strings_match(key, StringLiteral("wireframe_mode"))) {
+			b32 parsed_value;
+			if (!cast_string_to_b32(value, &parsed_value)) {
+				printf("Error parsing b32. Line: %lu. Value: '%s' :: %s.\n \n", line_count, value.str, VARIABLES_TWEAK_FILE);
+				continue;
+			}
+			HotloadableEnableWireframeMode = parsed_value;
+		} else if (strings_match(key, StringLiteral("enable_culling"))) {
+			b32 parsed_value;
+			if (!cast_string_to_b32(value, &parsed_value)) {
+				printf("Error parsing b32. Line: %lu. Value: '%s' :: %s.\n \n", line_count, value.str, VARIABLES_TWEAK_FILE);
+				continue;
+			}
+			HotloadableEnableCulling = parsed_value;
 		}
 
 		if (cursor >= file.size) {

@@ -1,3 +1,11 @@
-# comment
+# Startup # NOTE(fz): These should only run once at the beginning
+# window_width: 800
+# window_height: 600
+
+# Editor
 camera_speed: 16
 cube_border_thickness: 0.02
+
+# Opengl
+wireframe_mode: true
+enable_culling: true

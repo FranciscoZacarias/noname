@@ -16,6 +16,7 @@ function void hotload_shader_programs(Arena* arena, Renderer* renderer);
 global u64 VariablesTweakFileLastModified = 0;
 
 function void hotload_variables(Arena* arena);
-function f32 cast_string_to_f32(String str, f32* value);
+function b32 cast_string_to_f32(String str, f32* value);
+function b32 cast_string_to_b32(String str, b32* value);
 
 #endif // HOTLOAD_VARIABLES_H

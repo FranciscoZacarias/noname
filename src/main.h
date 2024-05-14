@@ -1,7 +1,6 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#define ENABLE_CULL 1
 #define ENABLE_ASSERT 1
 
 //////////////////////////////////////////////

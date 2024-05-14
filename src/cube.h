@@ -13,7 +13,7 @@
   in any implementation logic for this Cube structure
 */
 
-global f32 CubeBorderThickness = 0.02f;
+global f32 HotloadableCubeBorderThickness = 0.02f;
 
 typedef enum Cube_Face {
   CubeFace_Back,

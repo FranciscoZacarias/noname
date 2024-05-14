@@ -429,13 +429,17 @@ void renderer_end_frame(Renderer* renderer, s32 window_width, s32 window_height)
 	glBindBuffer(GL_ARRAY_BUFFER, renderer->triangle_vbo);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, renderer->triangle_count * 3 * sizeof(Renderer_Vertex), renderer->triangle_data);
 
-#if ENABLE_CULL
-  glEnable(GL_CULL_FACE);
-  glCullFace(GL_FRONT);
-  glFrontFace(GL_CCW);
-#endif
+	if (HotloadableEnableCulling) {
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_FRONT);
+		glFrontFace(GL_CCW);
+	}
+	if (HotloadableEnableWireframeMode) {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	}
 	glDrawArrays(GL_TRIANGLES, 0, renderer->triangle_count * 3);
-  glDisable(GL_CULL_FACE);
+	glDisable(GL_CULL_FACE);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, renderer->msaa_frame_buffer_object);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderer->postprocessing_fbo);	
@@ -560,7 +564,7 @@ function void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_c
 }
 
 function void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, Vec4f32 border_color, Cube_Face highlight, Vec4f32 highlight_color) {
-  f32 scale = 1-CubeBorderThickness;
+  f32 scale = 1-HotloadableCubeBorderThickness;
 
 	// On XY Plane
   {

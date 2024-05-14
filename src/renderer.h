@@ -14,6 +14,9 @@
 #define SCREEN_VERTEX_SHADER    "D:\\work\\noname\\src\\shaders\\screen_vertex_shader.glsl"
 #define SCREEN_FRAGMENT_SHADER  "D:\\work\\noname\\src\\shaders\\screen_fragment_shader.glsl"
 
+global b32 HotloadableEnableWireframeMode = false;
+global b32 HotloadableEnableCulling = true;
+
 typedef struct Renderer_Font_Info {
 	u32 font_texture;
   stbtt_packedchar cdata[95];

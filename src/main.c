@@ -1,7 +1,7 @@
 #include "main.h"
 
-global s32 WindowWidth  = 1280;
-global s32 WindowHeight = 720;
+global s32 WindowWidth  = 400;// 1280;
+global s32 WindowHeight = 200;// 720;
 
 global f32 NearPlane = 0.1f;
 global f32 FarPlane = 100.0f;
