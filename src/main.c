@@ -1,8 +1,5 @@
 #include "main.h"
 
-global s32 WindowWidth  = 400;// 1280;
-global s32 WindowHeight = 200;// 720;
-
 global f32 NearPlane = 0.1f;
 global f32 FarPlane = 100.0f;
 
@@ -67,6 +64,13 @@ Arena GlobalArena;
 
 int main(void) {
 
+	GlobalArena = arena_init();
+	hotload_variables(&GlobalArena);
+	os_init();
+	if (!os_file_create(StringLiteral(VARIABLES_TWEAK_FILE))) {
+		Assert(0);
+	}
+
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -85,13 +89,6 @@ int main(void) {
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		printf("Failed to initialize GLAD");
-		Assert(0);
-	}
-
-	GlobalArena = arena_init();
-
-	os_init();
-	if (!os_file_create(StringLiteral(VARIABLES_TWEAK_FILE))) {
 		Assert(0);
 	}
 
@@ -226,7 +223,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 
 void process_input(GLFWwindow *window) {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-		printf("Program existed from pressing Escape!\n");
+		printf("Program exited from pressing Escape!\n");
 		glfwSetWindowShouldClose(window, 1);
 	}
 

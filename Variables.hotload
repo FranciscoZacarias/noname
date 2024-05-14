@@ -1,11 +1,12 @@
-# Startup # NOTE(fz): These should only run once at the beginning
-# window_width: 800
-# window_height: 600
+# Startup runs only once.
+\Startup
+window_width: 800
+window_height: 600
 
-# Editor
+\Editor
 camera_speed: 16
-cube_border_thickness: 0.02
+cube_border_thickness: 3
 
-# Opengl
-wireframe_mode: true
+\Opengl
+wireframe_mode: false
 enable_culling: true

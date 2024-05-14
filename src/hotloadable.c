@@ -98,6 +98,18 @@ function b32 cast_string_to_f32(String str, f32* value) {
 	return true;
 }
 
+function b32 cast_string_to_s32(String str, s32* value) {
+	*value = 0.0f;
+	for (u64 i = 0; i < str.size; i++) {
+		if (str.str[i] >= '0'  && str.str[i] <= '9') {
+			*value = *value * 10.0f + (str.str[i] - '0');
+		} else {
+			return false;
+		}
+	}
+	return true;
+}
+
 function void hotload_variables(Arena* arena) {
 	Arena_Temp arena_temp = arena_temp_begin(arena);
 
@@ -124,6 +136,29 @@ function void hotload_variables(Arena* arena) {
 			continue;
 		}
 
+		// Parse section
+		if (line.str[0] == '\\') {
+			line = string_pop_left(line);
+			if (strings_match(line, StringLiteral("Startup"))) {
+				if (StartupVariablesLoaded) {
+					// Exhaust lines until next header
+					while (true) {
+						line = _file_get_next_line(file, &cursor);
+						if (line.str[0] == '\\') {
+							break;
+						} else if (cursor >= file.size) {
+							printf("Variables.hotload loaded!\n");
+							break;
+						}
+					}
+				} else {
+					StartupVariablesLoaded = true;
+				}
+			}
+			continue;
+		}
+
+		// Parse variables
 		String_List list = string_split(arena_temp.arena, line, StringLiteral(":"));
 		String key   = list.first->value;
 		String value = string_pop_left(list.last->value);
@@ -145,7 +180,7 @@ function void hotload_variables(Arena* arena) {
 				printf("Error parsing f32. Line: %lu. Value: '%s' :: %s.\n \n", line_count, value.str, VARIABLES_TWEAK_FILE);
 				continue;
 			}
-			HotloadableCubeBorderThickness = parsed_value;
+			HotloadableCubeBorderThickness = parsed_value * 0.01;
 		} else if (strings_match(key, StringLiteral("wireframe_mode"))) {
 			b32 parsed_value;
 			if (!cast_string_to_b32(value, &parsed_value)) {
@@ -160,14 +195,29 @@ function void hotload_variables(Arena* arena) {
 				continue;
 			}
 			HotloadableEnableCulling = parsed_value;
+		} else if (strings_match(key, StringLiteral("window_width"))) {
+			s32 parsed_value;
+			if (!cast_string_to_s32(value, &parsed_value)) {
+				printf("Error parsing s32. Line: %lu. Value: '%s' :: %s.\n \n", line_count, value.str, VARIABLES_TWEAK_FILE);
+				continue;
+			}
+			WindowWidth = parsed_value;
+		} else if (strings_match(key, StringLiteral("window_height"))) {
+			s32 parsed_value;
+			if (!cast_string_to_s32(value, &parsed_value)) {
+				printf("Error parsing s32. Line: %lu. Value: '%s' :: %s.\n \n", line_count, value.str, VARIABLES_TWEAK_FILE);
+				continue;
+			}
+			WindowHeight = parsed_value;
+		} else {
+			printf("Variable not loaded: "); print(line);
 		}
 
 		if (cursor >= file.size) {
+			printf("Variables.hotload loaded!\n");
 			break;
 		}
 	}
-
-	printf("Variables.hotload loaded!\n");
 
 	arena_temp_end(&arena_temp);
 }

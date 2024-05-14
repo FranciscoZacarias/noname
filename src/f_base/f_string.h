@@ -22,6 +22,7 @@ typedef struct String_List {
 function String string_new(u64 size, u8* str);
 function String string_range(u8* first, u8* range);
 function String string_pop_left(String str);
+function String string_pop_right(String str);
 function b32 strings_match(String a, String b);
 
 function String_List string_split(Arena* arena, String str, String split_character);

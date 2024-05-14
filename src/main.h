@@ -13,6 +13,9 @@
 // FLayer
 #include "f_includes.h"
 
+global s32 WindowWidth  = 1280;
+global s32 WindowHeight = 720;
+
 // *.h
 #include "cube.h"
 #include "utils.h"

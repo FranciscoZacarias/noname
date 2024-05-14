@@ -13,6 +13,11 @@ function String string_pop_left(String str) {
   return result;
 }
 
+function String string_pop_right(String str) {
+  String result = string_new(str.size-1, str.str);
+  return result;
+}
+
 function b32 strings_match(String a, String b) {
   if (a.size != b.size) {
     return false;
