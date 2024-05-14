@@ -17,5 +17,6 @@ set linker_flags= user32.lib ^
 									"..\src\external\glfw-3.3.9\lib\glfw3.lib"
 
 if not exist build mkdir build
-	%compiler_and_entry% %cl_default_flags% %external_include% %linker_flags% /Fe"noname.exe"
+pushd build
+%compiler_and_entry% %cl_default_flags% %external_include% %linker_flags% /Fe"noname.exe"
 popd
