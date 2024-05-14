@@ -1,7 +1,0 @@
-.gitignore
-.vscode/
-build/*
-noname.rdbg
-todo.txt
-source.bat
-hotload.bat
