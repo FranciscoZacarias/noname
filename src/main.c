@@ -1,3 +1,25 @@
+/*
+noname:
+- Add texture support to the renderer
+- Put any kind of text to the screen
+- Add directional light
+- Add phong light
+- Add cube to the hovered cube face
+- Delete cubes
+- Add more robust input system
+- Add way to save and load levels from files
+- Add undo system for the add/remove cubes
+- Be able to select a cube on click
+- Add translation gizmos to selected cube (xyz arrows) and (xy, xz, yz planes), that actually transform the cube each arrow
+- Moving cubes from gizmos must snap to the grid
+- Add some sort of post processing shake when loading variables from hotload @feature-creep
+f_base:
+- Add thread context module
+- Add arena debug visualizer
+- Add windows window layer I.e. remove glfw dependency
+- Add a generic array ds
+*/
+
 #include "main.h"
 
 global f32 NearPlane = 0.1f;
