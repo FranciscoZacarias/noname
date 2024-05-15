@@ -31,14 +31,6 @@ function void  os_memory_release(void* memory, u64 size) {
   VirtualFree(memory, 0, MEM_RELEASE);
 }
 
-function void  os_thread_context_set(void* ctx) {
-	TlsSetValue(Win32ThreadContextIndex, ctx);
-}
-
-function void* os_thread_context_get() {
-	return TlsGetValue(Win32ThreadContextIndex);
-}
-
 function HANDLE _win32_get_file_handle(String file_name) {
   HANDLE file_handle = CreateFileA(file_name.str, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
   if (file_handle == INVALID_HANDLE_VALUE) {

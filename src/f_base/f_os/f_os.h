@@ -23,11 +23,6 @@ function void os_thread_wait_for_join(OS_Thread* other);
 function void os_thread_wait_for_join_all(OS_Thread** threads, u32 count);
 function void os_thread_wait_for_join_any(OS_Thread** threads, u32 count);
 
-// Thread local storage ---
-
-function void  os_thread_context_set(void* ctx);
-function void* os_thread_context_get();
-
 // File handling --- 
 
 typedef struct OS_File {

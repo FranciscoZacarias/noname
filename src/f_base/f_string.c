@@ -67,6 +67,54 @@ function void string_list_push(Arena* arena, String_List* list, String str) {
   list->total_size += node->value.size;
 }
 
+function b32 cast_string_to_b32(String str, b32* value) {
+	b32 result = true;
+	if (strings_match(str, StringLiteral("false"))) {
+		*value = false;
+	} else if (strings_match(str, StringLiteral("true"))) {
+		*value = true;
+	} else {
+		result = false;
+	}
+	return result;
+}
+
+function b32 cast_string_to_f32(String str, f32* value) {
+	*value = 0.0f;
+	s32 decimal_position = -1;
+
+	for (u64 i = 0; i < str.size; i++) {
+		if (str.str[i] >= '0'  && str.str[i] <= '9') {
+			*value = *value * 10.0f + (str.str[i] - '0');
+			if (decimal_position != -1) {
+				decimal_position += 1;
+			}
+		} else if (str.str[i] == '.') {
+			decimal_position = 0;
+		} else {
+			return false;
+		}
+	}
+
+	if (decimal_position != -1) {
+		*value = *value / (f32)pow(10, decimal_position);
+	}
+
+	return true;
+}
+
+function b32 cast_string_to_s32(String str, s32* value) {
+	*value = 0.0f;
+	for (u64 i = 0; i < str.size; i++) {
+		if (str.str[i] >= '0'  && str.str[i] <= '9') {
+			*value = *value * 10.0f + (str.str[i] - '0');
+		} else {
+			return false;
+		}
+	}
+	return true;
+}
+
 function void print(String string) {
   os_print_string(string);
 }
