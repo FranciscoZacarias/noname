@@ -32,7 +32,7 @@ global f32 LastY;
 typedef struct MouseState {
 	f32 screen_space_x;
 	f32 screen_space_y;
-
+    
 	f32 ndc_x;
 	f32 ndc_y;
 } MouseState;
@@ -85,19 +85,19 @@ function void mouse_callback(GLFWwindow* window, f64 xpos, f64 ypos);
 Arena GlobalArena;
 
 int main(void) {
-
+    
 	GlobalArena = arena_init();
 	hotload_variables(&GlobalArena);
 	os_init();
 	if (!os_file_create(StringLiteral(VARIABLES_TWEAK_FILE))) {
 		Assert(0);
 	}
-
+    
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
+    
 	GLFWwindow* window = glfwCreateWindow(WindowWidth, WindowHeight, APP_NAME, NULL, NULL);
 	if (window == NULL) {
 		printf("Failed to create GLFW window");
@@ -106,26 +106,26 @@ int main(void) {
 	}
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
+    
 	glfwSetCursorPosCallback(window, mouse_callback);
-
+    
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		printf("Failed to initialize GLAD");
 		Assert(0);
 	}
-
+    
 	// Camera and Mouse -----------
 	camera = camera_create();
 	LastX  = WindowWidth / 2.0f;
 	LastY  = WindowHeight / 2.0f;
-
+    
 	Mouse.screen_space_x = LastX;
 	Mouse.screen_space_y = LastY;
 	Mouse.ndc_x = LastX;
 	Mouse.ndc_y = LastY;
-
+    
 	ProgramRenderer = renderer_init(&GlobalArena, WindowWidth, WindowHeight);
-
+    
 	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A);
 	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A);
 	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f, -8.0f), PALLETE_COLOR_B);
@@ -141,12 +141,12 @@ int main(void) {
 	Cubes[TotalCubes++] = cube_new(vec3f32( 8.0f,  8.0f,  8.0f), PALLETE_COLOR_C);
 	Cubes[TotalCubes++] = cube_new(vec3f32(-8.0f, -8.0f, -8.0f), PALLETE_COLOR_A);
 	Cubes[TotalCubes++] = cube_new(vec3f32( 8.0f, -8.0f, -8.0f), PALLETE_COLOR_B);
-
+    
 	while(!glfwWindowShouldClose(window)) {
 		CurrentTime = glfwGetTime();
 		DeltaTime = CurrentTime - LastFrame;
 		LastFrame = CurrentTime;
-
+        
 		f64 time_diff = CurrentTime - PreviousTime;
 		FrameCounter++;
 		if (time_diff >= (1.0f/30.0f)) {
@@ -156,26 +156,26 @@ int main(void) {
 			sprintf(window_title, "noname - %u FPS / %.2f ms", fps, ms);
 			glfwSetWindowTitle(window, window_title);
 		}
-
+        
 		process_input(window);
-
+        
 		local_persist f64 last_hotload_time = -1;
 		if (CurrentTime - last_hotload_time > 1) {
 			hotload_variables(&GlobalArena);
 			hotload_shader_programs(&GlobalArena, &ProgramRenderer);
 			last_hotload_time = CurrentTime;
 		}
-
+        
 		// View
 		Mat4f32 view = mat4f32(1.0f);
 		Mat4f32 look_at = look_at_mat4f32(camera.position, add_vec3f32(camera.position, camera.front), camera.up);
 		view = mul_mat4f32(look_at, view);
-
+        
 		// Projection 
 		Mat4f32 projection = mat4f32(1.0f);
 		Mat4f32 perspective = perspective_mat4f32(Radians(45), WindowWidth, WindowHeight, NearPlane, FarPlane);
 		projection = mul_mat4f32(perspective, projection);
-
+        
 		// Raycast
 		if (ActiveCameraMode == CameraMode_Select) {
 			Vec3f32 unproject_mouse = unproject_vec3f32(vec3f32(Mouse.ndc_x, Mouse.ndc_y, 1.0f), projection, view);
@@ -183,27 +183,27 @@ int main(void) {
 		} else {
 			Raycast = vec3f32(F32_MAX, F32_MAX, F32_MAX);
 		}
-
+        
 		Mat4f32 r = rotate_axis_mat4f32(vec3f32(-1.0f, 1.0f, 1.0f), glfwGetTime());
 		Mat4f32 t = translate_mat4f32(3.0f, 3.0f, 3.0f);
 		Mat4f32 trans = mul_mat4f32(t, r);
 		trans = mul_mat4f32(r, trans);
 		Cubes[0].transform = trans;
-
+        
 		r = rotate_axis_mat4f32(vec3f32(1.0f, -1.0f, 1.0f), glfwGetTime());
 		t = translate_mat4f32(-3.0f, 3.0f, 3.0f);
 		trans = mul_mat4f32(t, r);
 		Cubes[1].transform = trans;
-
+        
 		renderer_begin_frame(&ProgramRenderer, PALLETE_COLOR_D);
 		{
 			renderer_set_uniform_mat4fv(ProgramRenderer.shader_program, "model", mat4f32(1.0f));
 			renderer_set_uniform_mat4fv(ProgramRenderer.shader_program, "view", view);
 			renderer_set_uniform_mat4fv(ProgramRenderer.shader_program, "projection", projection);
-
+            
 			renderer_push_arrow(&ProgramRenderer, vec3f32(0.0f, 0.0f, 0.0f), scale_vec3f32(vec3f32(Cubes[0].transform.m12, Cubes[0].transform.m13, Cubes[0].transform.m14), 0.5), vec4f32(0.0f, 1.0f, 1.0f), 0.5f);
 			renderer_push_arrow(&ProgramRenderer, vec3f32(0.0f, 0.0f, 0.0f), scale_vec3f32(vec3f32(Cubes[1].transform.m12, Cubes[1].transform.m13, Cubes[1].transform.m14), 0.5), vec4f32(1.0f, 1.0f, 0.0f), 0.5f);
-
+            
 			// Axis
 			{ 
 				f32 size = 20.0f;
@@ -211,7 +211,7 @@ int main(void) {
 				renderer_push_arrow(&ProgramRenderer, vec3f32(  0.0f, -size,   0.0f), vec3f32( 0.0f, size,  0.0f), COLOR_GREEN, 0.5f);
 				renderer_push_arrow(&ProgramRenderer, vec3f32(  0.0f,   0.0f, -size), vec3f32( 0.0f,  0.0f, size), COLOR_BLUE, 0.5f);
 			}
-
+            
 			// Render cubes and highlight if cursor on top
 			for(u32 i = 0; i < TotalCubes; i++) {
 				CubeUnderCursor cuc;
@@ -223,14 +223,14 @@ int main(void) {
 			}
 		}
 		renderer_end_frame(&ProgramRenderer, WindowWidth, WindowHeight);
-
+        
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
-
+    
 	renderer_free(&ProgramRenderer);
 	arena_free(&GlobalArena);
-
+    
 	glfwTerminate();
 	return 0;
 }
@@ -239,7 +239,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
 	WindowWidth  = width;
 	WindowHeight = height;
-
+    
 	renderer_generate_msaa_and_intermidiate_buffers(&ProgramRenderer, WindowWidth, WindowHeight);
 }
 
@@ -248,13 +248,13 @@ void process_input(GLFWwindow *window) {
 		printf("Program exited from pressing Escape!\n");
 		glfwSetWindowShouldClose(window, 1);
 	}
-
+    
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
 		LeftMouseButton = 1;
 	} else {
 		LeftMouseButton = 0;
 	}
-
+    
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
 		if (ActiveCameraMode == CameraMode_Select) {
 			ActiveCameraMode = CameraMode_Fly;
@@ -263,7 +263,7 @@ void process_input(GLFWwindow *window) {
 			glfwSetCursorPos(window, WindowWidth/2, WindowHeight/2);
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		}
-
+        
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
 			camera_keyboard_callback(&camera, CameraMovement_Front, DeltaTime);
 		}
@@ -290,7 +290,7 @@ void process_input(GLFWwindow *window) {
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 			glfwSetCursorPos(window, Mouse.screen_space_x, Mouse.screen_space_y);
 		}
-
+        
 		if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
 			if (G_KeyState == 0 && G_KeyPreviousState == 1) {
 				G_KeyPreviousState = 0;
@@ -302,7 +302,7 @@ void process_input(GLFWwindow *window) {
 			G_KeyPreviousState = 1;
 			G_KeyState = 0;
 		}
-
+        
 		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
 			if (F_KeyState == 0 && F_KeyPreviousState == 1) {
 				F_KeyPreviousState = 0;
@@ -314,7 +314,7 @@ void process_input(GLFWwindow *window) {
 			F_KeyPreviousState = 1;
 			F_KeyState = 0;
 		}
-
+        
 		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
 			if (R_KeyState == 0 && R_KeyPreviousState == 1) {
 				R_KeyPreviousState = 0;
@@ -331,29 +331,29 @@ void process_input(GLFWwindow *window) {
 
 void mouse_callback(GLFWwindow* window, f64 xposIn, f64 yposIn) {
 	local_persist b32 FirstMouse = 1;
-
+    
 	if (ActiveCameraMode == CameraMode_Fly) {
 		f32 xpos = (f32)xposIn;
 		f32 ypos = (f32)yposIn;
-
+        
 		if (FirstMouse == 1) {
 			LastX = xpos;
 			LastY = ypos;
 			FirstMouse = 0;
 		}
-
+        
 		f32 xoffset = xpos - LastX;
 		f32 yoffset = LastY - ypos;
 		LastX = xpos;
 		LastY = ypos;
-
+        
 		camera_mouse_callback(&camera, xoffset, yoffset);
 	} else {
-			Mouse.screen_space_x = xposIn;
-			Mouse.screen_space_y = yposIn;
-
-			Mouse.ndc_x = (2.0f * xposIn) / WindowWidth - 1.0f;
-			Mouse.ndc_y = 1.0f - (2.0f * yposIn) / WindowHeight;
+        Mouse.screen_space_x = xposIn;
+        Mouse.screen_space_y = yposIn;
+        
+        Mouse.ndc_x = (2.0f * xposIn) / WindowWidth - 1.0f;
+        Mouse.ndc_y = 1.0f - (2.0f * yposIn) / WindowHeight;
 	}
 }
 
@@ -381,6 +381,6 @@ function b32 find_cube_under_cursor(CubeUnderCursor* result) {
 			}
 		}
 	}
-
+    
 	return match;
 }
