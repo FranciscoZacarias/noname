@@ -28,6 +28,10 @@ function b32 strings_match(String a, String b);
 function String_List string_split(Arena* arena, String str, String split_character);
 function void string_list_push(Arena* arena, String_List* list, String str);
 
+function b32 cast_string_to_f32(String str, f32* value);
+function b32 cast_string_to_s32(String str, s32* value);
+function b32 cast_string_to_b32(String str, b32* value);
+
 function void print(String string);
 
 #endif // F_STRING_H
