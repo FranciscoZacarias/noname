@@ -9,13 +9,13 @@ global u64 DefaultFragmentShaderLastModified = 0;
 global u64 ScreenVertexShaderLastModified    = 0;
 global u64 ScreenFragmentShaderLastModified  = 0;
 
-internal void hotload_shader_programs(Arena* arena, Renderer* renderer);
+internal void hotload_shader_programs(Renderer* renderer);
 
 // Variables ---
 #define VARIABLES_TWEAK_FILE "D:\\work\\noname\\Variables.hotload"
 global u64 VariablesTweakFileLastModified = 0;
 global b32 StartupVariablesLoaded = 0;
 
-internal void hotload_variables(Arena* arena);
+internal void hotload_variables();
 
 #endif // HOTLOAD_VARIABLES_H

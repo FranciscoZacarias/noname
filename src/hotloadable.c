@@ -1,4 +1,4 @@
-internal void hotload_shader_programs(Arena* arena, Renderer* renderer) {
+internal void hotload_shader_programs(Renderer* renderer) {
 	if (FirstEntry) {
 		DefaultVertexShaderLastModified   = os_file_get_last_modified_time(StringLiteral(DEFAULT_VERTEX_SHADER));
 		DefaultFragmentShaderLastModified = os_file_get_last_modified_time(StringLiteral(DEFAULT_FRAGMENT_SHADER));
@@ -8,7 +8,7 @@ internal void hotload_shader_programs(Arena* arena, Renderer* renderer) {
 		return;
 	}
 
-	Arena_Temp arena_temp = arena_temp_begin(arena);
+	Arena_Temp scratch = scratch_begin(0, 0);
 
 	// Default shader 
 	{
@@ -18,7 +18,7 @@ internal void hotload_shader_programs(Arena* arena, Renderer* renderer) {
 		if (DefaultVertexShaderLastModified   != default_vertex_shader_last_moditifed || 
 				DefaultFragmentShaderLastModified != default_fragment_shader_last_modified) {
 
-			renderer_recompile_default_shader(arena, renderer);
+			renderer_recompile_default_shader(scratch.arena, renderer);
 
 			DefaultVertexShaderLastModified   = default_vertex_shader_last_moditifed;
 			DefaultFragmentShaderLastModified = default_fragment_shader_last_modified;
@@ -33,14 +33,14 @@ internal void hotload_shader_programs(Arena* arena, Renderer* renderer) {
 		if (ScreenVertexShaderLastModified   != screen_vertex_shader_last_moditifed || 
 				ScreenFragmentShaderLastModified != screen_fragment_shader_last_modified) {
 
-			renderer_recompile_screen_shader(arena, renderer);
+			renderer_recompile_screen_shader(scratch.arena, renderer);
 
 			ScreenVertexShaderLastModified   = screen_vertex_shader_last_moditifed;
 			ScreenFragmentShaderLastModified = screen_fragment_shader_last_modified;
 		}
 	}
 
-	arena_temp_end(&arena_temp);
+	scratch_end(&scratch);
 }
 
 // Assumes OS_File is allocated
@@ -62,7 +62,7 @@ internal String _file_get_next_line(OS_File file, u32* cursor) {
 	return result;
 }
 
-internal void hotload_variables(Arena* arena) {
+internal void hotload_variables() {
 	Arena_Temp scratch = scratch_begin(0, 0);
 
 	u64 variables_tweak_last_modified = os_file_get_last_modified_time(StringLiteral(VARIABLES_TWEAK_FILE));

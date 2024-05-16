@@ -1,12 +1,12 @@
 
-internal Renderer renderer_init(Arena* arena, s32 window_width, s32 window_height) {
-	Arena_Temp arena_temp = arena_temp_begin(arena);
-    Renderer result = { 0 };
+internal Renderer renderer_init(s32 window_width, s32 window_height) {
+	Arena_Temp scratch = scratch_begin(0, 0);
+	Renderer result = { 0 };
     
-    // --- Compile shader
-    u32 vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+	// --- Compile shader
+	u32 vertex_shader = glCreateShader(GL_VERTEX_SHADER);
 	{
-		OS_File vertex_shader_source = os_file_load_entire_file(arena_temp.arena, StringLiteral(DEFAULT_VERTEX_SHADER));
+		OS_File vertex_shader_source = os_file_load_entire_file(scratch.arena, StringLiteral(DEFAULT_VERTEX_SHADER));
 		glShaderSource(vertex_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
 		glCompileShader(vertex_shader);
 		{
@@ -23,7 +23,7 @@ internal Renderer renderer_init(Arena* arena, s32 window_width, s32 window_heigh
     
 	u32 fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
 	{
-		OS_File fragment_shader_source = os_file_load_entire_file(arena_temp.arena, StringLiteral(DEFAULT_FRAGMENT_SHADER));
+		OS_File fragment_shader_source = os_file_load_entire_file(scratch.arena, StringLiteral(DEFAULT_FRAGMENT_SHADER));
 		glShaderSource(fragment_shader, 1, &fragment_shader_source.data, &(GLint)fragment_shader_source.size);
 		glCompileShader(fragment_shader);
 		{
@@ -127,7 +127,7 @@ internal Renderer renderer_init(Arena* arena, s32 window_width, s32 window_heigh
 	// --- Screen shader
     u32 screen_vertex_shader = glCreateShader(GL_VERTEX_SHADER);
 	{
-		OS_File vertex_shader_source = os_file_load_entire_file(arena_temp.arena, StringLiteral(SCREEN_VERTEX_SHADER));
+		OS_File vertex_shader_source = os_file_load_entire_file(scratch.arena, StringLiteral(SCREEN_VERTEX_SHADER));
 		glShaderSource(screen_vertex_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
 		glCompileShader(screen_vertex_shader);
 		{
@@ -144,7 +144,7 @@ internal Renderer renderer_init(Arena* arena, s32 window_width, s32 window_heigh
     
 	u32 screen_fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
 	{
-		OS_File vertex_shader_source = os_file_load_entire_file(arena_temp.arena, StringLiteral(SCREEN_FRAGMENT_SHADER));
+		OS_File vertex_shader_source = os_file_load_entire_file(scratch.arena, StringLiteral(SCREEN_FRAGMENT_SHADER));
 		glShaderSource(screen_fragment_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
 		glCompileShader(screen_fragment_shader);
 		{
@@ -199,7 +199,7 @@ internal Renderer renderer_init(Arena* arena, s32 window_width, s32 window_heigh
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
     
-	arena_temp_end(&arena_temp);
+	scratch_end(&scratch);
     
 	return result;
 }
@@ -258,11 +258,11 @@ internal void renderer_generate_msaa_and_intermidiate_buffers(Renderer* renderer
 }
 
 internal void renderer_recompile_default_shader(Arena* arena, Renderer* renderer) {
-	Arena_Temp arena_temp = arena_temp_begin(arena);
+	Arena_Temp scratch = scratch_begin(0, 0);
     
-    u32 vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+	u32 vertex_shader = glCreateShader(GL_VERTEX_SHADER);
 	{
-		OS_File vertex_shader_source = os_file_load_entire_file(arena_temp.arena, StringLiteral(DEFAULT_VERTEX_SHADER));
+		OS_File vertex_shader_source = os_file_load_entire_file(scratch.arena, StringLiteral(DEFAULT_VERTEX_SHADER));
 		glShaderSource(vertex_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
 		glCompileShader(vertex_shader);
 		{
@@ -279,7 +279,7 @@ internal void renderer_recompile_default_shader(Arena* arena, Renderer* renderer
     
 	u32 fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
 	{
-		OS_File fragment_shader_source = os_file_load_entire_file(arena_temp.arena, StringLiteral(DEFAULT_FRAGMENT_SHADER));
+		OS_File fragment_shader_source = os_file_load_entire_file(scratch.arena, StringLiteral(DEFAULT_FRAGMENT_SHADER));
 		glShaderSource(fragment_shader, 1, &fragment_shader_source.data, &(GLint)fragment_shader_source.size);
 		glCompileShader(fragment_shader);
 		{
@@ -327,15 +327,15 @@ internal void renderer_recompile_default_shader(Arena* arena, Renderer* renderer
     
 	printf("Default shader re-compiled!\n");
     
-	arena_temp_end(&arena_temp);
+	scratch_end(&scratch);
 }
 
 internal void renderer_recompile_screen_shader(Arena* arena, Renderer* renderer) {
-	Arena_Temp arena_temp = arena_temp_begin(arena);
+	Arena_Temp scratch = scratch_begin(0, 0);
     
-    u32 vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+	u32 vertex_shader = glCreateShader(GL_VERTEX_SHADER);
 	{
-		OS_File vertex_shader_source = os_file_load_entire_file(arena_temp.arena, StringLiteral(SCREEN_VERTEX_SHADER));
+		OS_File vertex_shader_source = os_file_load_entire_file(scratch.arena, StringLiteral(SCREEN_VERTEX_SHADER));
 		glShaderSource(vertex_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
 		glCompileShader(vertex_shader);
 		{
@@ -352,7 +352,7 @@ internal void renderer_recompile_screen_shader(Arena* arena, Renderer* renderer)
     
 	u32 fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
 	{
-		OS_File vertex_shader_source = os_file_load_entire_file(arena_temp.arena, StringLiteral(SCREEN_FRAGMENT_SHADER));
+		OS_File vertex_shader_source = os_file_load_entire_file(scratch.arena, StringLiteral(SCREEN_FRAGMENT_SHADER));
 		glShaderSource(fragment_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
 		glCompileShader(fragment_shader);
 		{
@@ -400,7 +400,7 @@ internal void renderer_recompile_screen_shader(Arena* arena, Renderer* renderer)
     
 	printf("Screen shader re-compiled!\n");
     
-	arena_temp_end(&arena_temp);
+	scratch_end(&scratch);
 }
 
 internal void renderer_free(Renderer* renderer) {

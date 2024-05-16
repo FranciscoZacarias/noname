@@ -82,7 +82,6 @@ internal void process_input(GLFWwindow *window);
 internal void mouse_callback(GLFWwindow* window, f64 xpos, f64 ypos);
 
 // TODO(Fz): these could just be generalized into a generic arena based array 
-global Arena* GlobalArena;
 global Arena* CubesArena;
 global Cube* Cubes;
 global u32 TotalCubes = 0;
@@ -94,11 +93,10 @@ int main(void) {
 	Thread_Context tctx;
 	thread_context_init_and_equip(&tctx);
     
-	GlobalArena = arena_init();
 	CubesArena  = arena_init();
 	
 	Cubes = (Cube*)arena_push(CubesArena, 1024);
-	hotload_variables(GlobalArena);
+	hotload_variables();
     
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -131,7 +129,7 @@ int main(void) {
 	Mouse.ndc_x = LastX;
 	Mouse.ndc_y = LastY;
     
-	ProgramRenderer = renderer_init(GlobalArena, WindowWidth, WindowHeight);
+	ProgramRenderer = renderer_init(WindowWidth, WindowHeight);
     
 	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A);
 	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A);
@@ -168,8 +166,8 @@ int main(void) {
         
 		local_persist f64 last_hotload_time = -1;
 		if (CurrentTime - last_hotload_time > 1) {
-			hotload_variables(GlobalArena);
-			hotload_shader_programs(GlobalArena, &ProgramRenderer);
+			hotload_variables();
+			hotload_shader_programs(&ProgramRenderer);
 			last_hotload_time = CurrentTime;
 		}
         
@@ -234,10 +232,7 @@ int main(void) {
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
-    
-	renderer_free(&ProgramRenderer);
-	arena_free(GlobalArena);
-    
+
 	glfwTerminate();
 	return 0;
 }

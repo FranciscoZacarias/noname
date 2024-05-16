@@ -64,7 +64,7 @@ typedef struct Renderer {
   u32 triangle_count;
 } Renderer;
 
-internal Renderer renderer_init(Arena* arena, s32 window_width, s32 window_height);
+internal Renderer renderer_init(s32 window_width, s32 window_height);
 internal void renderer_free(Renderer* renderer);
 
 internal void renderer_generate_msaa_and_intermidiate_buffers(Renderer* renderer, s32 window_width, s32 window_height);
