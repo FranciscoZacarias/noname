@@ -23,12 +23,16 @@ internal Arena* arena_init();
 internal Arena* arena_init_sized(u64 reserve, u64 commit);
 
 internal void* arena_push(Arena* arena, u64 size);
+internal void* arena_push_no_zero(Arena* arena, u64 size);
 internal void  arena_pop(Arena* arena, u64 size);
 internal void  arena_pop_to(Arena* arena, u64 pos);
 internal void  arena_clear(Arena* arena);
 internal void  arena_free(Arena* arena);
 
 internal void arena_print(Arena *arena);
+
+#define PushArray(arena, type, count)       (type *)arena_push((arena), sizeof(type)*(count))
+#define PushArrayNoZero(arena, type, count) (type *)arena_push_no_zero((arena), sizeof(type)*(count))
 
 typedef struct Arena_Temp {
   Arena* arena;

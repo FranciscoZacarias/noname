@@ -36,6 +36,12 @@ internal Arena* arena_init_sized(u64 reserve, u64 commit) {
 }
 
 internal void* arena_push(Arena* arena, u64 size) {
+  void* result = arena_push_no_zero(arena, size);
+  MemoryZero(result, size);
+  return result;
+}
+
+internal void* arena_push_no_zero(Arena* arena, u64 size) {
   u64 position_memory = AlignPow2(arena->position, arena->align);
   u64 new_position    = position_memory + size;
 

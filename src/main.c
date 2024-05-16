@@ -12,13 +12,12 @@ noname:
 [] - Be able to select a cube on click
 [] - Add translation gizmos to selected cube (xyz arrows) and (xy, xz, yz planes), that actually transform the cube each arrow
 [] - Moving cubes from gizmos must snap to the grid
-[] - Add some sort of post processing shake when loading variables from hotload @feature-creep
+[] - Add some sort of post processing shake when loading variables from hotload, just to know it was loaded and feature creep
 [] - MAX_TRIANGLES should be in an arena
-[] - Replace GlobalArena with a either more specific arenas or just thread context scratch arenas
+[x] - Replace GlobalArena with a either more specific arenas or just thread context scratch arenas
 f_base:
 [x] - Add thread context module
 [] - Add windows window layer I.e. remove glfw dependency
-[] - Add a generic array ds
 */
 
 #include "main.h"
@@ -81,7 +80,6 @@ internal void framebuffer_size_callback(GLFWwindow* window, int width, int heigh
 internal void process_input(GLFWwindow *window);
 internal void mouse_callback(GLFWwindow* window, f64 xpos, f64 ypos);
 
-// TODO(Fz): these could just be generalized into a generic arena based array 
 global Arena* CubesArena;
 global Cube* Cubes;
 global u32 TotalCubes = 0;
@@ -95,7 +93,7 @@ int main(void) {
     
 	CubesArena  = arena_init();
 	
-	Cubes = (Cube*)arena_push(CubesArena, 1024);
+	Cubes = (Cube*)PushArray(CubesArena, 1024);
 	hotload_variables();
     
 	glfwInit();
