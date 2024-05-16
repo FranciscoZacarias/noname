@@ -10,14 +10,17 @@
 #endif
 
 typedef struct Arena {
-  u64 capacity;
-  u64 commit_position;
-  u64 alloc_position;
-  u8* memory;
+  u64 reserved;      // Reserved memory
+  u64 commited;      // Commited memory
+  u64 commit_size;   // Size for each commit on this arena
+  u64 position;      // Current position of the arena
+  u64 align;         // Arena's memory alignment
 } Arena;
 
-internal Arena arena_init();
-internal Arena arena_init_sized(u64 size);
+#define ARENA_HEADER_SIZE AlignPow2(sizeof(Arena), os_memory_get_page_size())
+
+internal Arena* arena_init();
+internal Arena* arena_init_sized(u64 reserve, u64 commit);
 
 internal void* arena_push(Arena* arena, u64 size);
 internal void  arena_pop(Arena* arena, u64 size);
@@ -25,8 +28,7 @@ internal void  arena_pop_to(Arena* arena, u64 pos);
 internal void  arena_clear(Arena* arena);
 internal void  arena_free(Arena* arena);
 
-#define push_array_no_zero(a,T,c) (T*)arena_push((a), sizeof(T)*(c))
-#define push_array(a,T,c) (T*)MemoryZero(push_array_no_zero(a,T,c), sizeof(T)*(c))
+internal void arena_print(Arena *arena);
 
 typedef struct Arena_Temp {
   Arena* arena;

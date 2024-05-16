@@ -10,6 +10,8 @@ internal b32   os_memory_commit(void* memory, u64 size);
 internal void  os_memory_decommit(void* memory, u64 size);
 internal void  os_memory_release(void* memory, u64 size);
 
+internal u64 os_memory_get_page_size();
+
 // Threading ---
 
 typedef u64 thread_func(void* context); 

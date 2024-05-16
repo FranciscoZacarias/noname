@@ -31,6 +31,12 @@ internal void  os_memory_release(void* memory, u64 size) {
   VirtualFree(memory, 0, MEM_RELEASE);
 }
 
+internal u64 os_memory_get_page_size() {
+  SYSTEM_INFO sysinfo = {0};
+  GetSystemInfo(&sysinfo);
+  return(sysinfo.dwPageSize);
+}
+
 internal HANDLE _win32_get_file_handle(String file_name) {
   HANDLE file_handle = CreateFileA(file_name.str, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
   if (file_handle == INVALID_HANDLE_VALUE) {

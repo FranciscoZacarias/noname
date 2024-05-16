@@ -13,6 +13,8 @@ noname:
 - Add translation gizmos to selected cube (xyz arrows) and (xy, xz, yz planes), that actually transform the cube each arrow
 - Moving cubes from gizmos must snap to the grid
 - Add some sort of post processing shake when loading variables from hotload @feature-creep
+- MAX_TRIANGLES should be in an arena
+- Replace GlobalArena with a either more specific arenas or just thread context scratch arenas
 f_base:
 - Add thread context module
 - Add windows window layer I.e. remove glfw dependency
@@ -73,20 +75,24 @@ typedef struct CubeUnderCursor {
 } CubeUnderCursor;
 
 Renderer ProgramRenderer;
-global Cube Cubes[1024];
-global u32 TotalCubes = 0;
 
 internal b32 find_cube_under_cursor(CubeUnderCursor* result);
 internal void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 internal void process_input(GLFWwindow *window);
 internal void mouse_callback(GLFWwindow* window, f64 xpos, f64 ypos);
 
-Arena GlobalArena;
+global Arena* GlobalArena;
+
+global Arena* CubesArena;
+global Cube* Cubes;
+global u32 TotalCubes = 0;
 
 int main(void) {
     
 	GlobalArena = arena_init();
-	hotload_variables(&GlobalArena);
+	CubesArena  = arena_init();
+	Cubes = (Cube*)arena_push(CubesArena, 1024);
+	hotload_variables(GlobalArena);
 	os_init();
 	if (!os_file_create(StringLiteral(VARIABLES_TWEAK_FILE))) {
 		Assert(0);
@@ -123,7 +129,7 @@ int main(void) {
 	Mouse.ndc_x = LastX;
 	Mouse.ndc_y = LastY;
     
-	ProgramRenderer = renderer_init(&GlobalArena, WindowWidth, WindowHeight);
+	ProgramRenderer = renderer_init(GlobalArena, WindowWidth, WindowHeight);
     
 	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A);
 	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A);
@@ -160,8 +166,8 @@ int main(void) {
         
 		local_persist f64 last_hotload_time = -1;
 		if (CurrentTime - last_hotload_time > 1) {
-			hotload_variables(&GlobalArena);
-			hotload_shader_programs(&GlobalArena, &ProgramRenderer);
+			hotload_variables(GlobalArena);
+			hotload_shader_programs(GlobalArena, &ProgramRenderer);
 			last_hotload_time = CurrentTime;
 		}
         
@@ -222,13 +228,23 @@ int main(void) {
 			}
 		}
 		renderer_end_frame(&ProgramRenderer, WindowWidth, WindowHeight);
-        
+		
+
+		local_persist prev = 0;
+		if (glfwGetTime() - prev > 1) {
+			Cubes[TotalCubes++] = cube_new(vec3f32( sin(prev)*6,  cos(prev)*4,  sin(prev)*8), PALLETE_COLOR_A);
+			arena_print(CubesArena);
+			printf("Total cubes: %d\nCube size: %llu\nTotalCubesSize: %llu\n", TotalCubes, sizeof(Cube), TotalCubes*sizeof(Cube));
+			printf("Total Triangles: %d\n", ProgramRenderer.triangle_count);
+			prev = glfwGetTime();
+		}
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
     
 	renderer_free(&ProgramRenderer);
-	arena_free(&GlobalArena);
+	arena_free(GlobalArena);
     
 	glfwTerminate();
 	return 0;
