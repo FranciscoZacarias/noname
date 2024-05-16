@@ -3,7 +3,7 @@ internal Arena arena_init() {
   Arena arena;
   MemoryZeroStruct(&arena);
 
-  arena.capacity = ARENA_MAX_MEMORY;
+  arena.capacity = ARENA_RESERVE_SIZE;
   arena.memory   = os_memory_reserve(arena.capacity);
   arena.commit_position = 0;
   arena.alloc_position  = 0;
@@ -25,7 +25,7 @@ internal Arena arena_init_sized(u64 size) {
 
 internal void* arena_push(Arena* arena, u64 size) {
   void* memory = NULL;
-  size = AlignUpPow2(size, DEFAULT_ALIGNMENT);
+  size = AlignPow2(size, DEFAULT_ALIGNMENT);
 
   if (arena->alloc_position + size > arena->commit_position) {
     u64 commit_size = size;

@@ -2,8 +2,12 @@
 #ifndef F_MEMORY_H
 #define F_MEMORY_H
 
-#define ARENA_MAX_MEMORY Gigabytes(1)
-#define ARENA_COMMIT_SIZE Kilobytes(8)
+#ifndef ARENA_RESERVE_SIZE
+# define ARENA_RESERVE_SIZE Megabytes(64)
+#endif
+#ifndef ARENA_COMMIT_SIZE
+# define ARENA_COMMIT_SIZE Kilobytes(64)
+#endif
 
 typedef struct Arena {
   u64 capacity;

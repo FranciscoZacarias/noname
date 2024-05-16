@@ -191,14 +191,14 @@
 # error Unknown trap intrinsic for this compiler.
 #endif
 
-#define Stmnt(S) do{ S }while(0)
+#define Statement(S) do{ S }while(0)
 
 #if !defined(AssertBreak)
 # define AssertBreak() (*(volatile int*)0 = 0)
 #endif
 
 #if ENABLE_ASSERT
-# define Assert(c) Stmnt( if (!(c)){ AssertBreak(); } )
+# define Assert(c) Statement( if (!(c)){ AssertBreak(); } )
 #else
 # define Assert(c)
 #endif
@@ -229,8 +229,10 @@
 #define Trillion(n) ((n)*1000000000000llu)
 
 #define DEFAULT_ALIGNMENT sizeof(void*)
-#define AlignUpPow2(x,p)  (((x) + (p) - 1)&~((p) - 1))
-#define AlignDownPow2(x,p) ((x)&~((p) - 1))
+#define AlignPow2(x,b)     (((x) + (b) - 1)&(~((b) - 1)))
+#define AlignDownPow2(x,b) ((x)&(~((b) - 1)))
+#define IsPow2(x)          ((x)!=0 && ((x)&((x)-1))==0)
+#define IsPow2OrZero(x)    ((((x) - 1)&(x)) == 0)
 
 #define MemoryCopy(d,s,z)     memmove((d), (s), (z))
 #define MemoryCopyStruct(d,s) MemoryCopy((d),(s), Min(sizeof(*(d)) , sizeof(*(s))))
