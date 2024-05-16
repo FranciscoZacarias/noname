@@ -1,24 +1,24 @@
 /*
 noname:
-- Add texture support to the renderer
-- Put any kind of text to the screen
-- Add directional light
-- Add phong light
-- Add cube to the hovered cube face
-- Delete cubes
-- Add more robust input system
-- Add way to save and load levels from files
-- Add undo system for the add/remove cubes
-- Be able to select a cube on click
-- Add translation gizmos to selected cube (xyz arrows) and (xy, xz, yz planes), that actually transform the cube each arrow
-- Moving cubes from gizmos must snap to the grid
-- Add some sort of post processing shake when loading variables from hotload @feature-creep
-- MAX_TRIANGLES should be in an arena
-- Replace GlobalArena with a either more specific arenas or just thread context scratch arenas
+[] - Add texture support to the renderer
+[] - Put any kind of text to the screen
+[] - Add directional light
+[] - Add phong light
+[] - Add cube to the hovered cube face
+[] - Delete cubes
+[] - Add more robust input system
+[] - Add way to save and load levels from files
+[] - Add undo system for the add/remove cubes
+[] - Be able to select a cube on click
+[] - Add translation gizmos to selected cube (xyz arrows) and (xy, xz, yz planes), that actually transform the cube each arrow
+[] - Moving cubes from gizmos must snap to the grid
+[] - Add some sort of post processing shake when loading variables from hotload @feature-creep
+[] - MAX_TRIANGLES should be in an arena
+[] - Replace GlobalArena with a either more specific arenas or just thread context scratch arenas
 f_base:
-- Add thread context module
-- Add windows window layer I.e. remove glfw dependency
-- Add a generic array ds
+[x] - Add thread context module
+[] - Add windows window layer I.e. remove glfw dependency
+[] - Add a generic array ds
 */
 
 #include "main.h"
@@ -81,22 +81,24 @@ internal void framebuffer_size_callback(GLFWwindow* window, int width, int heigh
 internal void process_input(GLFWwindow *window);
 internal void mouse_callback(GLFWwindow* window, f64 xpos, f64 ypos);
 
+// TODO(Fz): these could just be generalized into a generic arena based array 
 global Arena* GlobalArena;
-
 global Arena* CubesArena;
 global Cube* Cubes;
 global u32 TotalCubes = 0;
 
 int main(void) {
+	os_init();
+	os_file_create(StringLiteral(VARIABLES_TWEAK_FILE));
+
+	Thread_Context tctx;
+	thread_context_init_and_equip(&tctx);
     
 	GlobalArena = arena_init();
 	CubesArena  = arena_init();
+	
 	Cubes = (Cube*)arena_push(CubesArena, 1024);
 	hotload_variables(GlobalArena);
-	os_init();
-	if (!os_file_create(StringLiteral(VARIABLES_TWEAK_FILE))) {
-		Assert(0);
-	}
     
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -229,16 +231,6 @@ int main(void) {
 		}
 		renderer_end_frame(&ProgramRenderer, WindowWidth, WindowHeight);
 		
-
-		local_persist prev = 0;
-		if (glfwGetTime() - prev > 1) {
-			Cubes[TotalCubes++] = cube_new(vec3f32( sin(prev)*6,  cos(prev)*4,  sin(prev)*8), PALLETE_COLOR_A);
-			arena_print(CubesArena);
-			printf("Total cubes: %d\nCube size: %llu\nTotalCubesSize: %llu\n", TotalCubes, sizeof(Cube), TotalCubes*sizeof(Cube));
-			printf("Total Triangles: %d\n", ProgramRenderer.triangle_count);
-			prev = glfwGetTime();
-		}
-
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}

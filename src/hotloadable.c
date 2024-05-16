@@ -63,7 +63,7 @@ internal String _file_get_next_line(OS_File file, u32* cursor) {
 }
 
 internal void hotload_variables(Arena* arena) {
-	Arena_Temp arena_temp = arena_temp_begin(arena);
+	Arena_Temp scratch = scratch_begin(0, 0);
 
 	u64 variables_tweak_last_modified = os_file_get_last_modified_time(StringLiteral(VARIABLES_TWEAK_FILE));
 	if (VariablesTweakFileLastModified == variables_tweak_last_modified) {
@@ -72,7 +72,7 @@ internal void hotload_variables(Arena* arena) {
 	VariablesTweakFileLastModified = variables_tweak_last_modified;
 
 	u64 size = os_file_size(StringLiteral(VARIABLES_TWEAK_FILE));
-	OS_File file = os_file_load_entire_file(arena_temp.arena, StringLiteral(VARIABLES_TWEAK_FILE));
+	OS_File file = os_file_load_entire_file(scratch.arena, StringLiteral(VARIABLES_TWEAK_FILE));
 	if (file.size == 0) {
 		printf("Variables not loaded.\n");
 		return;
@@ -111,7 +111,7 @@ internal void hotload_variables(Arena* arena) {
 		}
 
 		// Parse variables
-		String_List list = string_split(arena_temp.arena, line, StringLiteral(":"));
+		String_List list = string_split(scratch.arena, line, StringLiteral(":"));
 		String key   = list.first->value;
 		String value = string_pop_left(list.last->value);
 
@@ -171,5 +171,5 @@ internal void hotload_variables(Arena* arena) {
 		}
 	}
 
-	arena_temp_end(&arena_temp);
+	scratch_end(&scratch);
 }

@@ -175,6 +175,28 @@
 # define OS_MAC 0
 #endif
 
+#if COMPILER_MSVC
+# define thread_static __declspec(thread)
+#elif COMPILER_CLANG || COMPILER_GCC
+# define thread_static __thread
+#endif
+
+#if OS_WINDOWS
+# define shared_function C_LINKAGE __declspec(dllexport)
+#else
+# define shared_function C_LINKAGE
+#endif
+
+#if LANG_CPP
+# define C_LINKAGE_BEGIN extern "C"{
+# define C_LINKAGE_END }
+# define C_LINKAGE extern "C"
+#else
+# define C_LINKAGE_BEGIN
+# define C_LINKAGE_END
+# define C_LINKAGE
+#endif
+
 ////////////////////////////////
 // Core
 
