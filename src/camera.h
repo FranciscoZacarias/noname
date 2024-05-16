@@ -26,10 +26,10 @@ typedef struct Camera {
 	f32 pitch;
 } Camera;
 
-function Camera camera_create();
-function void print_camera(Camera camera);
-function void camera_mouse_callback(Camera* camera, f64 x_pos, f64 y_pos);
-function void camera_keyboard_callback(Camera* camera, Camera_Movement movement, f32 delta_time);
-function void _camera_update(Camera* camera);
+internal Camera camera_create();
+internal void print_camera(Camera camera);
+internal void camera_mouse_callback(Camera* camera, f64 x_pos, f64 y_pos);
+internal void camera_keyboard_callback(Camera* camera, Camera_Movement movement, f32 delta_time);
+internal void _camera_update(Camera* camera);
 
 #endif // CAMERA_H

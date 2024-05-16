@@ -4,7 +4,7 @@
 global u64 Win32TicksOerSec = 1;
 global u32 Win32ThreadContextIndex;
 
-function void os_init(void) {
+internal void os_init(void) {
   LARGE_INTEGER perf_freq = {0};
   if (QueryPerformanceFrequency(&perf_freq)) {
       Win32TicksOerSec = ((u64)perf_freq.HighPart << 32) | perf_freq.LowPart;
@@ -13,40 +13,40 @@ function void os_init(void) {
 	Win32ThreadContextIndex = TlsAlloc();
 }
 
-function void* os_memory_reserve(u64 size) {
+internal void* os_memory_reserve(u64 size) {
   void* result = VirtualAlloc(0, size, MEM_RESERVE, PAGE_NOACCESS);
   return result;
 }
 
-function b32 os_memory_commit(void* memory, u64 size) {
+internal b32 os_memory_commit(void* memory, u64 size) {
   b32 result = (VirtualAlloc(memory, size, MEM_COMMIT, PAGE_READWRITE) != 0);
   return result;
 }
 
-function void  os_memory_decommit(void* memory, u64 size) {
+internal void  os_memory_decommit(void* memory, u64 size) {
   VirtualFree(memory, size, MEM_DECOMMIT);
 }
 
-function void  os_memory_release(void* memory, u64 size) {
+internal void  os_memory_release(void* memory, u64 size) {
   VirtualFree(memory, 0, MEM_RELEASE);
 }
 
-function HANDLE _win32_get_file_handle(String file_name) {
+internal HANDLE _win32_get_file_handle(String file_name) {
   HANDLE file_handle = CreateFileA(file_name.str, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
   if (file_handle == INVALID_HANDLE_VALUE) {
     DWORD error = GetLastError();
     printf("Error: Failed to open file %s. Error: %lu\n", file_name.str, error);
-    return null;
+    return NULL;
   }
   return file_handle;
 }
 
-function b32 os_file_create(String file_name) {
-  b32 result = false;
+internal b32 os_file_create(String file_name) {
+  b32 result = 0;
   HANDLE file = CreateFileA(file_name.str, GENERIC_READ, 0, 0, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, 0);
   DWORD error = GetLastError();  
   if (error == ERROR_SUCCESS || error == ERROR_FILE_EXISTS) {
-    result = true;
+    result = 1;
   } else {
     // TODO(fz): We should send this error to user space
     printf("Error creating file %s with error: %lu\n", file_name.str, error);
@@ -55,7 +55,7 @@ function b32 os_file_create(String file_name) {
   return result;
 }
 
-function u64 os_file_get_last_modified_time(String file_name) {
+internal u64 os_file_get_last_modified_time(String file_name) {
   u32 result = 0;
   if (!os_file_exists(file_name)) {
     printf("Error: os_file_get_last_modified_time failed because file %s doesn't exist\n", file_name.str);
@@ -69,14 +69,14 @@ function u64 os_file_get_last_modified_time(String file_name) {
   return result;
 }
 
-function b32 os_file_exists(String file_name) {
-  b32 result = false;
+internal b32 os_file_exists(String file_name) {
+  b32 result = 0;
   DWORD file_attributes = GetFileAttributesA(file_name.str);
   result = (file_attributes != INVALID_FILE_ATTRIBUTES && !(file_attributes & FILE_ATTRIBUTE_DIRECTORY));
   return result;
 }
 
-function u32 os_file_size(String file_name) {
+internal u32 os_file_size(String file_name) {
   u32 result = 0;
   if (!os_file_exists(file_name)) {
     printf("Error: os_file_exists failed because file %s doesn't exist\n", file_name.str);
@@ -89,7 +89,7 @@ function u32 os_file_size(String file_name) {
   return result;
 }
 
-function OS_File os_file_load_entire_file(Arena* arena, String file_name) {
+internal OS_File os_file_load_entire_file(Arena* arena, String file_name) {
   OS_File os_file = { 0 };
   if (!os_file_exists(file_name)) {
     printf("Error: os_file_load_entire_file failed because file %s doesn't exist\n", file_name.str);
@@ -97,7 +97,7 @@ function OS_File os_file_load_entire_file(Arena* arena, String file_name) {
   }
 
   HANDLE file_handle = _win32_get_file_handle(file_name);
-  if (file_handle == null) {
+  if (file_handle == NULL) {
     return os_file;
   }
 
@@ -115,7 +115,7 @@ function OS_File os_file_load_entire_file(Arena* arena, String file_name) {
   return os_file;
 }
 
-function void os_print_string(String string) {
+internal void os_print_string(String string) {
   HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
   WriteFile(handle, string.str, string.size, NULL, NULL);
   char newline = '\n';

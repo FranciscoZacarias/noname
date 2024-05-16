@@ -1,12 +1,12 @@
 
-function Cube cube_new(Vec3f32 position, Vec4f32 color) {
+internal Cube cube_new(Vec3f32 position, Vec4f32 color) {
     Cube result = { 0 };
     result.transform = translate_mat4f32(position.x, position.y, position.z);;
     result.color     = color;
     return result;
 }
 
-function Quad cube_get_local_space_face_quad(Cube_Face face) {
+internal Quad cube_get_local_space_face_quad(Cube_Face face) {
 	Quad result = { 0 };
     
 	switch(face) {

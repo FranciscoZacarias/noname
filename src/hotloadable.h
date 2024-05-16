@@ -3,19 +3,19 @@
 
 // Shader programs ---
 
-global b32 FirstEntry = true; // To setup the hotload_shader_programs function.
+global b32 FirstEntry = 1; // To setup the hotload_shader_programs function.
 global u64 DefaultVertexShaderLastModified   = 0;
 global u64 DefaultFragmentShaderLastModified = 0;
 global u64 ScreenVertexShaderLastModified    = 0;
 global u64 ScreenFragmentShaderLastModified  = 0;
 
-function void hotload_shader_programs(Arena* arena, Renderer* renderer);
+internal void hotload_shader_programs(Arena* arena, Renderer* renderer);
 
 // Variables ---
 #define VARIABLES_TWEAK_FILE "D:\\work\\noname\\Variables.hotload"
 global u64 VariablesTweakFileLastModified = 0;
-global b32 StartupVariablesLoaded = false;
+global b32 StartupVariablesLoaded = 0;
 
-function void hotload_variables(Arena* arena);
+internal void hotload_variables(Arena* arena);
 
 #endif // HOTLOAD_VARIABLES_H

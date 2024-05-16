@@ -1,36 +1,36 @@
-function String string_new(u64 size, u8* str) {
+internal String string_new(u64 size, u8* str) {
   String result = { size, str };
   return result;
 }
 
-function String string_range(u8* first, u8* range) {
+internal String string_range(u8* first, u8* range) {
   String result = (String){(u64)(range - first), first};
   return result;
 }
 
-function String string_pop_left(String str) {
+internal String string_pop_left(String str) {
   String result = string_new(str.size-1, str.str+1);
   return result;
 }
 
-function String string_pop_right(String str) {
+internal String string_pop_right(String str) {
   String result = string_new(str.size-1, str.str);
   return result;
 }
 
-function b32 strings_match(String a, String b) {
+internal b32 strings_match(String a, String b) {
   if (a.size != b.size) {
-    return false;
+    return 0;
   }
   for(u32 i = 0; i < a.size; i++) {
     if (a.str[i] != b.str[i]) {
-      return false;
+      return 0;
     }
   }
-  return true;
+  return 1;
 }
 
-function String_List string_split(Arena* arena, String str, String split_character) {
+internal String_List string_split(Arena* arena, String str, String split_character) {
   String_List result = { 0 };
 
   if (split_character.size != 1) {
@@ -52,7 +52,7 @@ function String_List string_split(Arena* arena, String str, String split_charact
   return result;
 }
 
-function void string_list_push(Arena* arena, String_List* list, String str) {
+internal void string_list_push(Arena* arena, String_List* list, String str) {
   String_Node* node = (String_Node*)arena_push(arena, sizeof(String_Node));
   
   node->value = str;
@@ -67,19 +67,19 @@ function void string_list_push(Arena* arena, String_List* list, String str) {
   list->total_size += node->value.size;
 }
 
-function b32 cast_string_to_b32(String str, b32* value) {
-	b32 result = true;
+internal b32 cast_string_to_b32(String str, b32* value) {
+	b32 result = 1;
 	if (strings_match(str, StringLiteral("false"))) {
-		*value = false;
+		*value = 0;
 	} else if (strings_match(str, StringLiteral("true"))) {
-		*value = true;
+		*value = 1;
 	} else {
-		result = false;
+		result = 0;
 	}
 	return result;
 }
 
-function b32 cast_string_to_f32(String str, f32* value) {
+internal b32 cast_string_to_f32(String str, f32* value) {
 	*value = 0.0f;
 	s32 decimal_position = -1;
 
@@ -92,7 +92,7 @@ function b32 cast_string_to_f32(String str, f32* value) {
 		} else if (str.str[i] == '.') {
 			decimal_position = 0;
 		} else {
-			return false;
+			return 0;
 		}
 	}
 
@@ -100,21 +100,21 @@ function b32 cast_string_to_f32(String str, f32* value) {
 		*value = *value / (f32)pow(10, decimal_position);
 	}
 
-	return true;
+	return 1;
 }
 
-function b32 cast_string_to_s32(String str, s32* value) {
+internal b32 cast_string_to_s32(String str, s32* value) {
 	*value = 0.0f;
 	for (u64 i = 0; i < str.size; i++) {
 		if (str.str[i] >= '0'  && str.str[i] <= '9') {
 			*value = *value * 10.0f + (str.str[i] - '0');
 		} else {
-			return false;
+			return 0;
 		}
 	}
-	return true;
+	return 1;
 }
 
-function void print(String string) {
+internal void print(String string) {
   os_print_string(string);
 }

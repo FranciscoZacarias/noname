@@ -14,8 +14,8 @@
 #define SCREEN_VERTEX_SHADER    "D:\\work\\noname\\src\\shaders\\screen_vertex_shader.glsl"
 #define SCREEN_FRAGMENT_SHADER  "D:\\work\\noname\\src\\shaders\\screen_fragment_shader.glsl"
 
-global b32 HotloadableEnableWireframeMode = false;
-global b32 HotloadableEnableCulling = true;
+global b32 HotloadableEnableWireframeMode = 0;
+global b32 HotloadableEnableCulling = 1;
 
 typedef struct Renderer_Font_Info {
 	u32 font_texture;
@@ -64,24 +64,24 @@ typedef struct Renderer {
   u32 triangle_count;
 } Renderer;
 
-function Renderer renderer_init(Arena* arena, s32 window_width, s32 window_height);
-function void renderer_free(Renderer* renderer);
+internal Renderer renderer_init(Arena* arena, s32 window_width, s32 window_height);
+internal void renderer_free(Renderer* renderer);
 
-function void renderer_generate_msaa_and_intermidiate_buffers(Renderer* renderer, s32 window_width, s32 window_height);
-function void renderer_recompile_default_shader(Arena* arena, Renderer* renderer);
-function void renderer_recompile_screen_shader(Arena* arena, Renderer* renderer);
+internal void renderer_generate_msaa_and_intermidiate_buffers(Renderer* renderer, s32 window_width, s32 window_height);
+internal void renderer_recompile_default_shader(Arena* arena, Renderer* renderer);
+internal void renderer_recompile_screen_shader(Arena* arena, Renderer* renderer);
 
-function void renderer_begin_frame(Renderer* renderer, Vec4f32 background_color);
-function void renderer_end_frame(Renderer* renderer, s32 window_width, s32 window_height);
+internal void renderer_begin_frame(Renderer* renderer, Vec4f32 background_color);
+internal void renderer_end_frame(Renderer* renderer, s32 window_width, s32 window_height);
 
-function void renderer_push_string(Renderer* renderer, Renderer_Font_Info* font_info, String str, Vec2f32 pos, Vec4f32 color);
-function void renderer_push_triangle(Renderer* renderer, Vec3f32 a_position, Vec4f32 a_color, Vec3f32 b_position, Vec4f32 b_color, Vec3f32 c_position, Vec4f32 c_color);
-function void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color, f32 scale);
-function void renderer_push_quad(Renderer* renderer, Quad quad, Vec4f32 color);
-function void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_color);
-function void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, Vec4f32 border_color, Cube_Face highlight, Vec4f32 highlight_color);
+internal void renderer_push_string(Renderer* renderer, Renderer_Font_Info* font_info, String str, Vec2f32 pos, Vec4f32 color);
+internal void renderer_push_triangle(Renderer* renderer, Vec3f32 a_position, Vec4f32 a_color, Vec3f32 b_position, Vec4f32 b_color, Vec3f32 c_position, Vec4f32 c_color);
+internal void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color, f32 scale);
+internal void renderer_push_quad(Renderer* renderer, Quad quad, Vec4f32 color);
+internal void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_color);
+internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, Vec4f32 border_color, Cube_Face highlight, Vec4f32 highlight_color);
 
-function void renderer_set_uniform_mat4fv(u32 program, const char* uniform, Mat4f32 mat);
-function void renderer_set_uniform_s32(u32 program, const char* uniform, s32 s);
+internal void renderer_set_uniform_mat4fv(u32 program, const char* uniform, Mat4f32 mat);
+internal void renderer_set_uniform_s32(u32 program, const char* uniform, s32 s);
 
 #endif // RENDERER_H

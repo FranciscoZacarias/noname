@@ -62,7 +62,7 @@ typedef struct Cube {
   Vec4f32 color;
 } Cube;
 
-function Cube cube_new(Vec3f32 transform, Vec4f32 color);
-function Quad cube_get_local_space_face_quad(Cube_Face face);
+internal Cube cube_new(Vec3f32 transform, Vec4f32 color);
+internal Quad cube_get_local_space_face_quad(Cube_Face face);
 
 #endif // CUBE_H

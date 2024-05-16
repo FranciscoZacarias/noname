@@ -1,10 +1,10 @@
-function void hotload_shader_programs(Arena* arena, Renderer* renderer) {
+internal void hotload_shader_programs(Arena* arena, Renderer* renderer) {
 	if (FirstEntry) {
 		DefaultVertexShaderLastModified   = os_file_get_last_modified_time(StringLiteral(DEFAULT_VERTEX_SHADER));
 		DefaultFragmentShaderLastModified = os_file_get_last_modified_time(StringLiteral(DEFAULT_FRAGMENT_SHADER));
 		ScreenVertexShaderLastModified    = os_file_get_last_modified_time(StringLiteral(SCREEN_VERTEX_SHADER));
 		ScreenFragmentShaderLastModified  = os_file_get_last_modified_time(StringLiteral(SCREEN_FRAGMENT_SHADER));
-		FirstEntry = false;
+		FirstEntry = 0;
 		return;
 	}
 
@@ -44,11 +44,11 @@ function void hotload_shader_programs(Arena* arena, Renderer* renderer) {
 }
 
 // Assumes OS_File is allocated
-function String _file_get_next_line(OS_File file, u32* cursor) {
+internal String _file_get_next_line(OS_File file, u32* cursor) {
 	String result;
 	result.size = 0;
 	result.str  = file.data + *cursor;
-	while (true) {
+	while (1) {
 		if (*(file.data + *cursor) == '\n' || *cursor >= file.size) {
 			++(*cursor);		
 			break;
@@ -62,7 +62,7 @@ function String _file_get_next_line(OS_File file, u32* cursor) {
 	return result;
 }
 
-function void hotload_variables(Arena* arena) {
+internal void hotload_variables(Arena* arena) {
 	Arena_Temp arena_temp = arena_temp_begin(arena);
 
 	u64 variables_tweak_last_modified = os_file_get_last_modified_time(StringLiteral(VARIABLES_TWEAK_FILE));
@@ -80,7 +80,7 @@ function void hotload_variables(Arena* arena) {
 
 	u32 cursor = 0;
 	u32 line_count = 0;
-	while (true) {
+	while (1) {
 		line_count += 1;
 		String line = _file_get_next_line(file, &cursor);
 
@@ -94,7 +94,7 @@ function void hotload_variables(Arena* arena) {
 			if (strings_match(line, StringLiteral("Startup"))) {
 				if (StartupVariablesLoaded) {
 					// Exhaust lines until next header
-					while (true) {
+					while (1) {
 						line = _file_get_next_line(file, &cursor);
 						if (line.str[0] == '\\') {
 							break;
@@ -104,7 +104,7 @@ function void hotload_variables(Arena* arena) {
 						}
 					}
 				} else {
-					StartupVariablesLoaded = true;
+					StartupVariablesLoaded = 1;
 				}
 			}
 			continue;

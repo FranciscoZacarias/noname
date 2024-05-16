@@ -1,5 +1,5 @@
 
-function Renderer renderer_init(Arena* arena, s32 window_width, s32 window_height) {
+internal Renderer renderer_init(Arena* arena, s32 window_width, s32 window_height) {
 	Arena_Temp arena_temp = arena_temp_begin(arena);
     Renderer result = { 0 };
     
@@ -204,7 +204,7 @@ function Renderer renderer_init(Arena* arena, s32 window_width, s32 window_heigh
 	return result;
 }
 
-function void renderer_generate_msaa_and_intermidiate_buffers(Renderer* renderer, s32 window_width, s32 window_height) {
+internal void renderer_generate_msaa_and_intermidiate_buffers(Renderer* renderer, s32 window_width, s32 window_height) {
 	// Delete and recreate MSAA framebuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, renderer->msaa_frame_buffer_object);
 	glDeleteTextures(1, &renderer->msaa_texture_color_buffer_multisampled);
@@ -257,7 +257,7 @@ function void renderer_generate_msaa_and_intermidiate_buffers(Renderer* renderer
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-function void renderer_recompile_default_shader(Arena* arena, Renderer* renderer) {
+internal void renderer_recompile_default_shader(Arena* arena, Renderer* renderer) {
 	Arena_Temp arena_temp = arena_temp_begin(arena);
     
     u32 vertex_shader = glCreateShader(GL_VERTEX_SHADER);
@@ -330,7 +330,7 @@ function void renderer_recompile_default_shader(Arena* arena, Renderer* renderer
 	arena_temp_end(&arena_temp);
 }
 
-function void renderer_recompile_screen_shader(Arena* arena, Renderer* renderer) {
+internal void renderer_recompile_screen_shader(Arena* arena, Renderer* renderer) {
 	Arena_Temp arena_temp = arena_temp_begin(arena);
     
     u32 vertex_shader = glCreateShader(GL_VERTEX_SHADER);
@@ -403,7 +403,7 @@ function void renderer_recompile_screen_shader(Arena* arena, Renderer* renderer)
 	arena_temp_end(&arena_temp);
 }
 
-function void renderer_free(Renderer* renderer) {
+internal void renderer_free(Renderer* renderer) {
 	glDeleteVertexArrays(1, &renderer->vao);
 	glDeleteBuffers(1, &renderer->triangle_vbo);
 	glDeleteProgram(renderer->shader_program);
@@ -413,7 +413,7 @@ function void renderer_free(Renderer* renderer) {
 	glDeleteProgram(renderer->screen_program);
 }
 
-function void renderer_begin_frame(Renderer* renderer, Vec4f32 background_color) {
+internal void renderer_begin_frame(Renderer* renderer, Vec4f32 background_color) {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderer->msaa_frame_buffer_object);
 	glClearColor(background_color.x, background_color.y, background_color.z, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -463,7 +463,7 @@ void renderer_end_frame(Renderer* renderer, s32 window_width, s32 window_height)
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-function void renderer_push_triangle(Renderer* renderer, Vec3f32 a_position, Vec4f32 a_color, Vec3f32 b_position, Vec4f32 b_color, Vec3f32 c_position, Vec4f32 c_color) {
+internal void renderer_push_triangle(Renderer* renderer, Vec3f32 a_position, Vec4f32 a_color, Vec3f32 b_position, Vec4f32 b_color, Vec3f32 c_position, Vec4f32 c_color) {
 	if ((renderer->triangle_count + 1) >= MAX_TRIANGLES) {
 		printf("Error :: Renderer :: Too many triangles!");
 		Assert(0);
@@ -480,7 +480,7 @@ function void renderer_push_triangle(Renderer* renderer, Vec3f32 a_position, Vec
 	renderer->triangle_count += 1;
 }
 
-function void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color, f32 scale) {
+internal void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color, f32 scale) {
 	scale = scale * 0.1; // Makes this scale factor less sensitive on user level
 	Vec3f32 direction = normalize_vec3f32(sub_vec3f32(b, a));
 	Vec3f32 up   = vec3f32(0.0f, 1.0f, 0.0f);
@@ -549,7 +549,7 @@ function void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4
 	}
 }
 
-function void renderer_push_quad(Renderer* renderer, Quad quad, Vec4f32 color) {
+internal void renderer_push_quad(Renderer* renderer, Quad quad, Vec4f32 color) {
 	if ((renderer->triangle_count + 2) >= MAX_TRIANGLES) {
 		printf("Error :: Renderer :: Too many triangles!");
 		Assert(0);
@@ -559,11 +559,11 @@ function void renderer_push_quad(Renderer* renderer, Quad quad, Vec4f32 color) {
     renderer_push_triangle(renderer, quad.p0, color, quad.p2, color, quad.p3, color);
 }
 
-function void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_color) {
+internal void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_color) {
 	renderer_push_cube_highlight_face(renderer, cube, border_color, -1, COLOR_BLACK);
 }
 
-function void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, Vec4f32 border_color, Cube_Face highlight, Vec4f32 highlight_color) {
+internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, Vec4f32 border_color, Cube_Face highlight, Vec4f32 highlight_color) {
     f32 scale = 1-HotloadableCubeBorderThickness;
     
 	// On XY Plane
@@ -786,7 +786,7 @@ function void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, V
 	}
 }
 
-function void renderer_set_uniform_mat4fv(u32 program, const char* uniform, Mat4f32 mat) {
+internal void renderer_set_uniform_mat4fv(u32 program, const char* uniform, Mat4f32 mat) {
 	s32 uniform_location = glGetUniformLocation(program, uniform);
 	if (uniform_location == -1) {
 		printf("Mat4f32 :: Uniform %s not found\n", uniform);
@@ -794,7 +794,7 @@ function void renderer_set_uniform_mat4fv(u32 program, const char* uniform, Mat4
 	glUniformMatrix4fv(uniform_location, 1, 1, &mat.data[0][0]);
 }
 
-function void renderer_set_uniform_s32(u32 program, const char* uniform, s32 s) {
+internal void renderer_set_uniform_s32(u32 program, const char* uniform, s32 s) {
 	s32 uniform_location = glGetUniformLocation(program, uniform);
 	if (uniform_location == -1) {
 		printf("s32 :: Uniform %s not found\n", uniform);

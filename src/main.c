@@ -15,7 +15,6 @@ noname:
 - Add some sort of post processing shake when loading variables from hotload @feature-creep
 f_base:
 - Add thread context module
-- Add arena debug visualizer
 - Add windows window layer I.e. remove glfw dependency
 - Add a generic array ds
 */
@@ -77,10 +76,10 @@ Renderer ProgramRenderer;
 global Cube Cubes[1024];
 global u32 TotalCubes = 0;
 
-function b32 find_cube_under_cursor(CubeUnderCursor* result);
-function void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-function void process_input(GLFWwindow *window);
-function void mouse_callback(GLFWwindow* window, f64 xpos, f64 ypos);
+internal b32 find_cube_under_cursor(CubeUnderCursor* result);
+internal void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+internal void process_input(GLFWwindow *window);
+internal void mouse_callback(GLFWwindow* window, f64 xpos, f64 ypos);
 
 Arena GlobalArena;
 
@@ -357,8 +356,8 @@ void mouse_callback(GLFWwindow* window, f64 xposIn, f64 yposIn) {
 	}
 }
 
-function b32 find_cube_under_cursor(CubeUnderCursor* result) {
-	b32 match = false;
+internal b32 find_cube_under_cursor(CubeUnderCursor* result) {
+	b32 match = 0;
 	for (u32 i = 0; i < TotalCubes; i++) {
 		Cube it = Cubes[i];
 		for(u32 j = 0; j < 6; j++) {
@@ -369,7 +368,7 @@ function b32 find_cube_under_cursor(CubeUnderCursor* result) {
 					result->hovered_face = j;
 					result->index = i;
 					result->distance_to_camera = distance_vec3f32(intersection, camera.position);
-					match = true;
+					match = 1;
 				} else {
 					f32 distance = distance_vec3f32(intersection, camera.position);
 					if (distance < result->distance_to_camera) {

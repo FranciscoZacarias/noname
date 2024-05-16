@@ -209,6 +209,9 @@
 
 #define Min(A,B) (((A)<(B))?(A):(B))
 #define Max(A,B) (((A)>(B))?(A):(B))
+#define ClampTop(A,X) Min(A,X)
+#define ClampBot(X,B) Max(X,B)
+#define Clamp(A,X,B) (((X)<(A))?(A):((X)>(B))?(B):(X))
 
 #define IntFromPtr(p) (u64)((u8*)p - (u8*)0)
 #define PtrFromInt(i) (void*)((u8*)0 + (i))
@@ -231,20 +234,16 @@
 
 #define MemoryCopy(d,s,z)     memmove((d), (s), (z))
 #define MemoryCopyStruct(d,s) MemoryCopy((d),(s), Min(sizeof(*(d)) , sizeof(*(s))))
-#define MemoryZero(d,z)       memset((d), 0, (z))
-#define MemoryZeroStruct(d,T) MemoryZero((d),sizeof(T))
+#define MemoryZero(s,z)       memset((s),0,(z))
+#define MemoryZeroStruct(s)   MemoryZero((s),sizeof(*(s)))
 #define MemoryMatch(a,b,z)   (memcmp((a),(b),(z)) == 0)
 
 #define local_persist static
 #define global        static
-#define function      static
+#define internal      static
 
 ////////////////////////////////
 // Types 
-
-#define null ((void*)0)
-#define true  (1)
-#define false (0)
 
 typedef unsigned char      u8;
 typedef unsigned short     u16;

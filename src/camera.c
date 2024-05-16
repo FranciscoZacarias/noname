@@ -1,4 +1,4 @@
-function Camera camera_create() {
+internal Camera camera_create() {
 	Camera camera;
 	camera.position = vec3f32(-9.21f, 5.45f, 14.81f);
 	camera.front = vec3f32(0.56f, -0.31f, -0.77f);
@@ -10,7 +10,7 @@ function Camera camera_create() {
 	return camera;
 }
 
-function void print_camera(Camera camera) {
+internal void print_camera(Camera camera) {
 	print_vec3f32(camera.position, "camera.position =");
 	print_vec3f32(camera.front, "camera.front =");
 	print_vec3f32(camera.up, "camera.up =");
@@ -18,7 +18,7 @@ function void print_camera(Camera camera) {
 	printf("camera.pitch = %.2ff;\ncamera.yaw = %.2ff;\n-------------\n", camera.pitch, camera.yaw);
 }
 
-function void camera_mouse_callback(Camera* camera, f64 x_pos, f64 y_pos) {
+internal void camera_mouse_callback(Camera* camera, f64 x_pos, f64 y_pos) {
 	camera->yaw   += (x_pos * CAMERA_SENSITIVITY);
 	camera->pitch += (y_pos * CAMERA_SENSITIVITY);
 
@@ -28,7 +28,7 @@ function void camera_mouse_callback(Camera* camera, f64 x_pos, f64 y_pos) {
 	_camera_update(camera);
 }
 
-function void camera_keyboard_callback(Camera* camera, Camera_Movement movement, f32 delta_time) {
+internal void camera_keyboard_callback(Camera* camera, Camera_Movement movement, f32 delta_time) {
 	f32 cameraSpeed = (f32)(HotloadableCameraSpeed * delta_time);
 
   if (movement == CameraMovement_Front) {
@@ -57,7 +57,7 @@ function void camera_keyboard_callback(Camera* camera, Camera_Movement movement,
   }
 }
 
-function void _camera_update(Camera* camera) {
+internal void _camera_update(Camera* camera) {
 	Vec3f32 front = vec3f32(
 		cos(Radians(camera->yaw)) * cos(Radians(camera->pitch)),
 		sin(Radians(camera->pitch)),

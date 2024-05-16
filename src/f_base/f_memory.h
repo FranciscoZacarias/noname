@@ -12,14 +12,14 @@ typedef struct Arena {
   u8* memory;
 } Arena;
 
-function Arena arena_init();
-function Arena arena_init_sized(u64 size);
+internal Arena arena_init();
+internal Arena arena_init_sized(u64 size);
 
-function void* arena_push(Arena* arena, u64 size);
-function void  arena_pop(Arena* arena, u64 size);
-function void  arena_pop_to(Arena* arena, u64 pos);
-function void  arena_clear(Arena* arena);
-function void  arena_free(Arena* arena);
+internal void* arena_push(Arena* arena, u64 size);
+internal void  arena_pop(Arena* arena, u64 size);
+internal void  arena_pop_to(Arena* arena, u64 pos);
+internal void  arena_clear(Arena* arena);
+internal void  arena_free(Arena* arena);
 
 #define push_array_no_zero(a,T,c) (T*)arena_push((a), sizeof(T)*(c))
 #define push_array(a,T,c) (T*)MemoryZero(push_array_no_zero(a,T,c), sizeof(T)*(c))
@@ -29,7 +29,7 @@ typedef struct Arena_Temp {
   u64 temp_position;
 } Arena_Temp;
 
-function Arena_Temp arena_temp_begin(Arena* arena);
-function void       arena_temp_end(Arena_Temp* temp);
+internal Arena_Temp arena_temp_begin(Arena* arena);
+internal void       arena_temp_end(Arena_Temp* temp);
 
 #endif // F_MEMORY_H

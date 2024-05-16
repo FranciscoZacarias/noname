@@ -19,19 +19,19 @@ typedef struct String_List {
 } String_List;
 
 #define StringLiteral(s) (String){sizeof(s)-1, (u8*)(s)}
-function String string_new(u64 size, u8* str);
-function String string_range(u8* first, u8* range);
-function String string_pop_left(String str);
-function String string_pop_right(String str);
-function b32 strings_match(String a, String b);
+internal String string_new(u64 size, u8* str);
+internal String string_range(u8* first, u8* range);
+internal String string_pop_left(String str);
+internal String string_pop_right(String str);
+internal b32 strings_match(String a, String b);
 
-function String_List string_split(Arena* arena, String str, String split_character);
-function void string_list_push(Arena* arena, String_List* list, String str);
+internal String_List string_split(Arena* arena, String str, String split_character);
+internal void string_list_push(Arena* arena, String_List* list, String str);
 
-function b32 cast_string_to_f32(String str, f32* value);
-function b32 cast_string_to_s32(String str, s32* value);
-function b32 cast_string_to_b32(String str, b32* value);
+internal b32 cast_string_to_f32(String str, f32* value);
+internal b32 cast_string_to_s32(String str, s32* value);
+internal b32 cast_string_to_b32(String str, b32* value);
 
-function void print(String string);
+internal void print(String string);
 
 #endif // F_STRING_H
