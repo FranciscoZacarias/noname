@@ -224,13 +224,7 @@ int main(void) {
 
 			// Render stuff with textures.
 			{
-				Quad qt = {
-					vec3f32( 4.0f, 0.0f,  0.0f),
-					vec3f32(-4.0f, 0.0f,  0.0f),
-					vec3f32(-4.0f, 4.0f, -4.0f),
-					vec3f32( 4.0f, 4.0f, -4.0f)
-				};
-				renderer_push_quad_texture(&ProgramRenderer, qt, pepper);
+
 			}
 		}
 		renderer_end_frame(&ProgramRenderer, WindowWidth, WindowHeight);
