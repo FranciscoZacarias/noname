@@ -89,7 +89,7 @@ internal void renderer_push_triangle(Renderer* renderer, Vec3f32 a_position, Vec
 internal void renderer_push_triangle_texture(Renderer* renderer, Vec3f32 a_position, Vec2f32 a_uv, Vec3f32 b_position, Vec2f32 b_uv, Vec3f32 c_position, Vec2f32 c_uv, u32 texture);
 internal void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color, f32 scale);
 internal void renderer_push_quad(Renderer* renderer, Quad quad, Vec4f32 color);
-internal void renderer_push_quad_texture();
+internal void renderer_push_quad_texture(Renderer* renderer, Quad quad, u32 texture);
 internal void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_color);
 internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, Vec4f32 border_color, Cube_Face highlight, Vec4f32 highlight_color);
 

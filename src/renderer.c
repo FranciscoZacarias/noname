@@ -544,7 +544,7 @@ internal void renderer_push_triangle(Renderer* renderer, Vec3f32 a_position, Vec
 	renderer->triangle_data[index+2].uv            = vec2f32(0.0f, 0.0f);
 	renderer->triangle_data[index+2].texture_index = -1;
 	renderer->triangle_data[index+2].has_texture   = 0;
-	
+
 	renderer->triangle_count += 1;
 }
 
@@ -663,6 +663,19 @@ internal void renderer_push_quad(Renderer* renderer, Quad quad, Vec4f32 color) {
 
 	renderer_push_triangle(renderer, quad.p0, color, quad.p1, color, quad.p2, color);
 	renderer_push_triangle(renderer, quad.p0, color, quad.p2, color, quad.p3, color);
+}
+
+internal void renderer_push_quad_texture(Renderer* renderer, Quad quad, u32 texture) {
+	renderer_push_triangle_texture(renderer,
+		quad.p0, vec2f32(0.0f, 0.0f),
+		quad.p1, vec2f32(1.0f, 0.0f),
+		quad.p2, vec2f32(1.0f, 1.0f),
+		texture);
+	renderer_push_triangle_texture(renderer,
+		quad.p2, vec2f32(1.0f, 1.0f),
+		quad.p3, vec2f32(0.0f, 1.0f),
+		quad.p0, vec2f32(0.0f, 0.0f),
+		texture);
 }
 
 internal void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_color) {
