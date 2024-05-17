@@ -93,7 +93,7 @@ int main(void) {
     
 	CubesArena  = arena_init();
 	
-	Cubes = (Cube*)PushArray(CubesArena, 1024);
+	Cubes = (Cube*)PushArray(CubesArena, Cube, 1024);
 	hotload_variables();
     
 	glfwInit();
