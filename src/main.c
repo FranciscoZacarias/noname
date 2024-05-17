@@ -231,64 +231,64 @@ int main(void) {
       
 			// Render text
 			{
-				
-			}
-		}
-		renderer_end_frame(&ProgramRenderer, WindowWidth, WindowHeight);
-		
-		glfwSwapBuffers(window);
-		glfwPollEvents();
-	}
+        
+      }
+    }
+    renderer_end_frame(&ProgramRenderer, WindowWidth, WindowHeight);
+    
+    glfwSwapBuffers(window);
+    glfwPollEvents();
+  }
   
-	glfwTerminate();
-	return 0;
+  glfwTerminate();
+  return 0;
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-	glViewport(0, 0, width, height);
-	WindowWidth  = width;
-	WindowHeight = height;
+  glViewport(0, 0, width, height);
+  WindowWidth  = width;
+  WindowHeight = height;
   
-	renderer_generate_msaa_and_intermidiate_buffers(&ProgramRenderer, WindowWidth, WindowHeight);
+  renderer_generate_msaa_and_intermidiate_buffers(&ProgramRenderer, WindowWidth, WindowHeight);
 }
 
 void process_input(GLFWwindow *window) {
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-		printf("Program exited from pressing Escape!\n");
-		glfwSetWindowShouldClose(window, 1);
-	}
+  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+    printf("Program exited from pressing Escape!\n");
+    glfwSetWindowShouldClose(window, 1);
+  }
   
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-		LeftMouseButton = 1;
-	} else {
-		LeftMouseButton = 0;
-	}
+  if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+    LeftMouseButton = 1;
+  } else {
+    LeftMouseButton = 0;
+  }
   
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-		if (ActiveCameraMode == CameraMode_Select) {
-			ActiveCameraMode = CameraMode_Fly;
-			LastX = WindowWidth/2;
-			LastY = WindowHeight/2;
-			glfwSetCursorPos(window, WindowWidth/2, WindowHeight/2);
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		}
+  if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+    if (ActiveCameraMode == CameraMode_Select) {
+      ActiveCameraMode = CameraMode_Fly;
+      LastX = WindowWidth/2;
+      LastY = WindowHeight/2;
+      glfwSetCursorPos(window, WindowWidth/2, WindowHeight/2);
+      glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    }
     
-		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-			camera_keyboard_callback(&camera, CameraMovement_Front, DeltaTime);
-		}
-		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-			camera_keyboard_callback(&camera, CameraMovement_Back, DeltaTime);
-		}
-		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-			camera_keyboard_callback(&camera, CameraMovement_Left, DeltaTime);
-		}
-		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-			camera_keyboard_callback(&camera, CameraMovement_Right, DeltaTime);
-		}
-		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-			camera_keyboard_callback(&camera, CameraMovement_Down, DeltaTime);
-		}
-		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+      camera_keyboard_callback(&camera, CameraMovement_Front, DeltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+      camera_keyboard_callback(&camera, CameraMovement_Back, DeltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+      camera_keyboard_callback(&camera, CameraMovement_Left, DeltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+      camera_keyboard_callback(&camera, CameraMovement_Right, DeltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+      camera_keyboard_callback(&camera, CameraMovement_Down, DeltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
 			camera_keyboard_callback(&camera, CameraMovement_Up, DeltaTime);
 		}
 	} else {
