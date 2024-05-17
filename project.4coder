@@ -1,37 +1,63 @@
-version(2);
-project_name = "noname";
-patterns = {
-    "*.c",
-    "*.cpp",
-    "*.h",
-    "*.m",
-    "*.bat",
-    "*.sh",
-    "*.4coder",
-};
-blacklist_patterns = {
-    ".*",
-};
-load_paths_base = {
-    { ".", .relative = true, .recursive = true, },
-};
-load_paths = {
-    .win = load_paths_base,
-    .linux = load_paths_base,
-    .mac = load_paths_base,
+version(1);
+
+project_name = "New Project";
+
+patterns =
+{
+  "*.c",
+  "*.cpp",
+  "*.jai",
+  "*.odin",
+  "*.zig",
+  "*.h",
+  "*.inc",
+  "*.bat",
+  "*.sh",
+  "*.4coder",
+  "*.txt",
 };
 
-commands = {
-    .build = { .out = "*compilation*", .footer_panel = true, .save_dirty_files = true,
-        .win = "build.bat",
-        .linux = "./build.sh",
-        .mac = "./build.sh", },
-    .run = { .out = "*run*", .footer_panel = false, .save_dirty_files = false,
-        .win = "build\\noname",
-        .linux = "build/noname",
-        .mac = "build/noname", },
+blacklist_patterns =
+{
+  ".*",
 };
-fkey_command = {
-    .F1 = "run";
-    .F2 = "run";
+
+load_paths =
+{
+  {
+    { {"."}, .recursive = true, .relative = true }, .os = "win"
+  },
 };
+
+command_list =
+{
+  {
+    .name = "build",
+    .out = "*compilation*",
+    .footer_panel = true,
+    .save_dirty_files = true,
+    .cursor_at_end = false,
+    .cmd =
+    {
+      { "D:\\work\\noname\\build.bat", .os = "win" },
+      { "echo Linux build command not implemented for 4coder project.", .os = "linux" },
+    },
+  },
+  
+  {
+    .name = "run",
+    .out = "*compilation*",
+    .footer_panel = true,
+    .save_dirty_files = true,
+    .cursor_at_end = false,
+    .cmd =
+    {
+      { "D:\\work\\noname\\run.bat", .os = "win" },
+      { "echo Linux run command not implemented for 4coder project.", .os = "linux" },
+    },
+  },
+  
+};
+
+fkey_command[1] = "build";
+fkey_command[2] = "run";
