@@ -431,6 +431,42 @@ internal void renderer_free(Renderer* renderer) {
 	glDeleteProgram(renderer->screen_program);
 }
 
+internal void renderer_font_load(Renderer_Font_Info* font_info, String file_path, f32 font_size) {
+	Arena_Temp scratch = scratch_begin(0, 0);
+
+	OS_File font_file = os_file_load_entire_file(scratch.arena, file_path);
+
+	u8 temp_bitmap[512 * 512];
+	stbtt_fontinfo finfo;
+	stbtt_pack_context packctx;
+	if (stbtt_InitFont(&finfo, (const char*)font_file.data, 0) == 0) {
+		printf("Error loading font: "); print(file_path);
+		Assert(0);
+	}
+	stbtt_PackBegin(&packctx, temp_bitmap, 512, 512, 0, 1, 0);
+	stbtt_PackSetOversampling(&packctx, 1, 1);
+	stbtt_PackFontRange(&packctx, (const char*)font_file.data, 0, font_size, 32, 95, font_info->cdata);
+	stbtt_PackEnd(&packctx);
+
+	glGenTextures(1, &font_info->font_texture);
+	glBindTexture(GL_TEXTURE_2D, font_info->font_texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, 512, 512, 0, GL_RED, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	GLint swizzles[4] = { GL_ONE, GL_ONE, GL_ONE, GL_RED };
+	glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzles);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 512, 512, GL_RED, GL_UNSIGNED_BYTE, temp_bitmap);
+	
+	font_info->scale = stbtt_ScaleForPixelHeight(&finfo, font_size);
+	stbtt_GetFontVMetrics(&finfo, &font_info->ascent, &font_info->descent, NULL);
+	font_info->baseline = (s32) (font_info->ascent * font_info->scale);
+	font_info->font_size = font_size;
+
+	scratch_end(&scratch);
+}
+
 internal u32 renderer_texture_load(String file_path) {
 	s32 width, height, channels;
 	stbi_set_flip_vertically_on_load(1);
@@ -558,6 +594,8 @@ internal void renderer_push_triangle_texture(Renderer* renderer, Vec3f32 a_posit
 	}
 
 	// TODO(fz): If we add more textures than MAX_TEXTURES, we still have to handle that.
+	// TODO(fz): This should probably be in renderer_load_texture.
+	// TODO(fz): Do we need to clean them up? Didn't implement it yet because I think now they are kept during the lifetime of the program
 	if (texture_index == U64_MAX && renderer->texture_count < MAX_TEXTURES) {
 		renderer->textures[renderer->texture_count] = texture;
 		texture_index = renderer->texture_count;
@@ -903,6 +941,10 @@ internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, V
             mul_vec3f32_mat4f32(scale_vec3f32_xyz(P3,  1.0f, 1.0f,  scale), cube.transform)};
         renderer_push_quad(renderer, top_bottom_border, border_color);
 	}
+}
+
+internal void renderer_push_string(Renderer* renderer, Renderer_Font_Info* font_info, String text, Vec2f32 position, Vec4f32 color) {
+	
 }
 
 internal void renderer_set_uniform_mat4fv(u32 program, const char* uniform, Mat4f32 mat) {

@@ -58,6 +58,12 @@ typedef struct Quad {
   Vec3f32 p3;
 } Quad;
 
+typedef struct Quad2D {
+  f32 x;
+  f32 y;
+  f32 width;
+  f32 height;
+}
 
 typedef struct Linef32 {
   Vec3f32 point;

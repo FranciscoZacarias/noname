@@ -126,10 +126,13 @@ int main(void) {
 	Mouse.screen_space_y = LastY;
 	Mouse.ndc_x = LastX;
 	Mouse.ndc_y = LastY;
-    
+
 	ProgramRenderer = renderer_init(WindowWidth, WindowHeight);
 	u32 pepper = renderer_texture_load(StringLiteral("D:\\work\\noname\\res\\pepper.png"));
-    
+
+	Renderer_Font_Info font_info = {0};
+	renderer_font_load(&font_info, StringLiteral("D:\\work\\noname\\res\\Inconsolata.ttf"), 32);
+
 	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A);
 	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A);
 	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f, -8.0f), PALLETE_COLOR_B);
@@ -224,7 +227,11 @@ int main(void) {
 
 			// Render stuff with textures.
 			{
+			}
 
+			// Render text
+			{
+				
 			}
 		}
 		renderer_end_frame(&ProgramRenderer, WindowWidth, WindowHeight);

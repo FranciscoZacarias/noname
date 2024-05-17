@@ -78,7 +78,8 @@ internal void renderer_generate_msaa_and_intermidiate_buffers(Renderer* renderer
 internal void renderer_recompile_default_shader(Arena* arena, Renderer* renderer);
 internal void renderer_recompile_screen_shader(Arena* arena, Renderer* renderer);
 
-// TODO(fz): Should this be on this namespace?
+internal void renderer_font_load(Renderer_Font_Info* font_info, String file_path, f32 font_size);
+
 internal u32  renderer_texture_load(String file_path);
 
 internal void renderer_begin_frame(Renderer* renderer, Vec4f32 background_color);
@@ -92,6 +93,7 @@ internal void renderer_push_quad(Renderer* renderer, Quad quad, Vec4f32 color);
 internal void renderer_push_quad_texture(Renderer* renderer, Quad quad, u32 texture);
 internal void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_color);
 internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, Vec4f32 border_color, Cube_Face highlight, Vec4f32 highlight_color);
+internal void renderer_push_string(Renderer* renderer, Renderer_Font_Info* font_info, String text, Vec2f32 position, Vec4f32 color);
 
 internal void renderer_set_uniform_mat4fv(u32 program, const char* uniform, Mat4f32 mat);
 internal void renderer_set_uniform_s32(u32 program, const char* uniform, s32 s);
