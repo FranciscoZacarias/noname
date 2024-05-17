@@ -214,7 +214,8 @@ int main(void) {
 				for(u32 i = 0; i < TotalCubes; i++) {
 					CubeUnderCursor cuc;
 					if (find_cube_under_cursor(&cuc) && cuc.index == i) {
-						renderer_push_cube_highlight_face(&ProgramRenderer, Cubes[i], vec4f32(0.5+0.5*sin(5*CurrentTime), 0.5+0.5*sin(5*CurrentTime), 0.0f), cuc.hovered_face, scale_vec4f32(Cubes[i].color, 0.80));
+						f32 highlight_scale = 0.8f;
+						renderer_push_cube_highlight_face(&ProgramRenderer, Cubes[i], vec4f32(0.5+0.5*sin(5*CurrentTime), 0.5+0.5*sin(5*CurrentTime), 0.0f), cuc.hovered_face, vec4f32(Cubes[i].color.x * highlight_scale, Cubes[i].color.y * highlight_scale, Cubes[i].color.z * highlight_scale));
 					} else {
 						renderer_push_cube(&ProgramRenderer, Cubes[i], COLOR_BLACK);	
 					}
@@ -223,11 +224,11 @@ int main(void) {
 
 			// Render stuff with textures.
 			{
-				renderer_push_triangle_texture(&ProgramRenderer, 
-					vec3f32( 4.0f, 0.0f, 0.0f), vec2f32( 0.0f, 0.0f),
-					vec3f32(-4.0f, 0.0f, 0.0f), vec2f32( 1.0f, 0.0f),
-					vec3f32( 0.0f, 4.0f, 0.0f), vec2f32( 0.5f, 1.0f),
-					pepper);
+			renderer_push_triangle_texture(&ProgramRenderer,
+				vec3f32( 4.0f, 0.0f, 0.0f), vec2f32( 0.0f, 0.0f),
+				vec3f32(-4.0f, 0.0f, 0.0f), vec2f32( 1.0f, 0.0f),
+				vec3f32( 0.0f, 4.0f, 0.0f), vec2f32( 0.5f, 1.0f),
+				pepper);
 			}
 		}
 		renderer_end_frame(&ProgramRenderer, WindowWidth, WindowHeight);

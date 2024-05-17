@@ -187,10 +187,10 @@ internal Renderer renderer_init(s32 window_width, s32 window_height) {
 	f32 quad_vertices[] = {
 		-1.0f,  1.0f,
 		-1.0f, -1.0f,
-        1.0f, -1.0f,
+		 1.0f, -1.0f,
 		-1.0f,  1.0f,
-        1.0f, -1.0f,
-        1.0f,  1.0f
+		 1.0f, -1.0f,
+		 1.0f,  1.0f
 	};
     
 	glGenVertexArrays(1, &result.screen_vao);
@@ -525,7 +525,7 @@ internal void renderer_push_triangle(Renderer* renderer, Vec3f32 a_position, Vec
 		printf("Error :: Renderer :: Too many triangles!");
 		Assert(0);
 	}
-    
+
 	s64 index = renderer->triangle_count * 3;
 	renderer->triangle_data[index+0].position      = a_position;
 	renderer->triangle_data[index+0].color         = a_color;
@@ -544,7 +544,7 @@ internal void renderer_push_triangle(Renderer* renderer, Vec3f32 a_position, Vec
 	renderer->triangle_data[index+2].uv            = vec2f32(0.0f, 0.0f);
 	renderer->triangle_data[index+2].texture_index = -1;
 	renderer->triangle_data[index+2].has_texture   = 0;
-    
+	
 	renderer->triangle_count += 1;
 }
 
