@@ -1,23 +1,23 @@
 /*
 noname:
-[] - Add texture support to the renderer
-[] - Put any kind of text to the screen
-[] - Add directional light
-[] - Add phong light
-[] - Add cube to the hovered cube face
-[] - Delete cubes
-[] - Add more robust input system
-[] - Add way to save and load levels from files
-[] - Add undo system for the add/remove cubes
-[] - Be able to select a cube on click
-[] - Add translation gizmos to selected cube (xyz arrows) and (xy, xz, yz planes), that actually transform the cube each arrow
-[] - Moving cubes from gizmos must snap to the grid
-[] - Add some sort of post processing shake when loading variables from hotload, just to know it was loaded and feature creep
-[] - MAX_TRIANGLES should be in an arena
+[ ] - Add texture support to the renderer
+[ ] - Put any kind of text to the screen
+[ ] - Add directional light
+[ ] - Add phong light
+[ ] - Add cube to the hovered cube face
+[ ] - Delete cubes
+[ ] - Add more robust input system
+[ ] - Add way to save and load levels from files
+[ ] - Add undo system for the add/remove cubes
+[ ] - Be able to select a cube on click
+[ ] - Add translation gizmos to selected cube (xyz arrows) and (xy, xz, yz planes), that actually transform the cube each arrow
+[ ] - Moving cubes from gizmos must snap to the grid
+[ ] - Add some sort of post processing shake when loading variables from hotload, just to know it was loaded and feature creep
+[ ] - MAX_TRIANGLES should be in an arena
 [x] - Replace GlobalArena with a either more specific arenas or just thread context scratch arenas
 f_base:
 [x] - Add thread context module
-[] - Add windows window layer I.e. remove glfw dependency
+[ ] - Add windows window layer I.e. remove glfw dependency
 */
 
 #include "main.h"
@@ -116,7 +116,7 @@ int main(void) {
 		printf("Failed to initialize GLAD");
 		Assert(0);
 	}
-    
+
 	// Camera and Mouse -----------
 	camera = camera_create();
 	LastX  = WindowWidth / 2.0f;
@@ -150,23 +150,16 @@ int main(void) {
 		DeltaTime = CurrentTime - LastFrame;
 		LastFrame = CurrentTime;
         
-		f64 time_diff = CurrentTime - PreviousTime;
-		FrameCounter++;
-		if (time_diff >= (1.0f/30.0f)) {
-			u32 fps = (1.0f / time_diff) * FrameCounter;
-			f32 ms = (time_diff / FrameCounter) * 1000;
-			char window_title[64];
-			sprintf(window_title, "noname - %u FPS / %.2f ms", fps, ms);
-			glfwSetWindowTitle(window, window_title);
-		}
-        
 		process_input(window);
-        
-		local_persist f64 last_hotload_time = -1;
-		if (CurrentTime - last_hotload_time > 1) {
-			hotload_variables();
-			hotload_shader_programs(&ProgramRenderer);
-			last_hotload_time = CurrentTime;
+
+		// Hotloading files
+		{
+			local_persist f64 last_hotload_time = -1;
+			if (CurrentTime - last_hotload_time > 1) {
+				hotload_variables();
+				hotload_shader_programs(&ProgramRenderer);
+				last_hotload_time = CurrentTime;
+			}
 		}
         
 		// View
@@ -187,13 +180,13 @@ int main(void) {
 			Raycast = vec3f32(F32_MAX, F32_MAX, F32_MAX);
 		}
         
-		Mat4f32 r = rotate_axis_mat4f32(vec3f32(-1.0f, 1.0f, 1.0f), glfwGetTime());
+		Mat4f32 r = rotate_axis_mat4f32(vec3f32(-1.0f, 1.0f, 1.0f), CurrentTime);
 		Mat4f32 t = translate_mat4f32(3.0f, 3.0f, 3.0f);
 		Mat4f32 trans = mul_mat4f32(t, r);
 		trans = mul_mat4f32(r, trans);
 		Cubes[0].transform = trans;
         
-		r = rotate_axis_mat4f32(vec3f32(1.0f, -1.0f, 1.0f), glfwGetTime());
+		r = rotate_axis_mat4f32(vec3f32(1.0f, -1.0f, 1.0f), CurrentTime);
 		t = translate_mat4f32(-3.0f, 3.0f, 3.0f);
 		trans = mul_mat4f32(t, r);
 		Cubes[1].transform = trans;
@@ -219,7 +212,7 @@ int main(void) {
 			for(u32 i = 0; i < TotalCubes; i++) {
 				CubeUnderCursor cuc;
 				if (find_cube_under_cursor(&cuc) && cuc.index == i) {
-					renderer_push_cube_highlight_face(&ProgramRenderer, Cubes[i], vec4f32(0.5+0.5*sin(5*glfwGetTime()), 0.5+0.5*sin(5*glfwGetTime()), 0.0f), cuc.hovered_face, scale_vec4f32(Cubes[i].color, 0.80));
+					renderer_push_cube_highlight_face(&ProgramRenderer, Cubes[i], vec4f32(0.5+0.5*sin(5*CurrentTime), 0.5+0.5*sin(5*CurrentTime), 0.0f), cuc.hovered_face, scale_vec4f32(Cubes[i].color, 0.80));
 				} else {
 					renderer_push_cube(&ProgramRenderer, Cubes[i], COLOR_BLACK);	
 				}
