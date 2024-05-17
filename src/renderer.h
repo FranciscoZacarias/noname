@@ -4,10 +4,10 @@
 
 #define MSAA_SAMPLES 8
 
-#define MAX_TRIANGLES 4096
+#define MAX_TRIANGLES 2048
 #define MAX_TRIANGLES_VERTICES (MAX_TRIANGLES * 3)
-#define MAX_LINES 256
-#define MAX_LINES_VERTICES (MAX_LINES * 2)
+
+#define MAX_TEXTURES 8
 
 #define DEFAULT_VERTEX_SHADER   "D:\\work\\noname\\src\\shaders\\default_vertex_shader.glsl"
 #define DEFAULT_FRAGMENT_SHADER "D:\\work\\noname\\src\\shaders\\default_fragment_shader.glsl"
@@ -30,6 +30,9 @@ typedef struct Renderer_Font_Info {
 typedef struct Renderer_Vertex {
   Vec3f32 position;
   Vec4f32 color;
+  Vec2f32 uv;
+  f32 texture_index;
+  s32 has_texture;
 } Renderer_Vertex;
 
 typedef struct Renderer {
@@ -60,8 +63,12 @@ typedef struct Renderer {
   u32 screen_vao;
   u32 screen_vbo;
 
+  // Data
   Renderer_Vertex triangle_data[MAX_TRIANGLES_VERTICES];
   u32 triangle_count;
+
+	u32 textures[MAX_TEXTURES];
+	u32 texture_count;
 } Renderer;
 
 internal Renderer renderer_init(s32 window_width, s32 window_height);
@@ -71,13 +78,18 @@ internal void renderer_generate_msaa_and_intermidiate_buffers(Renderer* renderer
 internal void renderer_recompile_default_shader(Arena* arena, Renderer* renderer);
 internal void renderer_recompile_screen_shader(Arena* arena, Renderer* renderer);
 
+// TODO(fz): Should this be on this namespace?
+internal u32  renderer_texture_load(String file_path);
+
 internal void renderer_begin_frame(Renderer* renderer, Vec4f32 background_color);
 internal void renderer_end_frame(Renderer* renderer, s32 window_width, s32 window_height);
 
 internal void renderer_push_string(Renderer* renderer, Renderer_Font_Info* font_info, String str, Vec2f32 pos, Vec4f32 color);
 internal void renderer_push_triangle(Renderer* renderer, Vec3f32 a_position, Vec4f32 a_color, Vec3f32 b_position, Vec4f32 b_color, Vec3f32 c_position, Vec4f32 c_color);
+internal void renderer_push_triangle_texture(Renderer* renderer, Vec3f32 a_position, Vec2f32 a_uv, Vec3f32 b_position, Vec2f32 b_uv, Vec3f32 c_position, Vec2f32 c_uv, u32 texture);
 internal void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color, f32 scale);
 internal void renderer_push_quad(Renderer* renderer, Quad quad, Vec4f32 color);
+internal void renderer_push_quad_texture();
 internal void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_color);
 internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, Vec4f32 border_color, Cube_Face highlight, Vec4f32 highlight_color);
 

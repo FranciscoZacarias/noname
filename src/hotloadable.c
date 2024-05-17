@@ -63,6 +63,9 @@ internal String _file_get_next_line(OS_File file, u32* cursor) {
 }
 
 internal void hotload_variables() {
+#if !ENABLE_HOTLOAD_VARIABLES
+	return;
+#endif 
 	Arena_Temp scratch = scratch_begin(0, 0);
 
 	u64 variables_tweak_last_modified = os_file_get_last_modified_time(StringLiteral(VARIABLES_TWEAK_FILE));

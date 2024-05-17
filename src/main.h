@@ -1,6 +1,7 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+#define ENABLE_HOTLOAD_VARIABLES 1
 #define ENABLE_ASSERT 1
 
 //////////////////////////////////////////////

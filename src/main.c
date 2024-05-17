@@ -1,6 +1,6 @@
 /*
 noname:
-[ ] - Add texture support to the renderer
+[x] - Add texture support to the renderer
 [ ] - Put any kind of text to the screen
 [ ] - Add directional light
 [ ] - Add phong light
@@ -13,7 +13,7 @@ noname:
 [ ] - Add translation gizmos to selected cube (xyz arrows) and (xy, xz, yz planes), that actually transform the cube each arrow
 [ ] - Moving cubes from gizmos must snap to the grid
 [ ] - Add some sort of post processing shake when loading variables from hotload, just to know it was loaded and feature creep
-[ ] - MAX_TRIANGLES should be in an arena
+[ ] - MAX_TRIANGLES should be in allocated memory instead of a stack allocation
 [x] - Replace GlobalArena with a either more specific arenas or just thread context scratch arenas
 f_base:
 [x] - Add thread context module
@@ -90,12 +90,9 @@ int main(void) {
 
 	Thread_Context tctx;
 	thread_context_init_and_equip(&tctx);
-    
-	CubesArena  = arena_init();
-	
-	Cubes = (Cube*)PushArray(CubesArena, Cube, 1024);
+
 	hotload_variables();
-    
+
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -116,6 +113,9 @@ int main(void) {
 		printf("Failed to initialize GLAD");
 		Assert(0);
 	}
+    
+	CubesArena  = arena_init();
+	Cubes = (Cube*)PushArray(CubesArena, Cube, 1024);
 
 	// Camera and Mouse -----------
 	camera = camera_create();
@@ -128,6 +128,7 @@ int main(void) {
 	Mouse.ndc_y = LastY;
     
 	ProgramRenderer = renderer_init(WindowWidth, WindowHeight);
+	u32 pepper = renderer_texture_load(StringLiteral("D:\\work\\noname\\res\\pepper.png"));
     
 	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A);
 	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A);
@@ -196,10 +197,10 @@ int main(void) {
 			renderer_set_uniform_mat4fv(ProgramRenderer.shader_program, "model", mat4f32(1.0f));
 			renderer_set_uniform_mat4fv(ProgramRenderer.shader_program, "view", view);
 			renderer_set_uniform_mat4fv(ProgramRenderer.shader_program, "projection", projection);
-            
+
 			renderer_push_arrow(&ProgramRenderer, vec3f32(0.0f, 0.0f, 0.0f), scale_vec3f32(vec3f32(Cubes[0].transform.m12, Cubes[0].transform.m13, Cubes[0].transform.m14), 0.5), vec4f32(0.0f, 1.0f, 1.0f), 0.5f);
 			renderer_push_arrow(&ProgramRenderer, vec3f32(0.0f, 0.0f, 0.0f), scale_vec3f32(vec3f32(Cubes[1].transform.m12, Cubes[1].transform.m13, Cubes[1].transform.m14), 0.5), vec4f32(1.0f, 1.0f, 0.0f), 0.5f);
-            
+
 			// Axis
 			{ 
 				f32 size = 20.0f;
@@ -208,14 +209,25 @@ int main(void) {
 				renderer_push_arrow(&ProgramRenderer, vec3f32(  0.0f,   0.0f, -size), vec3f32( 0.0f,  0.0f, size), COLOR_BLUE, 0.5f);
 			}
             
-			// Render cubes and highlight if cursor on top
-			for(u32 i = 0; i < TotalCubes; i++) {
-				CubeUnderCursor cuc;
-				if (find_cube_under_cursor(&cuc) && cuc.index == i) {
-					renderer_push_cube_highlight_face(&ProgramRenderer, Cubes[i], vec4f32(0.5+0.5*sin(5*CurrentTime), 0.5+0.5*sin(5*CurrentTime), 0.0f), cuc.hovered_face, scale_vec4f32(Cubes[i].color, 0.80));
-				} else {
-					renderer_push_cube(&ProgramRenderer, Cubes[i], COLOR_BLACK);	
+			// Render cubes and highlight if cursor on top.
+			{
+				for(u32 i = 0; i < TotalCubes; i++) {
+					CubeUnderCursor cuc;
+					if (find_cube_under_cursor(&cuc) && cuc.index == i) {
+						renderer_push_cube_highlight_face(&ProgramRenderer, Cubes[i], vec4f32(0.5+0.5*sin(5*CurrentTime), 0.5+0.5*sin(5*CurrentTime), 0.0f), cuc.hovered_face, scale_vec4f32(Cubes[i].color, 0.80));
+					} else {
+						renderer_push_cube(&ProgramRenderer, Cubes[i], COLOR_BLACK);	
+					}
 				}
+			}
+
+			// Render stuff with textures.
+			{
+				renderer_push_triangle_texture(&ProgramRenderer, 
+					vec3f32( 4.0f, 0.0f, 0.0f), vec2f32( 0.0f, 0.0f),
+					vec3f32(-4.0f, 0.0f, 0.0f), vec2f32( 1.0f, 0.0f),
+					vec3f32( 0.0f, 4.0f, 0.0f), vec2f32( 0.5f, 1.0f),
+					pepper);
 			}
 		}
 		renderer_end_frame(&ProgramRenderer, WindowWidth, WindowHeight);

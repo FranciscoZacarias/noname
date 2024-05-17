@@ -74,6 +74,14 @@ internal Renderer renderer_init(s32 window_width, s32 window_height) {
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(1, 4, GL_FLOAT, GL_False, sizeof(Renderer_Vertex), (void*) OffsetOfMember(Renderer_Vertex, color));
 		glEnableVertexAttribArray(1);
+
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_False, sizeof(Renderer_Vertex), (void*) OffsetOfMember(Renderer_Vertex, uv));
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(3, 1, GL_FLOAT, GL_False, sizeof(Renderer_Vertex), (void*) OffsetOfMember(Renderer_Vertex, texture_index));
+		glEnableVertexAttribArray(3);
+
+		glVertexAttribPointer(4, 1, GL_INT, GL_False, sizeof(Renderer_Vertex), (void*) OffsetOfMember(Renderer_Vertex, has_texture));
+		glEnableVertexAttribArray(4);
 	}
     
 	glBindVertexArray(0);
@@ -198,7 +206,17 @@ internal Renderer renderer_init(s32 window_width, s32 window_height) {
     
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-    
+
+	u32 texture_location = glGetUniformLocation(result.shader_program, "u_texture");
+	s32 textures[MAX_TEXTURES];
+	for (s32 i = 0; i < MAX_TEXTURES; i += 1) {
+		textures[i] = i;
+	}
+	glUniform1iv(texture_location, 8, textures);
+	
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	scratch_end(&scratch);
     
 	return result;
@@ -413,6 +431,39 @@ internal void renderer_free(Renderer* renderer) {
 	glDeleteProgram(renderer->screen_program);
 }
 
+internal u32 renderer_texture_load(String file_path) {
+	s32 width, height, channels;
+	stbi_set_flip_vertically_on_load(1);
+	u8* data = stbi_load((const char*)file_path.str, &width, &height, &channels, 0);
+	
+	u32 id;
+	glGenTextures(1, &id);
+	glBindTexture(GL_TEXTURE_2D, id);
+	
+	if (channels == 3) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	} else  if (channels == 4) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	} else {
+		printf("Error :: Unexpected number of channels when loading a texture.\n");
+		Assert(0);
+	}
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	
+	if (channels == 3) {
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
+	} else if (channels == 4) {
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+	}
+	
+	stbi_image_free(data);
+	return id;
+}
+
 internal void renderer_begin_frame(Renderer* renderer, Vec4f32 background_color) {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderer->msaa_frame_buffer_object);
 	glClearColor(background_color.x, background_color.y, background_color.z, 1.0f);
@@ -420,11 +471,17 @@ internal void renderer_begin_frame(Renderer* renderer, Vec4f32 background_color)
 	glEnable(GL_DEPTH_TEST);
     
 	renderer->triangle_count = 0;
+	renderer->texture_count = 0;
     
 	glUseProgram(renderer->shader_program);
 }
 
 void renderer_end_frame(Renderer* renderer, s32 window_width, s32 window_height) {
+	for (u32 i = 0; i < renderer->texture_count; i += 1) {
+		glActiveTexture(GL_TEXTURE0 + i);
+		glBindTexture(GL_TEXTURE_2D, renderer->textures[i]);
+	}
+
 	glBindVertexArray(renderer->vao);
 	glBindBuffer(GL_ARRAY_BUFFER, renderer->triangle_vbo);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, renderer->triangle_count * 3 * sizeof(Renderer_Vertex), renderer->triangle_data);
@@ -470,13 +527,62 @@ internal void renderer_push_triangle(Renderer* renderer, Vec3f32 a_position, Vec
 	}
     
 	s64 index = renderer->triangle_count * 3;
-	renderer->triangle_data[index+0].position = a_position;
-	renderer->triangle_data[index+0].color = a_color;
-	renderer->triangle_data[index+1].position = b_position;
-	renderer->triangle_data[index+1].color = b_color;
-	renderer->triangle_data[index+2].position = c_position;
-	renderer->triangle_data[index+2].color = c_color;
+	renderer->triangle_data[index+0].position      = a_position;
+	renderer->triangle_data[index+0].color         = a_color;
+	renderer->triangle_data[index+0].uv            = vec2f32(0.0f, 0.0f);
+	renderer->triangle_data[index+0].texture_index = -1;
+	renderer->triangle_data[index+0].has_texture   = 0;
+
+	renderer->triangle_data[index+1].position      = b_position;
+	renderer->triangle_data[index+1].color         = b_color;
+	renderer->triangle_data[index+1].uv            = vec2f32(0.0f, 0.0f);
+	renderer->triangle_data[index+1].texture_index = -1;
+	renderer->triangle_data[index+1].has_texture   = 0;
+
+	renderer->triangle_data[index+2].position      = c_position;
+	renderer->triangle_data[index+2].color         = c_color;
+	renderer->triangle_data[index+2].uv            = vec2f32(0.0f, 0.0f);
+	renderer->triangle_data[index+2].texture_index = -1;
+	renderer->triangle_data[index+2].has_texture   = 0;
     
+	renderer->triangle_count += 1;
+}
+
+internal void renderer_push_triangle_texture(Renderer* renderer, Vec3f32 a_position, Vec2f32 a_uv, Vec3f32 b_position, Vec2f32 b_uv, Vec3f32 c_position, Vec2f32 c_uv, u32 texture) {
+	u64 texture_index = U64_MAX;
+	for (u64 i = 0; i < renderer->texture_count; i += 1) {
+		if (renderer->textures[i] == texture) {
+			texture_index = i;
+			break;
+		}
+	}
+
+	// TODO(fz): If we add more textures than MAX_TEXTURES, we still have to handle that.
+	if (texture_index == U64_MAX && renderer->texture_count < MAX_TEXTURES) {
+		renderer->textures[renderer->texture_count] = texture;
+		texture_index = renderer->texture_count;
+		renderer->texture_count += 1;
+	}
+
+	s64 index = renderer->triangle_count * 3;
+	renderer->triangle_data[index+0].position      = a_position;
+	renderer->triangle_data[index+0].color         = COLOR_WHITE;
+	renderer->triangle_data[index+0].uv            = a_uv;
+	renderer->triangle_data[index+0].texture_index = texture_index;
+	renderer->triangle_data[index+0].has_texture   = 1;
+
+	renderer->triangle_data[index+1].position      = b_position;
+	renderer->triangle_data[index+1].color         = COLOR_WHITE;
+	renderer->triangle_data[index+1].uv            = b_uv;
+	renderer->triangle_data[index+1].texture_index = texture_index;
+	renderer->triangle_data[index+1].has_texture   = 1;
+
+	renderer->triangle_data[index+2].position      = c_position;
+	renderer->triangle_data[index+2].color         = COLOR_WHITE;
+	renderer->triangle_data[index+2].uv            = c_uv;
+	renderer->triangle_data[index+2].texture_index = texture_index;
+	renderer->triangle_data[index+2].has_texture   = 1;
+	
 	renderer->triangle_count += 1;
 }
 
@@ -554,9 +660,9 @@ internal void renderer_push_quad(Renderer* renderer, Quad quad, Vec4f32 color) {
 		printf("Error :: Renderer :: Too many triangles!");
 		Assert(0);
 	}
-    
-    renderer_push_triangle(renderer, quad.p0, color, quad.p1, color, quad.p2, color);
-    renderer_push_triangle(renderer, quad.p0, color, quad.p2, color, quad.p3, color);
+
+	renderer_push_triangle(renderer, quad.p0, color, quad.p1, color, quad.p2, color);
+	renderer_push_triangle(renderer, quad.p0, color, quad.p2, color, quad.p3, color);
 }
 
 internal void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_color) {
