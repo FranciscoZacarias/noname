@@ -1,7 +1,8 @@
 
 internal Renderer renderer_init(s32 window_width, s32 window_height) {
 	Arena_Temp scratch = scratch_begin(0, 0);
-	Renderer result = { 0 };
+	Renderer result;
+  MemoryZeroStruct(&result);
   
 	// --- Compile shader
 	u32 vertex_shader = glCreateShader(GL_VERTEX_SHADER);

@@ -227,7 +227,6 @@ int main(void) {
       
 			// Render stuff with textures.
 			{
-        
         Quad qt = {
           vec3f32( 4.0f, 0.0f,  0.0f),
           vec3f32(-4.0f, 0.0f,  0.0f),
