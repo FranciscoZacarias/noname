@@ -40,33 +40,33 @@ typedef struct Renderer {
   u32 shader_program;
   u32 vao;
   u32 triangle_vbo;
-
+  
   /* Default program renders to the MSAA offscreen buffer, 
      to apply anti aliasing */
-
+  
   // MSAA offscreen buffer
   u32 msaa_frame_buffer_object;
   u32 msaa_texture_color_buffer_multisampled;
   u32 msaa_render_buffer_object;
-
+  
   /* Blit (copy) from MSAA buffer into the pos processing (intermidiate)
      frame buffer, to apply post processing */
-
+  
   // Post processing offscreen buffer
   u32 postprocessing_fbo;
   u32 screen_texture;
-
+  
   /* Then we render again to a texture that fills the screen */
-
+  
   // Screen shader program
   u32 screen_program;
   u32 screen_vao;
   u32 screen_vbo;
-
+  
   // Data
   Renderer_Vertex triangle_data[MAX_TRIANGLES_VERTICES];
   u32 triangle_count;
-
+  
 	u32 textures[MAX_TEXTURES];
 	u32 texture_count;
 } Renderer;
@@ -91,6 +91,7 @@ internal void renderer_push_triangle_texture(Renderer* renderer, Vec3f32 a_posit
 internal void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color, f32 scale);
 internal void renderer_push_quad(Renderer* renderer, Quad quad, Vec4f32 color);
 internal void renderer_push_quad_texture(Renderer* renderer, Quad quad, u32 texture);
+internal void renderer_push_quad_texture_flipped(Renderer* renderer, Quad quad, u32 texture);
 internal void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_color);
 internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, Vec4f32 border_color, Cube_Face highlight, Vec4f32 highlight_color);
 internal void renderer_push_string(Renderer* renderer, Renderer_Font_Info* font_info, String text, Vec2f32 position, Vec4f32 color);

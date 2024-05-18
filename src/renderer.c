@@ -716,6 +716,19 @@ internal void renderer_push_quad_texture(Renderer* renderer, Quad quad, u32 text
                                  texture);
 }
 
+internal void renderer_push_quad_texture_flipped(Renderer* renderer, Quad quad, u32 texture) {
+	renderer_push_triangle_texture(renderer,
+                                 quad.p0, vec2f32(0.0f, 0.0f),
+                                 quad.p1, vec2f32(1.0f, 0.0f),
+                                 quad.p2, vec2f32(1.0f, 1.0f),
+                                 texture);
+	renderer_push_triangle_texture(renderer,
+                                 quad.p2, vec2f32(1.0f, 1.0f),
+                                 quad.p3, vec2f32(0.0f, 1.0f),
+                                 quad.p0, vec2f32(0.0f, 0.0f),
+                                 texture);
+}
+
 internal void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_color) {
 	renderer_push_cube_highlight_face(renderer, cube, border_color, -1, COLOR_BLACK);
 }
@@ -943,22 +956,23 @@ internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, V
 	}
 }
 
+
 internal void renderer_push_string(Renderer* renderer, Renderer_Font_Info* font_info, String text, Vec2f32 position, Vec4f32 color) {
-	
+  
 }
 
 internal void renderer_set_uniform_mat4fv(u32 program, const char* uniform, Mat4f32 mat) {
-	s32 uniform_location = glGetUniformLocation(program, uniform);
-	if (uniform_location == -1) {
-		printf("Mat4f32 :: Uniform %s not found\n", uniform);
-	}
-	glUniformMatrix4fv(uniform_location, 1, 1, &mat.data[0][0]);
+  s32 uniform_location = glGetUniformLocation(program, uniform);
+  if (uniform_location == -1) {
+    printf("Mat4f32 :: Uniform %s not found\n", uniform);
+  }
+  glUniformMatrix4fv(uniform_location, 1, 1, &mat.data[0][0]);
 }
 
 internal void renderer_set_uniform_s32(u32 program, const char* uniform, s32 s) {
-	s32 uniform_location = glGetUniformLocation(program, uniform);
-	if (uniform_location == -1) {
-		printf("s32 :: Uniform %s not found\n", uniform);
-	}
-	glUniform1i(uniform_location, s);
+  s32 uniform_location = glGetUniformLocation(program, uniform);
+  if (uniform_location == -1) {
+    printf("s32 :: Uniform %s not found\n", uniform);
+  }
+  glUniform1i(uniform_location, s);
 }

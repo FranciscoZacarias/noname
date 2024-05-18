@@ -44,13 +44,15 @@ typedef struct Mat4f32 {
     f32 data[4][4];
     struct {
       f32 m0, m4, m8,  m12,
-          m1, m5, m9,  m13,
-          m2, m6, m10, m14,
-          m3, m7, m11, m15;
+      m1, m5, m9,  m13,
+      m2, m6, m10, m14,
+      m3, m7, m11, m15;
     };
   };
 } Mat4f32;
 
+
+//~ Quad
 typedef struct Quad {
   Vec3f32 p0;
   Vec3f32 p1;
@@ -58,6 +60,10 @@ typedef struct Quad {
   Vec3f32 p3;
 } Quad;
 
+internal Quad transform_quad(Quad q, Mat4f32 m);
+internal Quad scale_quad(Quad q, f32 scale);
+
+// NOTE(fz): This defines a 2D Quad where (x,y) are the bottom left point of the quad!
 typedef struct Quad2D {
   f32 x;
   f32 y;
@@ -65,13 +71,18 @@ typedef struct Quad2D {
   f32 height;
 } Quad2D;
 
+b32 quad2d_contains_point(Quad2D a, Vec2f32 p);
+b32 quad2d_overlaps(Quad2D a, Quad2D b);
+b32 quad2d_fully_contained_by_qad2d(Quad2D a, Quad2D b);
+Quad2D quad2d_get_overlap(Quad2D a, Quad2D b);
+Quad2D quad2d_uv_cull(Quad2D quad, Quad2D uv, Quad2D cull_quad);
+
 typedef struct Linef32 {
   Vec3f32 point;
   Vec3f32 direction;
 } Linef32;
 
-internal Quad transform_quad(Quad q, Mat4f32 m);
-internal Quad scale_quad(Quad q, f32 scale);
+
 internal Linef32 linef32(Vec3f32 point, Vec3f32 direction);
 
 internal Vec2f32 vec2f32(f32 x, f32 y);

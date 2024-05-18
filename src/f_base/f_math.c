@@ -19,8 +19,67 @@ internal Quad scale_quad(Quad q, f32 scale) {
 	return result;
 }
 
+b32 quad2d_contains_point(Quad2D a, Vec2f32 p) {
+  b32 result = 
+    a.x <= p.x &&
+    a.y <= p.y &&
+    a.x + a.width  >= p.x &&
+    a.y + a.height >= p.y;
+  return result;
+}
+
+b32 quad2d_overlaps(Quad2D a, Quad2D b) {
+  b32 x = 
+  (a.x >= b.x && a.x <= b.x + b.width) ||
+  (a.x + a.width >= b.x && a.x + a.width <= b.x + b.width) ||
+  (a.x <= b.x && a.x + a.width >= b.x + b.width);
+  b32 y = 
+  (a.y >= b.y && a.y <= b.y + b.height) ||
+  (a.y + a.height >= b.y && a.y + a.height <= b.y + b.height) ||
+  (a.y <= b.y && a.y + a.height >= b.y + b.height);
+  return x && y;
+}
+
+b32 quad2d_fully_contained_by_quad2d(Quad2D a, Quad2D b) {
+  b32 x = 
+  (a.x >= b.x && a.x <= b.x + b.width) && 
+  (a.x + a.width >= b.x && a.x + a.width <= b.x + b.width);
+  b32 y =
+  (a.y >= b.y && a.y <= b.y + b.height) && 
+  (a.y + a.height >= b.y && a.y + a.height <= b.y + b.height);
+  return x && y;
+}
+
+Quad2D quad2d_get_overlap(Quad2D a, Quad2D b) {
+  Vec2f32 min = vec2f32(Max(a.x, b.x), Max(a.y, b.y));
+  Vec2f32 max = vec2f32(Min(a.x + a.width, b.x + b.width), Min(a.y + a.height, b.y + b.height));
+  Quad2D result = {
+    min.x, min.y,
+    max.x - min.x, max.y - min.y,
+  };
+  return result;
+}
+
+Quad2D quad2d_uv_cull(Quad2D quad, Quad2D uv, Quad2D cull_quad) {
+  if (!quad2d_overlaps(quad, cull_quad) || quad2d_fully_contained_by_quad2d(quad, cull_quad)) {
+    return uv;
+  }
+  
+  b32 x_shift_constant = !(quad.x >= cull_quad.x && quad.x <= cull_quad.x + cull_quad.width);
+  b32 y_shift_constant = !(quad.y >= cull_quad.y && quad.y <= cull_quad.y + cull_quad.height);
+  
+  f32 uv_xratio = uv.width / quad.width;
+  f32 uv_yratio = uv.height / quad.height;
+  Quad2D overlap = quad2d_get_overlap(quad, cull_quad);
+  f32 culled_x = uv.x + (quad.width - overlap.width) * uv_xratio * x_shift_constant;
+  f32 culled_y = uv.y + (quad.height - overlap.height) * uv_yratio * y_shift_constant;
+  f32 culled_w = overlap.width * uv_xratio;
+  f32 culled_h = overlap.height * uv_yratio;
+  return (Quad2D) { culled_x, culled_y, culled_w, culled_h };
+}
+
 internal Linef32 linef32(Vec3f32 point, Vec3f32 direction) {
-	Linef32 result = {point, direction};
+  Linef32 result = {point, direction};
 	return result;
 }
 
@@ -39,7 +98,6 @@ internal Vec3f32 vec3f32_from_vec4f32(Vec4f32 v) {
 	return result;
 }
 
-#include "stdio.h" 
 internal void print_vec3f32(Vec3f32 v, const char* label) {
 	printf("%sVec3f32(%.2ff, %.2ff, %.2ff)\n", label, v.x, v.y, v.z);
 }
@@ -156,9 +214,9 @@ internal Vec3f32 transform_vec3f32_mat4f32(Vec3f32 v, Mat4f32 m) {
 internal Vec3f32 rotate_by_axis_vec3f32(Vec3f32 v, Vec3f32 axis, f32 radians) {
 	// Using Euler-Rodrigues Formula
 	// Ref.: https://en.wikipedia.org/w/index.php?title=Euler%E2%80%93Rodrigues_formula
-
+  
 	Vec3f32 result = v;
-
+  
 	// Vector3Normalize(axis);
 	f32 length = sqrtf(axis.x*axis.x + axis.y*axis.y + axis.z*axis.z);
 	if (length == 0.0f) length = 1.0f;
@@ -166,7 +224,7 @@ internal Vec3f32 rotate_by_axis_vec3f32(Vec3f32 v, Vec3f32 axis, f32 radians) {
 	axis.x *= ilength;
 	axis.y *= ilength;
 	axis.z *= ilength;
-
+  
 	radians /= 2.0f;
 	f32 a = sinf(radians);
 	f32 b = axis.x*a;
@@ -174,32 +232,32 @@ internal Vec3f32 rotate_by_axis_vec3f32(Vec3f32 v, Vec3f32 axis, f32 radians) {
 	f32 d = axis.z*a;
 	a = cosf(radians);
 	Vec3f32 w = { b, c, d };
-
+  
 	// Vector3CrossProduct(w, v)
 	Vec3f32 wv = { w.y*v.z - w.z*v.y, w.z*v.x - w.x*v.z, w.x*v.y - w.y*v.x };
-
+  
 	// Vector3CrossProduct(w, wv)
 	Vec3f32 wwv = { w.y*wv.z - w.z*wv.y, w.z*wv.x - w.x*wv.z, w.x*wv.y - w.y*wv.x };
-
+  
 	// Vector3Scale(wv, 2*a)
 	a *= 2;
 	wv.x *= a;
 	wv.y *= a;
 	wv.z *= a;
-
+  
 	// Vector3Scale(wwv, 2)
 	wwv.x *= 2;
 	wwv.y *= 2;
 	wwv.z *= 2;
-
+  
 	result.x += wv.x;
 	result.y += wv.y;
 	result.z += wv.z;
-
+  
 	result.x += wwv.x;
 	result.y += wwv.y;
 	result.z += wwv.z;
-
+  
 	return result;
 }
 
@@ -213,84 +271,84 @@ internal Vec3f32 lerp_vec3f32(Vec3f32 a, Vec3f32 b, f32 t) {
 }
 
 internal Vec3f32 unproject_vec3f32(Vec3f32 source, Mat4f32 projection, Mat4f32 view) {
-		Vec3f32 result = { 0 };
-
-    // Calculate unprojected matrix (multiply view matrix by projection matrix) and invert it
-    Mat4f32 matViewProj = {      // MatrixMultiply(view, projection);
-        view.m0*projection.m0 + view.m1*projection.m4 + view.m2*projection.m8 + view.m3*projection.m12,
-        view.m0*projection.m1 + view.m1*projection.m5 + view.m2*projection.m9 + view.m3*projection.m13,
-        view.m0*projection.m2 + view.m1*projection.m6 + view.m2*projection.m10 + view.m3*projection.m14,
-        view.m0*projection.m3 + view.m1*projection.m7 + view.m2*projection.m11 + view.m3*projection.m15,
-        view.m4*projection.m0 + view.m5*projection.m4 + view.m6*projection.m8 + view.m7*projection.m12,
-        view.m4*projection.m1 + view.m5*projection.m5 + view.m6*projection.m9 + view.m7*projection.m13,
-        view.m4*projection.m2 + view.m5*projection.m6 + view.m6*projection.m10 + view.m7*projection.m14,
-        view.m4*projection.m3 + view.m5*projection.m7 + view.m6*projection.m11 + view.m7*projection.m15,
-        view.m8*projection.m0 + view.m9*projection.m4 + view.m10*projection.m8 + view.m11*projection.m12,
-        view.m8*projection.m1 + view.m9*projection.m5 + view.m10*projection.m9 + view.m11*projection.m13,
-        view.m8*projection.m2 + view.m9*projection.m6 + view.m10*projection.m10 + view.m11*projection.m14,
-        view.m8*projection.m3 + view.m9*projection.m7 + view.m10*projection.m11 + view.m11*projection.m15,
-        view.m12*projection.m0 + view.m13*projection.m4 + view.m14*projection.m8 + view.m15*projection.m12,
-        view.m12*projection.m1 + view.m13*projection.m5 + view.m14*projection.m9 + view.m15*projection.m13,
-        view.m12*projection.m2 + view.m13*projection.m6 + view.m14*projection.m10 + view.m15*projection.m14,
-        view.m12*projection.m3 + view.m13*projection.m7 + view.m14*projection.m11 + view.m15*projection.m15 };
-
-    // Calculate inverted matrix -> MatrixInvert(matViewProj);
-    // Cache the matrix values (speed optimization)
-    f32 a00 = matViewProj.m0, a01 = matViewProj.m1, a02 = matViewProj.m2, a03 = matViewProj.m3;
-    f32 a10 = matViewProj.m4, a11 = matViewProj.m5, a12 = matViewProj.m6, a13 = matViewProj.m7;
-    f32 a20 = matViewProj.m8, a21 = matViewProj.m9, a22 = matViewProj.m10, a23 = matViewProj.m11;
-    f32 a30 = matViewProj.m12, a31 = matViewProj.m13, a32 = matViewProj.m14, a33 = matViewProj.m15;
-
-    f32 b00 = a00*a11 - a01*a10;
-    f32 b01 = a00*a12 - a02*a10;
-    f32 b02 = a00*a13 - a03*a10;
-    f32 b03 = a01*a12 - a02*a11;
-    f32 b04 = a01*a13 - a03*a11;
-    f32 b05 = a02*a13 - a03*a12;
-    f32 b06 = a20*a31 - a21*a30;
-    f32 b07 = a20*a32 - a22*a30;
-    f32 b08 = a20*a33 - a23*a30;
-    f32 b09 = a21*a32 - a22*a31;
-    f32 b10 = a21*a33 - a23*a31;
-    f32 b11 = a22*a33 - a23*a32;
-
-    // Calculate the invert determinant (inlined to avoid double-caching)
-    f32 invDet = 1.0f/(b00*b11 - b01*b10 + b02*b09 + b03*b08 - b04*b07 + b05*b06);
-
-    Mat4f32 matViewProjInv = {
-        (a11*b11 - a12*b10 + a13*b09)*invDet,
-        (-a01*b11 + a02*b10 - a03*b09)*invDet,
-        (a31*b05 - a32*b04 + a33*b03)*invDet,
-        (-a21*b05 + a22*b04 - a23*b03)*invDet,
-        (-a10*b11 + a12*b08 - a13*b07)*invDet,
-        (a00*b11 - a02*b08 + a03*b07)*invDet,
-        (-a30*b05 + a32*b02 - a33*b01)*invDet,
-        (a20*b05 - a22*b02 + a23*b01)*invDet,
-        (a10*b10 - a11*b08 + a13*b06)*invDet,
-        (-a00*b10 + a01*b08 - a03*b06)*invDet,
-        (a30*b04 - a31*b02 + a33*b00)*invDet,
-        (-a20*b04 + a21*b02 - a23*b00)*invDet,
-        (-a10*b09 + a11*b07 - a12*b06)*invDet,
-        (a00*b09 - a01*b07 + a02*b06)*invDet,
-        (-a30*b03 + a31*b01 - a32*b00)*invDet,
-        (a20*b03 - a21*b01 + a22*b00)*invDet };
-
-    // Create quaternion from source point
-    Vec4f32 quat = { source.x, source.y, source.z, 1.0f };
-
-    // Multiply quat point by unprojecte matrix
-    Vec4f32 qtransformed = {     // QuaternionTransform(quat, matViewProjInv)
-        matViewProjInv.m0*quat.x + matViewProjInv.m4*quat.y + matViewProjInv.m8*quat.z + matViewProjInv.m12*quat.w,
-        matViewProjInv.m1*quat.x + matViewProjInv.m5*quat.y + matViewProjInv.m9*quat.z + matViewProjInv.m13*quat.w,
-        matViewProjInv.m2*quat.x + matViewProjInv.m6*quat.y + matViewProjInv.m10*quat.z + matViewProjInv.m14*quat.w,
-        matViewProjInv.m3*quat.x + matViewProjInv.m7*quat.y + matViewProjInv.m11*quat.z + matViewProjInv.m15*quat.w };
-
-    // Normalized world points in vectors
-    result.x = qtransformed.x/qtransformed.w;
-    result.y = qtransformed.y/qtransformed.w;
-    result.z = qtransformed.z/qtransformed.w;
-
-    return result;
+  Vec3f32 result = { 0 };
+  
+  // Calculate unprojected matrix (multiply view matrix by projection matrix) and invert it
+  Mat4f32 matViewProj = {      // MatrixMultiply(view, projection);
+    view.m0*projection.m0 + view.m1*projection.m4 + view.m2*projection.m8 + view.m3*projection.m12,
+    view.m0*projection.m1 + view.m1*projection.m5 + view.m2*projection.m9 + view.m3*projection.m13,
+    view.m0*projection.m2 + view.m1*projection.m6 + view.m2*projection.m10 + view.m3*projection.m14,
+    view.m0*projection.m3 + view.m1*projection.m7 + view.m2*projection.m11 + view.m3*projection.m15,
+    view.m4*projection.m0 + view.m5*projection.m4 + view.m6*projection.m8 + view.m7*projection.m12,
+    view.m4*projection.m1 + view.m5*projection.m5 + view.m6*projection.m9 + view.m7*projection.m13,
+    view.m4*projection.m2 + view.m5*projection.m6 + view.m6*projection.m10 + view.m7*projection.m14,
+    view.m4*projection.m3 + view.m5*projection.m7 + view.m6*projection.m11 + view.m7*projection.m15,
+    view.m8*projection.m0 + view.m9*projection.m4 + view.m10*projection.m8 + view.m11*projection.m12,
+    view.m8*projection.m1 + view.m9*projection.m5 + view.m10*projection.m9 + view.m11*projection.m13,
+    view.m8*projection.m2 + view.m9*projection.m6 + view.m10*projection.m10 + view.m11*projection.m14,
+    view.m8*projection.m3 + view.m9*projection.m7 + view.m10*projection.m11 + view.m11*projection.m15,
+    view.m12*projection.m0 + view.m13*projection.m4 + view.m14*projection.m8 + view.m15*projection.m12,
+    view.m12*projection.m1 + view.m13*projection.m5 + view.m14*projection.m9 + view.m15*projection.m13,
+    view.m12*projection.m2 + view.m13*projection.m6 + view.m14*projection.m10 + view.m15*projection.m14,
+    view.m12*projection.m3 + view.m13*projection.m7 + view.m14*projection.m11 + view.m15*projection.m15 };
+  
+  // Calculate inverted matrix -> MatrixInvert(matViewProj);
+  // Cache the matrix values (speed optimization)
+  f32 a00 = matViewProj.m0, a01 = matViewProj.m1, a02 = matViewProj.m2, a03 = matViewProj.m3;
+  f32 a10 = matViewProj.m4, a11 = matViewProj.m5, a12 = matViewProj.m6, a13 = matViewProj.m7;
+  f32 a20 = matViewProj.m8, a21 = matViewProj.m9, a22 = matViewProj.m10, a23 = matViewProj.m11;
+  f32 a30 = matViewProj.m12, a31 = matViewProj.m13, a32 = matViewProj.m14, a33 = matViewProj.m15;
+  
+  f32 b00 = a00*a11 - a01*a10;
+  f32 b01 = a00*a12 - a02*a10;
+  f32 b02 = a00*a13 - a03*a10;
+  f32 b03 = a01*a12 - a02*a11;
+  f32 b04 = a01*a13 - a03*a11;
+  f32 b05 = a02*a13 - a03*a12;
+  f32 b06 = a20*a31 - a21*a30;
+  f32 b07 = a20*a32 - a22*a30;
+  f32 b08 = a20*a33 - a23*a30;
+  f32 b09 = a21*a32 - a22*a31;
+  f32 b10 = a21*a33 - a23*a31;
+  f32 b11 = a22*a33 - a23*a32;
+  
+  // Calculate the invert determinant (inlined to avoid double-caching)
+  f32 invDet = 1.0f/(b00*b11 - b01*b10 + b02*b09 + b03*b08 - b04*b07 + b05*b06);
+  
+  Mat4f32 matViewProjInv = {
+    (a11*b11 - a12*b10 + a13*b09)*invDet,
+    (-a01*b11 + a02*b10 - a03*b09)*invDet,
+    (a31*b05 - a32*b04 + a33*b03)*invDet,
+    (-a21*b05 + a22*b04 - a23*b03)*invDet,
+    (-a10*b11 + a12*b08 - a13*b07)*invDet,
+    (a00*b11 - a02*b08 + a03*b07)*invDet,
+    (-a30*b05 + a32*b02 - a33*b01)*invDet,
+    (a20*b05 - a22*b02 + a23*b01)*invDet,
+    (a10*b10 - a11*b08 + a13*b06)*invDet,
+    (-a00*b10 + a01*b08 - a03*b06)*invDet,
+    (a30*b04 - a31*b02 + a33*b00)*invDet,
+    (-a20*b04 + a21*b02 - a23*b00)*invDet,
+    (-a10*b09 + a11*b07 - a12*b06)*invDet,
+    (a00*b09 - a01*b07 + a02*b06)*invDet,
+    (-a30*b03 + a31*b01 - a32*b00)*invDet,
+    (a20*b03 - a21*b01 + a22*b00)*invDet };
+  
+  // Create quaternion from source point
+  Vec4f32 quat = { source.x, source.y, source.z, 1.0f };
+  
+  // Multiply quat point by unprojecte matrix
+  Vec4f32 qtransformed = {     // QuaternionTransform(quat, matViewProjInv)
+    matViewProjInv.m0*quat.x + matViewProjInv.m4*quat.y + matViewProjInv.m8*quat.z + matViewProjInv.m12*quat.w,
+    matViewProjInv.m1*quat.x + matViewProjInv.m5*quat.y + matViewProjInv.m9*quat.z + matViewProjInv.m13*quat.w,
+    matViewProjInv.m2*quat.x + matViewProjInv.m6*quat.y + matViewProjInv.m10*quat.z + matViewProjInv.m14*quat.w,
+    matViewProjInv.m3*quat.x + matViewProjInv.m7*quat.y + matViewProjInv.m11*quat.z + matViewProjInv.m15*quat.w };
+  
+  // Normalized world points in vectors
+  result.x = qtransformed.x/qtransformed.w;
+  result.y = qtransformed.y/qtransformed.w;
+  result.z = qtransformed.z/qtransformed.w;
+  
+  return result;
 }
 
 internal f32 dot_vec3f32(Vec3f32 a, Vec3f32 b) {
@@ -390,11 +448,11 @@ internal Vec4f32 normalize_vec4f32(Vec4f32 v) {
 	Vec4f32 result = v;
 	f32 length = sqrtf((v.x*v.x) + (v.y*v.y) + (v.z*v.z) + (v.w*v.w));
 	if (length > 0) {
-			f32 ilength = 1.0f/length;
-			result.x = v.x*ilength;
-			result.y = v.y*ilength;
-			result.z = v.z*ilength;
-			result.w = v.w*ilength;
+    f32 ilength = 1.0f/length;
+    result.x = v.x*ilength;
+    result.y = v.y*ilength;
+    result.z = v.z*ilength;
+    result.w = v.w*ilength;
 	}
 	return result;
 }
@@ -437,7 +495,7 @@ internal Mat4f32 mat4f32(f32 diag) {
 		0.0f, diag, 0.0f, 0.0f,
 		0.0f, 0.0f, diag, 0.0f,
 		0.0f, 0.0f, 0.0f, diag };
-
+  
 	return result;
 }
 
@@ -516,92 +574,92 @@ internal Mat4f32 translate_mat4f32(f32 x, f32 y, f32 z) {
 
 internal Mat4f32 rotate_axis_mat4f32(Vec3f32 axis, f32 radians) {
 	Mat4f32 result = { 0 };
-
+  
 	f32 x = axis.x;
 	f32 y = axis.y;
 	f32 z = axis.z;
 	f32 lengthSquared = x*x + y*y + z*z;
-
+  
 	if ((lengthSquared != 1.0f) && (lengthSquared != 0.0f)) {
 		f32 ilength = 1.0f/sqrtf(lengthSquared);
 		x *= ilength;
 		y *= ilength;
 		z *= ilength;
 	}
-
+  
 	f32 sinres = sinf(radians);
 	f32 cosres = cosf(radians);
 	f32 t = 1.0f - cosres;
-
+  
 	result.m0 = x*x*t + cosres;
 	result.m1 = y*x*t + z*sinres;
 	result.m2 = z*x*t - y*sinres;
 	result.m3 = 0.0f;
-
+  
 	result.m4 = x*y*t - z*sinres;
 	result.m5 = y*y*t + cosres;
 	result.m6 = z*y*t + x*sinres;
 	result.m7 = 0.0f;
-
+  
 	result.m8 = x*z*t + y*sinres;
 	result.m9 = y*z*t - x*sinres;
 	result.m10 = z*z*t + cosres;
 	result.m11 = 0.0f;
-
+  
 	result.m12 = 0.0f;
 	result.m13 = 0.0f;
 	result.m14 = 0.0f;
 	result.m15 = 1.0f;
-
+  
 	return result;
 }
 
 internal Mat4f32 rotate_x_mat4f32(f32 radians) {
-		Mat4f32 result = {
-			1.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, 1.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f
-		};
-		f32 cosres = cosf(radians);
-		f32 sinres = sinf(radians);
-		result.m5  = cosres;
-		result.m6  = sinres;
-		result.m9  = -sinres;
-		result.m10 = cosres;
-		return result;
+  Mat4f32 result = {
+    1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, 1.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f
+  };
+  f32 cosres = cosf(radians);
+  f32 sinres = sinf(radians);
+  result.m5  = cosres;
+  result.m6  = sinres;
+  result.m9  = -sinres;
+  result.m10 = cosres;
+  return result;
 }
 
 internal Mat4f32 rotate_y_mat4f32(f32 radians) {
-		Mat4f32 result = {
-			1.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, 1.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f
-		};
-		f32 cosres = cosf(radians);
-		f32 sinres = sinf(radians);
-		result.m0 = cosres;
-		result.m2 = -sinres;
-		result.m8 = sinres;
-		result.m10 = cosres;
-		return result;
+  Mat4f32 result = {
+    1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, 1.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f
+  };
+  f32 cosres = cosf(radians);
+  f32 sinres = sinf(radians);
+  result.m0 = cosres;
+  result.m2 = -sinres;
+  result.m8 = sinres;
+  result.m10 = cosres;
+  return result;
 }
 
 internal Mat4f32 rotate_z_mat4f32(f32 radians) {
-		Mat4f32 result = {
-			1.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, 1.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f
-		};
-		f32 cosres = cosf(radians);
-		f32 sinres = sinf(radians);
-		result.m0 = cosres;
-		result.m1 = sinres;
-		result.m4 = -sinres;
-		result.m5 = cosres;
-		return result;
+  Mat4f32 result = {
+    1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, 1.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f
+  };
+  f32 cosres = cosf(radians);
+  f32 sinres = sinf(radians);
+  result.m0 = cosres;
+  result.m1 = sinres;
+  result.m4 = -sinres;
+  result.m5 = cosres;
+  return result;
 }
 
 internal Mat4f32 rotate_xyz_mat4f32(Vec3f32 radians) {
@@ -611,59 +669,59 @@ internal Mat4f32 rotate_xyz_mat4f32(Vec3f32 radians) {
 		0.0f, 0.0f, 1.0f, 0.0f,
 		0.0f, 0.0f, 0.0f, 1.0f
 	};
-
+  
 	f32 cosz = cosf(-radians.z);
 	f32 sinz = sinf(-radians.z);
 	f32 cosy = cosf(-radians.y);
 	f32 siny = sinf(-radians.y);
 	f32 cosx = cosf(-radians.x);
 	f32 sinx = sinf(-radians.x);
-
+  
 	result.m0 = cosz*cosy;
 	result.m1 = (cosz*siny*sinx) - (sinz*cosx);
 	result.m2 = (cosz*siny*cosx) + (sinz*sinx);
-
+  
 	result.m4 = sinz*cosy;
 	result.m5 = (sinz*siny*sinx) + (cosz*cosx);
 	result.m6 = (sinz*siny*cosx) - (cosz*sinx);
-
+  
 	result.m8 = -siny;
 	result.m9 = cosy*sinx;
 	result.m10= cosy*cosx;
-
+  
 	return result;
 }
 
 internal Mat4f32 rotate_zyx_mat4f32(Vec3f32 radians) {
 	Mat4f32 result = { 0 };
-
+  
 	f32 cz = cosf(radians.z);
 	f32 sz = sinf(radians.z);
 	f32 cy = cosf(radians.y);
 	f32 sy = sinf(radians.y);
 	f32 cx = cosf(radians.x);
 	f32 sx = sinf(radians.x);
-
+  
 	result.m0 = cz*cy;
 	result.m4 = cz*sy*sx - cx*sz;
 	result.m8 = sz*sx + cz*cx*sy;
 	result.m12 = 0;
-
+  
 	result.m1 = cy*sz;
 	result.m5 = cz*cx + sz*sy*sx;
 	result.m9 = cx*sz*sy - cz*sx;
 	result.m13 = 0;
-
+  
 	result.m2 = -sy;
 	result.m6 = cy*sx;
 	result.m10 = cy*cx;
 	result.m14 = 0;
-
+  
 	result.m3 = 0;
 	result.m7 = 0;
 	result.m11 = 0;
 	result.m15 = 1;
-
+  
 	return result;
 }
 
@@ -700,47 +758,47 @@ internal Mat4f32 scale_mat4f32(f32 x, f32 y, f32 z) {
 
 internal Mat4f32 frustum_mat4f32(f64 left, f64 right, f64 bottom, f64 top, f64 near_plane, f64 far_plane) {
 	Mat4f32 result = { 0 };
-
+  
 	f32 rl = (f32)(right - left);
 	f32 tb = (f32)(top - bottom);
 	f32 fn = (f32)(far_plane - near_plane);
-
+  
 	result.m0 = ((f32)near_plane*2.0f)/rl;
 	result.m1 = 0.0f;
 	result.m2 = 0.0f;
 	result.m3 = 0.0f;
-
+  
 	result.m4 = 0.0f;
 	result.m5 = ((f32)near_plane*2.0f)/tb;
 	result.m6 = 0.0f;
 	result.m7 = 0.0f;
-
+  
 	result.m8 = ((f32)right + (f32)left)/rl;
 	result.m9 = ((f32)top + (f32)bottom)/tb;
 	result.m10 = -((f32)far_plane + (f32)near_plane)/fn;
 	result.m11 = -1.0f;
-
+  
 	result.m12 = 0.0f;
 	result.m13 = 0.0f;
 	result.m14 = -((f32)far_plane*(f32)near_plane*2.0f)/fn;
 	result.m15 = 0.0f;
-
+  
 	return result;
 }
 
 internal Mat4f32 perspective_mat4f32(f64 fovy, f64 window_width, f64 window_height, f64 near_plane, f64 far_plane) {
 	Mat4f32 result = { 0 };
-
+  
 	f64 top = near_plane*tan(fovy*0.5);
 	f64 bottom = -top;
 	f64 right = top*(window_width/window_height);
 	f64 left = -right;
-
+  
 	// MatrixFrustum(-right, right, -top, top, near, far);
 	f32 rl = (f32)(right - left);
 	f32 tb = (f32)(top - bottom);
 	f32 fn = (f32)(far_plane - near_plane);
-
+  
 	result.m0 = ((f32)near_plane*2.0f)/rl;
 	result.m5 = ((f32)near_plane*2.0f)/tb;
 	result.m8 = ((f32)right + (f32)left)/rl;
@@ -748,17 +806,17 @@ internal Mat4f32 perspective_mat4f32(f64 fovy, f64 window_width, f64 window_heig
 	result.m10 = -((f32)far_plane + (f32)near_plane)/fn;
 	result.m11 = -1.0f;
 	result.m14 = -((f32)far_plane*(f32)near_plane*2.0f)/fn;
-
+  
 	return result;
 }
 
 internal Mat4f32 ortographic_mat4f32(f64 left, f64 right, f64 bottom, f64 top, f64 near_plane, f64 far_plane) {
 	Mat4f32 result = { 0 };
-
+  
 	f32 rl = (f32)(right - left);
 	f32 tb = (f32)(top - bottom);
 	f32 fn = (f32)(far_plane - near_plane);
-
+  
 	result.m0 = 2.0f/rl;
 	result.m1 = 0.0f;
 	result.m2 = 0.0f;
@@ -775,19 +833,19 @@ internal Mat4f32 ortographic_mat4f32(f64 left, f64 right, f64 bottom, f64 top, f
 	result.m13 = -((f32)top + (f32)bottom)/tb;
 	result.m14 = -((f32)far_plane + (f32)near_plane)/fn;
 	result.m15 = 1.0f;
-
+  
 	return result;
 }
 
 internal Mat4f32 look_at_mat4f32(Vec3f32 eye, Vec3f32 target, Vec3f32 up) {
 	Mat4f32 result = { 0 };
-
+  
 	f32 length = 0.0f;
 	f32 ilength = 0.0f;
-
+  
 	// Vector3Subtract(eye, target)
 	Vec3f32 vz = { eye.x - target.x, eye.y - target.y, eye.z - target.z };
-
+  
 	// Vector3Normalize(vz)
 	Vec3f32 v = vz;
 	length = sqrtf(v.x*v.x + v.y*v.y + v.z*v.z);
@@ -796,10 +854,10 @@ internal Mat4f32 look_at_mat4f32(Vec3f32 eye, Vec3f32 target, Vec3f32 up) {
 	vz.x *= ilength;
 	vz.y *= ilength;
 	vz.z *= ilength;
-
+  
 	// Vector3CrossProduct(up, vz)
 	Vec3f32 vx = { up.y*vz.z - up.z*vz.y, up.z*vz.x - up.x*vz.z, up.x*vz.y - up.y*vz.x };
-
+  
 	// Vector3Normalize(x)
 	v = vx;
 	length = sqrtf(v.x*v.x + v.y*v.y + v.z*v.z);
@@ -808,10 +866,10 @@ internal Mat4f32 look_at_mat4f32(Vec3f32 eye, Vec3f32 target, Vec3f32 up) {
 	vx.x *= ilength;
 	vx.y *= ilength;
 	vx.z *= ilength;
-
+  
 	// Vector3CrossProduct(vz, vx)
 	Vec3f32 vy = { vz.y*vx.z - vz.z*vx.y, vz.z*vx.x - vz.x*vx.z, vz.x*vx.y - vz.y*vx.x };
-
+  
 	result.m0 = vx.x;
 	result.m1 = vy.x;
 	result.m2 = vz.x;
@@ -828,7 +886,7 @@ internal Mat4f32 look_at_mat4f32(Vec3f32 eye, Vec3f32 target, Vec3f32 up) {
 	result.m13 = -(vy.x*eye.x + vy.y*eye.y + vy.z*eye.z);   // Vector3DotProduct(vy, eye)
 	result.m14 = -(vz.x*eye.x + vz.y*eye.y + vz.z*eye.z);   // Vector3DotProduct(vz, eye)
 	result.m15 = 1.0f;
-
+  
 	return result;
 }
 
@@ -849,21 +907,21 @@ internal f32 lerpf32(f32 start, f32 end, f32 t) {
 
 internal b32 is_vector_inside_rectangle(Vec3f32 p, Vec3f32 a, Vec3f32 b, Vec3f32 c) {
 	b32 result = 0;
-
+  
 	Vec3f32 ab = sub_vec3f32(a, b);
 	Vec3f32 bc = sub_vec3f32(b, c);
 	Vec3f32 ap = sub_vec3f32(a, p);
 	Vec3f32 bp = sub_vec3f32(b, p);
-
+  
 	f32 abap = dot_vec3f32(ab, ap);
 	f32 abab = dot_vec3f32(ab, ab);
 	f32 bcbp = dot_vec3f32(bc, bp);
 	f32 bcbc = dot_vec3f32(bc, bc);
-
+  
 	if (0 <= abap && abap <= abab && 0 <= bcbp && bcbp <= bcbc) {
 		result = 1;
 	}
-
+  
 	return result;
 }
 
@@ -875,22 +933,22 @@ internal Vec3f32 intersect_line_with_plane(Linef32 line, Vec3f32 point1, Vec3f32
 																 plane_v1.z*plane_v2.x - plane_v1.x*plane_v2.z,
 																 plane_v1.x*plane_v2.y - plane_v1.y*plane_v2.x);
 	f32 dot = dot_vec3f32(line.direction, plane_normal);
-
+  
 	// If the dot product is close to zero, the line is parallel to the plane
 	if (fabs(dot) < 0.000001f) {
-			return result;
+    return result;
 	}
-
+  
 	// Calculate the vector from a point on the line to a point on the plane
 	Vec3f32 lineToPlane = vec3f32(point1.x-line.point.x, point1.y-line.point.y, point1.z-line.point.z);
-
+  
 	// Calculate the distance along the line to the intersection point
 	f32 t = (lineToPlane.x*plane_normal.x + lineToPlane.y*plane_normal.y + lineToPlane.z*plane_normal.z) / dot;
-
+  
 	// Calculate the intersection point
 	result = vec3f32(line.point.x + t * line.direction.x,
-										line.point.y + t * line.direction.y,
-										line.point.z + t * line.direction.z);
-
+                   line.point.y + t * line.direction.y,
+                   line.point.z + t * line.direction.z);
+  
 	return result;
 }
