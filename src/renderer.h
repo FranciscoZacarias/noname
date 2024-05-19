@@ -32,7 +32,7 @@ typedef struct Renderer_Vertex {
   Vec4f32 color;
   Vec2f32 uv;
   f32 texture_index;
-  s32 has_texture;
+  f32 has_texture;
 } Renderer_Vertex;
 
 typedef struct Renderer {

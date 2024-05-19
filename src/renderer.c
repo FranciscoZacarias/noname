@@ -567,20 +567,20 @@ internal void renderer_push_triangle(Renderer* renderer, Vec3f32 a_position, Vec
 	renderer->triangle_data[index+0].position      = a_position;
 	renderer->triangle_data[index+0].color         = a_color;
 	renderer->triangle_data[index+0].uv            = vec2f32(0.0f, 0.0f);
-	renderer->triangle_data[index+0].texture_index = -1;
-	renderer->triangle_data[index+0].has_texture   = 0;
+	renderer->triangle_data[index+0].texture_index = F32_MAX;
+	renderer->triangle_data[index+0].has_texture   = 0.0;
   
 	renderer->triangle_data[index+1].position      = b_position;
 	renderer->triangle_data[index+1].color         = b_color;
 	renderer->triangle_data[index+1].uv            = vec2f32(0.0f, 0.0f);
-	renderer->triangle_data[index+1].texture_index = -1;
-	renderer->triangle_data[index+1].has_texture   = 0;
+	renderer->triangle_data[index+1].texture_index = F32_MAX;
+	renderer->triangle_data[index+1].has_texture   = 0.0;
   
 	renderer->triangle_data[index+2].position      = c_position;
 	renderer->triangle_data[index+2].color         = c_color;
 	renderer->triangle_data[index+2].uv            = vec2f32(0.0f, 0.0f);
-	renderer->triangle_data[index+2].texture_index = -1;
-	renderer->triangle_data[index+2].has_texture   = 0;
+	renderer->triangle_data[index+2].texture_index = F32_MAX;
+	renderer->triangle_data[index+2].has_texture   = 0.0;
   
 	renderer->triangle_count += 1;
 }
@@ -602,25 +602,27 @@ internal void renderer_push_triangle_texture(Renderer* renderer, Vec3f32 a_posit
 		texture_index = renderer->texture_count;
 		renderer->texture_count += 1;
 	}
-  
+
+	Assert(texture_index >= 0 && texture_index <= MAX_TEXTURES);
+
 	s64 index = renderer->triangle_count * 3;
 	renderer->triangle_data[index+0].position      = a_position;
 	renderer->triangle_data[index+0].color         = COLOR_WHITE;
 	renderer->triangle_data[index+0].uv            = a_uv;
 	renderer->triangle_data[index+0].texture_index = texture_index;
-	renderer->triangle_data[index+0].has_texture   = 1;
+	renderer->triangle_data[index+0].has_texture   = 1.0;
   
 	renderer->triangle_data[index+1].position      = b_position;
 	renderer->triangle_data[index+1].color         = COLOR_WHITE;
 	renderer->triangle_data[index+1].uv            = b_uv;
 	renderer->triangle_data[index+1].texture_index = texture_index;
-	renderer->triangle_data[index+1].has_texture   = 1;
+	renderer->triangle_data[index+1].has_texture   = 1.0;
   
 	renderer->triangle_data[index+2].position      = c_position;
 	renderer->triangle_data[index+2].color         = COLOR_WHITE;
 	renderer->triangle_data[index+2].uv            = c_uv;
 	renderer->triangle_data[index+2].texture_index = texture_index;
-	renderer->triangle_data[index+2].has_texture   = 1;
+	renderer->triangle_data[index+2].has_texture   = 1.0;
 	
 	renderer->triangle_count += 1;
 }

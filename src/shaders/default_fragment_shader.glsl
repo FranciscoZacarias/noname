@@ -2,15 +2,15 @@
 
 layout (location = 0) out vec4 FragColor;
 
-in vec4  vertex_color;
-in vec2  vertex_uv;
-in float vertex_texture_index;
-flat in int  vertex_has_texture;
+in vec4        vertex_color;
+in vec2        vertex_uv;
+in float       vertex_texture_index;
+flat in float  vertex_has_texture;
 
 uniform sampler2D u_texture[8];
 
 void main() {
-  if (vertex_has_texture > 0) {
+  if (vertex_has_texture > 0.0) {
     switch (int(vertex_texture_index)) {
       case 0: FragColor = vertex_color * texture(u_texture[0], vertex_uv); break;
       case 1: FragColor = vertex_color * texture(u_texture[1], vertex_uv); break;
