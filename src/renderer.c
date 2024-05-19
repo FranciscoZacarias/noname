@@ -720,16 +720,6 @@ internal void renderer_push_quad_texture(Renderer* renderer, Quad quad, u32 text
 }
 
 internal void renderer_push_quad_texture_flipped(Renderer* renderer, Quad quad, u32 texture) {
-	renderer_push_triangle_texture(renderer,
-                                 quad.p0, vec2f32(0.0f, 0.0f),
-                                 quad.p1, vec2f32(1.0f, 0.0f),
-                                 quad.p2, vec2f32(1.0f, 1.0f),
-                                 texture);
-	renderer_push_triangle_texture(renderer,
-                                 quad.p2, vec2f32(1.0f, 1.0f),
-                                 quad.p3, vec2f32(0.0f, 1.0f),
-                                 quad.p0, vec2f32(0.0f, 0.0f),
-                                 texture);
 }
 
 internal void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_color) {
