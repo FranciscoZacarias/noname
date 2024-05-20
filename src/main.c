@@ -222,23 +222,16 @@ int main(void) {
 					} else {
             renderer_push_cube(&ProgramRenderer, Cubes[i], COLOR_BLACK);	
 					}
-				}
-			}
-      
-			// Render stuff with textures.
-			{
-        Quad qt = {
-          vec3f32( 4.0f, 0.0f,  0.0f),
-          vec3f32(-4.0f, 0.0f,  0.0f),
-          vec3f32(-4.0f, 4.0f, -4.0f),
-          vec3f32( 4.0f, 4.0f, -4.0f)
+        }
+        
+        // Render stuff with textures.
+        {
         };
-        // renderer_push_quad_texture(&ProgramRenderer, qt, pepper);
-      }
-      
-      // Render text
-      {
-        renderer_push_string(&ProgramRenderer, &font_info, StringLiteral("There is a sign in the universe."), vec2f32(0.0f, 0.0f), COLOR_WHITE);
+        
+        // Render text
+        {
+          renderer_push_string(&ProgramRenderer, &font_info, StringLiteral("There is a sign in the universe."), vec2f32(-1.0f, -1.0f), COLOR_WHITE);
+        }
       }
     }
     renderer_end_frame(&ProgramRenderer, WindowWidth, WindowHeight);

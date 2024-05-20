@@ -945,7 +945,14 @@ internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, V
   }
 }
 
+
+
+// NOTE(fz): Position should be in NDC
 internal void renderer_push_string(Renderer* renderer, Renderer_Font_Info* font_info, String text, Vec2f32 position, Vec4f32 color) {
+  // NDC to screen
+  position.x = ((position.x + 1.0f) / 2.0f) * WindowWidth;
+  position.y = ((position.y + 1.0f) / 2.0f) * WindowHeight;
+  
   for (u32 i = 0; i < text.size; i++) {
     if (text.str[i] >= 32 && text.str[i] < 128) {
       stbtt_packedchar* info = &font_info->cdata[text.str[i] - 32];
@@ -955,36 +962,35 @@ internal void renderer_push_string(Renderer* renderer, Renderer_Font_Info* font_
         info->x0 / size, info->y0 / size,
         (info->x1 - info->x0) / size, (info->y1 - info->y0) / size
       };
-      Quad2D screen_location = {
-        position.x + info->xoff, position.y - info->yoff,
-        info->x1 - info->x0, info->y1 - info->y0
-      };
       
-      f32 scale = 0.002;
-      screen_location.x *= scale;
-      screen_location.y *= scale;
-      screen_location.width  *= scale;
-      screen_location.height *= scale;
+      // Calculate screen space location
+      f32 x0 = position.x + info->xoff;
+      f32 x1 = x0 + (info->x1 - info->x0);
+      f32 y0 = position.y - info->yoff;
+      f32 y1 = y0 - (info->y1 - info->y0);
       
-      Vec3f32 top_left_pos = { screen_location.x, screen_location.y, 0.0f };
-      Vec3f32 top_right_pos = { screen_location.x + screen_location.width, screen_location.y, 0.0f };
-      Vec3f32 bottom_left_pos = { screen_location.x, screen_location.y - screen_location.height, 0.0f };
-      Vec3f32 bottom_right_pos = { screen_location.x + screen_location.width, screen_location.y - screen_location.height, 0.0f };
+      // Convert screen space location to NDC
+      f32 ndc_x0 = (x0 / WindowWidth)  * 2.0f - 1.0f;
+      f32 ndc_y0 = (y0 / WindowHeight) * 2.0f - 1.0f;
+      f32 ndc_x1 = (x1 / WindowWidth)  * 2.0f - 1.0f;
+      f32 ndc_y1 = (y1 / WindowHeight) * 2.0f - 1.0f;
       
-      // Define UV coordinates in texture space
-      Vec2f32 top_left_uv = { atlas_location.x, atlas_location.y };
-      Vec2f32 top_right_uv = { atlas_location.x + atlas_location.width, atlas_location.y };
-      Vec2f32 bottom_left_uv = { atlas_location.x, atlas_location.y + atlas_location.height };
+      Vec3f32 top_left_pos     = { ndc_x0, ndc_y0, 0.0f };
+      Vec3f32 top_right_pos    = { ndc_x1, ndc_y0, 0.0f };
+      Vec3f32 bottom_left_pos  = { ndc_x0, ndc_y1, 0.0f };
+      Vec3f32 bottom_right_pos = { ndc_x1, ndc_y1, 0.0f };
+      
+      // UV coords of this character in the texture atlas
+      Vec2f32 top_left_uv     = { atlas_location.x, atlas_location.y };
+      Vec2f32 top_right_uv    = { atlas_location.x + atlas_location.width, atlas_location.y };
+      Vec2f32 bottom_left_uv  = { atlas_location.x, atlas_location.y + atlas_location.height };
       Vec2f32 bottom_right_uv = { atlas_location.x + atlas_location.width, atlas_location.y + atlas_location.height };
       
-      // Push first triangle (Top-left, Top-right, Bottom-left)
       renderer_push_triangle_texture(renderer, 
                                      top_left_pos, top_left_uv, 
                                      top_right_pos, top_right_uv, 
                                      bottom_left_pos, bottom_left_uv, 
                                      font_info->font_texture);
-      
-      // Push second triangle (Top-right, Bottom-right, Bottom-left)
       renderer_push_triangle_texture(renderer, 
                                      top_right_pos, top_right_uv, 
                                      bottom_right_pos, bottom_right_uv, 
