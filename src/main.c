@@ -131,7 +131,7 @@ int main(void) {
 	ProgramRenderer = renderer_init(WindowWidth, WindowHeight);
   
 	Renderer_Font_Info font_info = {0};
-	renderer_font_load(&font_info, StringLiteral("D:\\work\\noname\\res\\Karmina.Otf"), 32);
+	renderer_font_load(&font_info, StringLiteral("D:\\work\\noname\\res\\Karmina.Otf"), 16);
   
 	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A);
 	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A);
@@ -230,7 +230,7 @@ int main(void) {
         
         // Render text
         {
-          renderer_push_string(&ProgramRenderer, &font_info, StringLiteral("There is a sign in the universe."), vec2f32(-1.0f, -1.0f), COLOR_WHITE);
+          renderer_push_string(&ProgramRenderer, &font_info, StringLiteral("There is a sign in the universe."), vec2f32(-0.9, -0.9), COLOR_YELLOW);
         }
       }
     }

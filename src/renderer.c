@@ -584,7 +584,7 @@ internal void renderer_push_triangle(Renderer* renderer, Vec3f32 a_position, Vec
 	renderer->triangle_count += 1;
 }
 
-internal void renderer_push_triangle_texture(Renderer* renderer, Vec3f32 a_position, Vec2f32 a_uv, Vec3f32 b_position, Vec2f32 b_uv, Vec3f32 c_position, Vec2f32 c_uv, u32 texture) {
+internal void renderer_push_triangle_texture_color(Renderer* renderer, Vec3f32 a_position, Vec2f32 a_uv, Vec3f32 b_position, Vec2f32 b_uv, Vec3f32 c_position, Vec2f32 c_uv, Vec4f32 color, u32 texture) {
   u64 texture_index = U64_MAX;
   for (u64 i = 0; i < renderer->texture_count; i += 1) {
     if (renderer->textures[i] == texture) {
@@ -606,24 +606,28 @@ internal void renderer_push_triangle_texture(Renderer* renderer, Vec3f32 a_posit
   
   s64 index = renderer->triangle_count * 3;
   renderer->triangle_data[index+0].position      = a_position;
-  renderer->triangle_data[index+0].color         = COLOR_WHITE;
+  renderer->triangle_data[index+0].color         = color;
   renderer->triangle_data[index+0].uv            = a_uv;
   renderer->triangle_data[index+0].texture_index = texture_index;
   renderer->triangle_data[index+0].has_texture   = 1.0;
   
   renderer->triangle_data[index+1].position      = b_position;
-  renderer->triangle_data[index+1].color         = COLOR_WHITE;
+  renderer->triangle_data[index+1].color         = color;
   renderer->triangle_data[index+1].uv            = b_uv;
   renderer->triangle_data[index+1].texture_index = texture_index;
   renderer->triangle_data[index+1].has_texture   = 1.0;
   
   renderer->triangle_data[index+2].position      = c_position;
-  renderer->triangle_data[index+2].color         = COLOR_WHITE;
+  renderer->triangle_data[index+2].color         = color;
   renderer->triangle_data[index+2].uv            = c_uv;
   renderer->triangle_data[index+2].texture_index = texture_index;
   renderer->triangle_data[index+2].has_texture   = 1.0;
   
   renderer->triangle_count += 1;
+}
+
+internal void renderer_push_triangle_texture(Renderer* renderer, Vec3f32 a_position, Vec2f32 a_uv, Vec3f32 b_position, Vec2f32 b_uv, Vec3f32 c_position, Vec2f32 c_uv, u32 texture) {
+  renderer_push_triangle_texture_color(renderer, a_position, a_uv, b_position, b_uv, c_position, c_uv, COLOR_WHITE, texture);
 }
 
 internal void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color, f32 scale) {
@@ -986,16 +990,16 @@ internal void renderer_push_string(Renderer* renderer, Renderer_Font_Info* font_
       Vec2f32 bottom_left_uv  = { atlas_location.x, atlas_location.y + atlas_location.height };
       Vec2f32 bottom_right_uv = { atlas_location.x + atlas_location.width, atlas_location.y + atlas_location.height };
       
-      renderer_push_triangle_texture(renderer, 
-                                     top_left_pos, top_left_uv, 
-                                     top_right_pos, top_right_uv, 
-                                     bottom_left_pos, bottom_left_uv, 
-                                     font_info->font_texture);
-      renderer_push_triangle_texture(renderer, 
-                                     top_right_pos, top_right_uv, 
-                                     bottom_right_pos, bottom_right_uv, 
-                                     bottom_left_pos, bottom_left_uv, 
-                                     font_info->font_texture);
+      renderer_push_triangle_texture_color(renderer, 
+                                           top_left_pos, top_left_uv, 
+                                           top_right_pos, top_right_uv, 
+                                           bottom_left_pos, bottom_left_uv, 
+                                           color, font_info->font_texture);
+      renderer_push_triangle_texture_color(renderer, 
+                                           top_right_pos, top_right_uv, 
+                                           bottom_right_pos, bottom_right_uv, 
+                                           bottom_left_pos, bottom_left_uv, 
+                                           color, font_info->font_texture);
       
       position.x += info->xadvance;
     }
