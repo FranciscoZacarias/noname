@@ -244,17 +244,17 @@ int main(void) {
             char fps_buffer[16] = {0};
             s32 len = stbsp_sprintf(fps_buffer, "FPS: %d", FPS);
             String txt = { (u64)len, (u8*)fps_buffer };
-            renderer_push_string(&ProgramRenderer, &font_info, txt, vec2f32(-0.995, 0.95), COLOR_WHITE);
+            renderer_push_string(&ProgramRenderer, &font_info, txt, vec2f32(-0.998, 0.95), COLOR_WHITE);
             
             char tri_buffer[64] = {0};
             len = stbsp_sprintf(tri_buffer, "Triangles Count: %d", ProgramRenderer.triangle_count);
             String stats_tri = { (u64)len, (u8*)tri_buffer };
-            renderer_push_string(&ProgramRenderer, &font_info, stats_tri, vec2f32(-0.995, 0.90), COLOR_WHITE);
+            renderer_push_string(&ProgramRenderer, &font_info, stats_tri, vec2f32(-0.998, 0.90), COLOR_WHITE);
             
             char cube_buffer[64] = {0};
             len = stbsp_sprintf(cube_buffer, "Cube Count: %d", TotalCubes-1);
             String stats_cube = { (u64)len, (u8*)cube_buffer };
-            renderer_push_string(&ProgramRenderer, &font_info, stats_cube, vec2f32(-0.994, 0.85), COLOR_WHITE);
+            renderer_push_string(&ProgramRenderer, &font_info, stats_cube, vec2f32(-0.998, 0.85), COLOR_WHITE);
           }
         }
       }

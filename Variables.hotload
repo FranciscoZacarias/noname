@@ -5,7 +5,7 @@ window_height: 720
 
 \Editor
 camera_speed: 16
-cube_border_thickness: 5
+cube_border_thickness: 6
 show_stats: true
 
 \Opengl
