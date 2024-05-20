@@ -15,6 +15,7 @@ noname:
 [ ] - Moving cubes from gizmos must snap to the grid
 [ ] - Add some sort of post processing shake when loading variables from hotload, just to know it was loaded and feature creep
 [ ] - MAX_TRIANGLES should be in allocated memory instead of a stack allocation
+[x] - Add hotloadable stats on top left
 [x] - Replace GlobalArena with a either more specific arenas or just thread context scratch arenas
 f_base:
 [x] - Add thread context module
