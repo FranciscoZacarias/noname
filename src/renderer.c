@@ -545,8 +545,7 @@ void renderer_end_frame(Renderer* renderer, s32 window_width, s32 window_height)
 	glDisable(GL_DEPTH_TEST);
   
 	glUseProgram(renderer->screen_program);
-	glBindVertexArray(renderer->screen_vao);
-	glActiveTexture(GL_TEXTURE0);
+	glBindVertexArray(renderer->screen_vao);glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, renderer->screen_texture);
 	renderer_set_uniform_s32(renderer->screen_program, "window_width", window_width);
 	renderer_set_uniform_s32(renderer->screen_program, "window_height", window_height);
@@ -586,229 +585,226 @@ internal void renderer_push_triangle(Renderer* renderer, Vec3f32 a_position, Vec
 }
 
 internal void renderer_push_triangle_texture(Renderer* renderer, Vec3f32 a_position, Vec2f32 a_uv, Vec3f32 b_position, Vec2f32 b_uv, Vec3f32 c_position, Vec2f32 c_uv, u32 texture) {
-	u64 texture_index = U64_MAX;
-	for (u64 i = 0; i < renderer->texture_count; i += 1) {
-		if (renderer->textures[i] == texture) {
-			texture_index = i;
-			break;
-		}
-	}
+  u64 texture_index = U64_MAX;
+  for (u64 i = 0; i < renderer->texture_count; i += 1) {
+    if (renderer->textures[i] == texture) {
+      texture_index = i;
+      break;
+    }
+  }
   
-	// TODO(fz): If we add more textures than MAX_TEXTURES, we still have to handle that.
-	// TODO(fz): This should probably be in renderer_load_texture.
-	// TODO(fz): Do we need to clean them up? Didn't implement it yet because I think now they are kept during the lifetime of the program
-	if (texture_index == U64_MAX && renderer->texture_count < MAX_TEXTURES) {
-		renderer->textures[renderer->texture_count] = texture;
-		texture_index = renderer->texture_count;
-		renderer->texture_count += 1;
-	}
-
-	Assert(texture_index >= 0 && texture_index <= MAX_TEXTURES);
-
-	s64 index = renderer->triangle_count * 3;
-	renderer->triangle_data[index+0].position      = a_position;
-	renderer->triangle_data[index+0].color         = COLOR_WHITE;
-	renderer->triangle_data[index+0].uv            = a_uv;
-	renderer->triangle_data[index+0].texture_index = texture_index;
-	renderer->triangle_data[index+0].has_texture   = 1.0;
+  // TODO(fz): If we add more textures than MAX_TEXTURES, we still have to handle that.
+  // TODO(fz): This should probably be in renderer_load_texture.
+  // TODO(fz): Do we need to clean them up? Didn't implement it yet because I think now they are kept during the lifetime of the program
+  if (texture_index == U64_MAX && renderer->texture_count < MAX_TEXTURES) {
+    renderer->textures[renderer->texture_count] = texture;
+    texture_index = renderer->texture_count;
+    renderer->texture_count += 1;
+  }
   
-	renderer->triangle_data[index+1].position      = b_position;
-	renderer->triangle_data[index+1].color         = COLOR_WHITE;
-	renderer->triangle_data[index+1].uv            = b_uv;
-	renderer->triangle_data[index+1].texture_index = texture_index;
-	renderer->triangle_data[index+1].has_texture   = 1.0;
+  Assert(texture_index >= 0 && texture_index <= MAX_TEXTURES);
   
-	renderer->triangle_data[index+2].position      = c_position;
-	renderer->triangle_data[index+2].color         = COLOR_WHITE;
-	renderer->triangle_data[index+2].uv            = c_uv;
-	renderer->triangle_data[index+2].texture_index = texture_index;
-	renderer->triangle_data[index+2].has_texture   = 1.0;
-	
-	renderer->triangle_count += 1;
+  s64 index = renderer->triangle_count * 3;
+  renderer->triangle_data[index+0].position      = a_position;
+  renderer->triangle_data[index+0].color         = COLOR_WHITE;
+  renderer->triangle_data[index+0].uv            = a_uv;
+  renderer->triangle_data[index+0].texture_index = texture_index;
+  renderer->triangle_data[index+0].has_texture   = 1.0;
+  
+  renderer->triangle_data[index+1].position      = b_position;
+  renderer->triangle_data[index+1].color         = COLOR_WHITE;
+  renderer->triangle_data[index+1].uv            = b_uv;
+  renderer->triangle_data[index+1].texture_index = texture_index;
+  renderer->triangle_data[index+1].has_texture   = 1.0;
+  
+  renderer->triangle_data[index+2].position      = c_position;
+  renderer->triangle_data[index+2].color         = COLOR_WHITE;
+  renderer->triangle_data[index+2].uv            = c_uv;
+  renderer->triangle_data[index+2].texture_index = texture_index;
+  renderer->triangle_data[index+2].has_texture   = 1.0;
+  
+  renderer->triangle_count += 1;
 }
 
 internal void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color, f32 scale) {
-	scale = scale * 0.1; // Makes this scale factor less sensitive on user level
-	Vec3f32 direction = normalize_vec3f32(sub_vec3f32(b, a));
-	Vec3f32 up   = vec3f32(0.0f, 1.0f, 0.0f);
-	Vec3f32 axis = cross_vec3f32(direction, up);
-	f64 angle = acos(dot_vec3f32(direction, up) / (length_vec3f32(direction) * length_vec3f32(up)));
-	Mat4f32 r = rotate_axis_mat4f32(axis, -angle);
-	Mat4f32 t = translate_mat4f32(b.x, b.y, b.z);
-	f32 arrow_height = 0.5;
+  scale = scale * 0.1; // Makes this scale factor less sensitive on user level
+  Vec3f32 direction = normalize_vec3f32(sub_vec3f32(b, a));
+  Vec3f32 up   = vec3f32(0.0f, 1.0f, 0.0f);
+  Vec3f32 axis = cross_vec3f32(direction, up);
+  f64 angle = acos(dot_vec3f32(direction, up) / (length_vec3f32(direction) * length_vec3f32(up)));
+  Mat4f32 r = rotate_axis_mat4f32(axis, -angle);
+  Mat4f32 t = translate_mat4f32(b.x, b.y, b.z);
+  f32 arrow_height = 0.5;
   
-	{
-		Vec3f32 arrow_top = vec3f32(0.0f, scale, 0.0f);
-		Quad base_a = {
-			vec3f32(-scale, -scale,  scale),
-			vec3f32( scale, -scale,  scale),
-			vec3f32( scale, -scale, -scale),
-			vec3f32(-scale, -scale, -scale),
-		};
-		base_a = transform_quad(base_a, r);
-		base_a = transform_quad(base_a, t);
-		base_a.p0 = sub_vec3f32(base_a.p0, scale_vec3f32(direction, arrow_height));
-		base_a.p1 = sub_vec3f32(base_a.p1, scale_vec3f32(direction, arrow_height));
-		base_a.p2 = sub_vec3f32(base_a.p2, scale_vec3f32(direction, arrow_height));
-		base_a.p3 = sub_vec3f32(base_a.p3, scale_vec3f32(direction, arrow_height));
+  {
+    Vec3f32 arrow_top = vec3f32(0.0f, scale, 0.0f);
+    Quad base_a = {
+      vec3f32(-scale, -scale,  scale),
+      vec3f32( scale, -scale,  scale),
+      vec3f32( scale, -scale, -scale),
+      vec3f32(-scale, -scale, -scale),
+    };
+    base_a = transform_quad(base_a, r);
+    base_a = transform_quad(base_a, t);
+    base_a.p0 = sub_vec3f32(base_a.p0, scale_vec3f32(direction, arrow_height));
+    base_a.p1 = sub_vec3f32(base_a.p1, scale_vec3f32(direction, arrow_height));
+    base_a.p2 = sub_vec3f32(base_a.p2, scale_vec3f32(direction, arrow_height));
+    base_a.p3 = sub_vec3f32(base_a.p3, scale_vec3f32(direction, arrow_height));
     
-		arrow_top = mul_vec3f32_mat4f32(arrow_top, r);
-		arrow_top = mul_vec3f32_mat4f32(arrow_top, t);
-		f32 top_extra = distance_vec3f32(arrow_top, b);
-		arrow_top = sub_vec3f32(arrow_top, scale_vec3f32(direction, top_extra));
+    arrow_top = mul_vec3f32_mat4f32(arrow_top, r);
+    arrow_top = mul_vec3f32_mat4f32(arrow_top, t);
+    f32 top_extra = distance_vec3f32(arrow_top, b);
+    arrow_top = sub_vec3f32(arrow_top, scale_vec3f32(direction, top_extra));
     
-		renderer_push_quad(renderer, base_a, color);
-		renderer_push_triangle(renderer, base_a.p0, color, arrow_top, color, base_a.p1, color);
-		renderer_push_triangle(renderer, base_a.p1, color, arrow_top, color, base_a.p2, color);
-		renderer_push_triangle(renderer, base_a.p2, color, arrow_top, color, base_a.p3, color);
-		renderer_push_triangle(renderer, base_a.p3, color, arrow_top, color, base_a.p0, color);
-	}
+    renderer_push_quad(renderer, base_a, color);
+    renderer_push_triangle(renderer, base_a.p0, color, arrow_top, color, base_a.p1, color);
+    renderer_push_triangle(renderer, base_a.p1, color, arrow_top, color, base_a.p2, color);
+    renderer_push_triangle(renderer, base_a.p2, color, arrow_top, color, base_a.p3, color);
+    renderer_push_triangle(renderer, base_a.p3, color, arrow_top, color, base_a.p0, color);
+  }
   
-	{
-		scale = scale*0.5;
-		Quad base_a = {
-			vec3f32(-scale, -scale,  scale),
-			vec3f32( scale, -scale,  scale),
-			vec3f32( scale, -scale, -scale),
-			vec3f32(-scale, -scale, -scale),
-		};
-		base_a = transform_quad(base_a, r);
-		base_a = transform_quad(base_a, t);
-		
-		Quad base_b = {
-			sub_vec3f32(base_a.p0, scale_vec3f32(direction, distance_vec3f32(a, b))),
-			sub_vec3f32(base_a.p1, scale_vec3f32(direction, distance_vec3f32(a, b))),
-			sub_vec3f32(base_a.p2, scale_vec3f32(direction, distance_vec3f32(a, b))),
-			sub_vec3f32(base_a.p3, scale_vec3f32(direction, distance_vec3f32(a, b))),
-		};
-		
-		base_a.p0 = sub_vec3f32(base_a.p0, scale_vec3f32(direction, arrow_height));
-		base_a.p1 = sub_vec3f32(base_a.p1, scale_vec3f32(direction, arrow_height));
-		base_a.p2 = sub_vec3f32(base_a.p2, scale_vec3f32(direction, arrow_height));
-		base_a.p3 = sub_vec3f32(base_a.p3, scale_vec3f32(direction, arrow_height));
+  {
+    scale = scale*0.5;
+    Quad base_a = {
+      vec3f32(-scale, -scale,  scale),
+      vec3f32( scale, -scale,  scale),
+      vec3f32( scale, -scale, -scale),
+      vec3f32(-scale, -scale, -scale),
+    };
+    base_a = transform_quad(base_a, r);
+    base_a = transform_quad(base_a, t);
     
-		color = scale_vec4f32(color, 0.8);
-		renderer_push_quad(renderer, base_b, color);
-		renderer_push_quad(renderer, (Quad){ base_a.p1, base_b.p1, base_b.p0, base_a.p0 }, color);
-		renderer_push_quad(renderer, (Quad){ base_a.p2, base_b.p2, base_b.p1, base_a.p1 }, color);
-		renderer_push_quad(renderer, (Quad){ base_a.p3, base_b.p3, base_b.p2, base_a.p2 }, color);
-		renderer_push_quad(renderer, (Quad){ base_b.p3, base_a.p3, base_a.p0, base_b.p0 }, color);
-	}
+    Quad base_b = {
+      sub_vec3f32(base_a.p0, scale_vec3f32(direction, distance_vec3f32(a, b))),
+      sub_vec3f32(base_a.p1, scale_vec3f32(direction, distance_vec3f32(a, b))),
+      sub_vec3f32(base_a.p2, scale_vec3f32(direction, distance_vec3f32(a, b))),
+      sub_vec3f32(base_a.p3, scale_vec3f32(direction, distance_vec3f32(a, b))),
+    };
+    
+    base_a.p0 = sub_vec3f32(base_a.p0, scale_vec3f32(direction, arrow_height));
+    base_a.p1 = sub_vec3f32(base_a.p1, scale_vec3f32(direction, arrow_height));
+    base_a.p2 = sub_vec3f32(base_a.p2, scale_vec3f32(direction, arrow_height));
+    base_a.p3 = sub_vec3f32(base_a.p3, scale_vec3f32(direction, arrow_height));
+    
+    color = scale_vec4f32(color, 0.8);
+    renderer_push_quad(renderer, base_b, color);
+    renderer_push_quad(renderer, (Quad){ base_a.p1, base_b.p1, base_b.p0, base_a.p0 }, color);
+    renderer_push_quad(renderer, (Quad){ base_a.p2, base_b.p2, base_b.p1, base_a.p1 }, color);
+    renderer_push_quad(renderer, (Quad){ base_a.p3, base_b.p3, base_b.p2, base_a.p2 }, color);
+    renderer_push_quad(renderer, (Quad){ base_b.p3, base_a.p3, base_a.p0, base_b.p0 }, color);
+  }
 }
 
 internal void renderer_push_quad(Renderer* renderer, Quad quad, Vec4f32 color) {
-	if ((renderer->triangle_count + 2) >= MAX_TRIANGLES) {
-		printf("Error :: Renderer :: Too many triangles!");
-		Assert(0);
-	}
+  if ((renderer->triangle_count + 2) >= MAX_TRIANGLES) {
+    printf("Error :: Renderer :: Too many triangles!");
+    Assert(0);
+  }
   
-	renderer_push_triangle(renderer, quad.p0, color, quad.p1, color, quad.p2, color);
-	renderer_push_triangle(renderer, quad.p0, color, quad.p2, color, quad.p3, color);
+  renderer_push_triangle(renderer, quad.p0, color, quad.p1, color, quad.p2, color);
+  renderer_push_triangle(renderer, quad.p0, color, quad.p2, color, quad.p3, color);
 }
 
 internal void renderer_push_quad_texture(Renderer* renderer, Quad quad, u32 texture) {
-	renderer_push_triangle_texture(renderer,
+  renderer_push_triangle_texture(renderer,
                                  quad.p0, vec2f32(0.0f, 0.0f),
                                  quad.p1, vec2f32(1.0f, 0.0f),
                                  quad.p2, vec2f32(1.0f, 1.0f),
                                  texture);
-	renderer_push_triangle_texture(renderer,
+  renderer_push_triangle_texture(renderer,
                                  quad.p2, vec2f32(1.0f, 1.0f),
                                  quad.p3, vec2f32(0.0f, 1.0f),
                                  quad.p0, vec2f32(0.0f, 0.0f),
                                  texture);
 }
 
-internal void renderer_push_quad_texture_flipped(Renderer* renderer, Quad quad, u32 texture) {
-}
-
 internal void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_color) {
-	renderer_push_cube_highlight_face(renderer, cube, border_color, -1, COLOR_BLACK);
+  renderer_push_cube_highlight_face(renderer, cube, border_color, -1, COLOR_BLACK);
 }
 
 internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, Vec4f32 border_color, Cube_Face highlight, Vec4f32 highlight_color) {
   f32 scale = 1-HotloadableCubeBorderThickness;
   
-	// On XY Plane
+  // On XY Plane
   {
-		Quad back = {
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P0, scale, scale, 1.0f), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P1, scale, scale, 1.0f), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P2, scale, scale, 1.0f), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P3, scale, scale, 1.0f), cube.transform)};
+    Quad back = {
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P0, scale, scale, 1.0f), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P1, scale, scale, 1.0f), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P2, scale, scale, 1.0f), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P3, scale, scale, 1.0f), cube.transform)};
     renderer_push_quad(renderer, back, (highlight == CubeFace_Back) ? highlight_color : cube.color);
     
-		Quad back_left_border_quad = {
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P0,   1.0f, scale, 1.0f), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P1, -scale, scale, 1.0f), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P2, -scale , 1.0f, 1.0f), cube.transform),
-			mul_vec3f32_mat4f32(P3,                                         cube.transform)};
-		renderer_push_quad(renderer, back_left_border_quad, border_color);
+    Quad back_left_border_quad = {
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P0,   1.0f, scale, 1.0f), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P1, -scale, scale, 1.0f), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P2, -scale , 1.0f, 1.0f), cube.transform),
+      mul_vec3f32_mat4f32(P3,                                         cube.transform)};
+    renderer_push_quad(renderer, back_left_border_quad, border_color);
     
-		Quad back_top_border = {
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P3, scale,   1.0f, 1.0f), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P0, scale, -scale, 1.0f), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P1,  1.0f, -scale, 1.0f), cube.transform),
-			mul_vec3f32_mat4f32(P2,                                         cube.transform)};
-		renderer_push_quad(renderer, back_top_border, border_color);
+    Quad back_top_border = {
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P3, scale,   1.0f, 1.0f), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P0, scale, -scale, 1.0f), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P1,  1.0f, -scale, 1.0f), cube.transform),
+      mul_vec3f32_mat4f32(P2,                                         cube.transform)};
+    renderer_push_quad(renderer, back_top_border, border_color);
     
-		Quad back_right_border = {
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P0, -scale,  1.0f, 1.0f), cube.transform),
-			mul_vec3f32_mat4f32(P1,                                         cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P2,   1.0f, scale, 1.0f), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P3, -scale, scale, 1.0f), cube.transform)};
-		renderer_push_quad(renderer, back_right_border, border_color);
+    Quad back_right_border = {
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P0, -scale,  1.0f, 1.0f), cube.transform),
+      mul_vec3f32_mat4f32(P1,                                         cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P2,   1.0f, scale, 1.0f), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P3, -scale, scale, 1.0f), cube.transform)};
+    renderer_push_quad(renderer, back_right_border, border_color);
     
-		Quad back_bottom_border = {
-			mul_vec3f32_mat4f32(P0,                                          cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P1, scale,   1.0f, 1.0f),  cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P2, scale, -scale, 1.0f),  cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P0, 1.0f,   scale, 1.0f),  cube.transform)};
-		renderer_push_quad(renderer, back_bottom_border, border_color);
+    Quad back_bottom_border = {
+      mul_vec3f32_mat4f32(P0,                                          cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P1, scale,   1.0f, 1.0f),  cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P2, scale, -scale, 1.0f),  cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P0, 1.0f,   scale, 1.0f),  cube.transform)};
+    renderer_push_quad(renderer, back_bottom_border, border_color);
     
-		Quad front = {
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P7, scale, scale, 1.0f), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P6, scale, scale, 1.0f), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P5, scale, scale, 1.0f), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P4, scale, scale, 1.0f), cube.transform)};
+    Quad front = {
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P7, scale, scale, 1.0f), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P6, scale, scale, 1.0f), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P5, scale, scale, 1.0f), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P4, scale, scale, 1.0f), cube.transform)};
     renderer_push_quad(renderer, front, (highlight == CubeFace_Front) ? highlight_color : cube.color);
     
-		Quad front_left_border = {
-			mul_vec3f32_mat4f32(P7,                                         cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P6, -scale,  1.0f, 1.0f), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P5, -scale, scale, 1.0f), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P4,   1.0f, scale, 1.0f), cube.transform)};
-		renderer_push_quad(renderer, front_left_border, border_color);
+    Quad front_left_border = {
+      mul_vec3f32_mat4f32(P7,                                         cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P6, -scale,  1.0f, 1.0f), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P5, -scale, scale, 1.0f), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P4,   1.0f, scale, 1.0f), cube.transform)};
+    renderer_push_quad(renderer, front_left_border, border_color);
     
-		Quad front_top_border = {
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P7, scale  , 1.0f, 1.0f), cube.transform),
-			mul_vec3f32_mat4f32(P6,                                         cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P5,  1.0f, -scale, 1.0f), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P4, scale, -scale, 1.0f), cube.transform)};
-		renderer_push_quad(renderer, front_top_border, border_color);
+    Quad front_top_border = {
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P7, scale  , 1.0f, 1.0f), cube.transform),
+      mul_vec3f32_mat4f32(P6,                                         cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P5,  1.0f, -scale, 1.0f), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P4, scale, -scale, 1.0f), cube.transform)};
+    renderer_push_quad(renderer, front_top_border, border_color);
     
-		Quad front_right_border = {
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P7, -scale, scale, 1.0f), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P6,   1.0f, scale, 1.0f), cube.transform),
-			mul_vec3f32_mat4f32(P5,                                         cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P4, -scale,  1.0f, 1.0f), cube.transform)};
-		renderer_push_quad(renderer, front_right_border, border_color);
+    Quad front_right_border = {
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P7, -scale, scale, 1.0f), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P6,   1.0f, scale, 1.0f), cube.transform),
+      mul_vec3f32_mat4f32(P5,                                         cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P4, -scale,  1.0f, 1.0f), cube.transform)};
+    renderer_push_quad(renderer, front_right_border, border_color);
     
-		Quad front_bottom_border = {
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P7, 1.0f,  -scale, 1.0f), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P6, scale, -scale, 1.0f), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P5, scale,   1.0f, 1.0f), cube.transform),
-			mul_vec3f32_mat4f32(P4, cube.transform)};
-		renderer_push_quad(renderer, front_bottom_border, border_color);
+    Quad front_bottom_border = {
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P7, 1.0f,  -scale, 1.0f), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P6, scale, -scale, 1.0f), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P5, scale,   1.0f, 1.0f), cube.transform),
+      mul_vec3f32_mat4f32(P4, cube.transform)};
+    renderer_push_quad(renderer, front_bottom_border, border_color);
   }
   
-	// On YZ plane
+  // On YZ plane
   {
-		Quad left = {
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P0, 1.0f, scale, scale), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P3, 1.0f, scale, scale), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P7, 1.0f, scale, scale), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P4, 1.0f, scale, scale), cube.transform)};
+    Quad left = {
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P0, 1.0f, scale, scale), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P3, 1.0f, scale, scale), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P7, 1.0f, scale, scale), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P4, 1.0f, scale, scale), cube.transform)};
     renderer_push_quad(renderer, left, (highlight == CubeFace_Left) ? highlight_color : cube.color);
     
     Quad left_left_border = {
@@ -839,11 +835,11 @@ internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, V
       mul_vec3f32_mat4f32(scale_vec3f32_xyz(P4, 1.0f,   1.0f, scale), cube.transform)};
     renderer_push_quad(renderer, left_bottom_border, border_color);
     
-		Quad right = {
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P5, 1.0f, scale, scale), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P6, 1.0f, scale, scale), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P2, 1.0f, scale, scale), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P1, 1.0f, scale, scale), cube.transform)};
+    Quad right = {
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P5, 1.0f, scale, scale), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P6, 1.0f, scale, scale), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P2, 1.0f, scale, scale), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P1, 1.0f, scale, scale), cube.transform)};
     renderer_push_quad(renderer, right, (highlight == CubeFace_Right) ? highlight_color : cube.color);
     
     Quad right_left_border = {
@@ -873,15 +869,15 @@ internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, V
       mul_vec3f32_mat4f32(scale_vec3f32_xyz(P1, 1.0f,  scale,  1.0f), cube.transform),
       mul_vec3f32_mat4f32(P1, cube.transform)};
     renderer_push_quad(renderer, right_bottom_border, border_color);
-	}
+  }
   
-	// On XZ plane
+  // On XZ plane
   {
-		Quad bottom = {
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P4, scale, 1.0f, scale), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P5, scale, 1.0f, scale), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P1, scale, 1.0f, scale), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P0, scale, 1.0f, scale), cube.transform)};
+    Quad bottom = {
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P4, scale, 1.0f, scale), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P5, scale, 1.0f, scale), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P1, scale, 1.0f, scale), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P0, scale, 1.0f, scale), cube.transform)};
     renderer_push_quad(renderer, bottom, (highlight == CubeFace_Bottom) ? highlight_color : cube.color);
     
     Quad bottom_left_border = {
@@ -912,11 +908,11 @@ internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, V
       mul_vec3f32_mat4f32(P0,                                         cube.transform)};
     renderer_push_quad(renderer, bottom_bottom_border, border_color);
     
-		Quad top = {
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P3, scale, 1.0f, scale), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P2, scale, 1.0f, scale), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P6, scale, 1.0f, scale), cube.transform),
-			mul_vec3f32_mat4f32(scale_vec3f32_xyz(P7, scale, 1.0f, scale), cube.transform)};
+    Quad top = {
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P3, scale, 1.0f, scale), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P2, scale, 1.0f, scale), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P6, scale, 1.0f, scale), cube.transform),
+      mul_vec3f32_mat4f32(scale_vec3f32_xyz(P7, scale, 1.0f, scale), cube.transform)};
     renderer_push_quad(renderer, top, (highlight == CubeFace_Top) ? highlight_color : cube.color);
     
     Quad top_left_border = {
@@ -946,13 +942,60 @@ internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, V
       mul_vec3f32_mat4f32(scale_vec3f32_xyz(P6, scale, 1.0f, -scale), cube.transform),
       mul_vec3f32_mat4f32(scale_vec3f32_xyz(P3,  1.0f, 1.0f,  scale), cube.transform)};
     renderer_push_quad(renderer, top_bottom_border, border_color);
-	}
+  }
 }
-
 
 internal void renderer_push_string(Renderer* renderer, Renderer_Font_Info* font_info, String text, Vec2f32 position, Vec4f32 color) {
-  
+  for (u32 i = 0; i < text.size; i++) {
+    if (text.str[i] >= 32 && text.str[i] < 128) {
+      stbtt_packedchar* info = &font_info->cdata[text.str[i] - 32];
+      f32 size = 512.0f;
+      
+      Quad2D atlas_location = {
+        info->x0 / size, info->y0 / size,
+        (info->x1 - info->x0) / size, (info->y1 - info->y0) / size
+      };
+      Quad2D screen_location = {
+        position.x + info->xoff, position.y - info->yoff,
+        info->x1 - info->x0, info->y1 - info->y0
+      };
+      
+      f32 scale = 0.002;
+      screen_location.x *= scale;
+      screen_location.y *= scale;
+      screen_location.width  *= scale;
+      screen_location.height *= scale;
+      
+      Vec3f32 top_left_pos = { screen_location.x, screen_location.y, 0.0f };
+      Vec3f32 top_right_pos = { screen_location.x + screen_location.width, screen_location.y, 0.0f };
+      Vec3f32 bottom_left_pos = { screen_location.x, screen_location.y - screen_location.height, 0.0f };
+      Vec3f32 bottom_right_pos = { screen_location.x + screen_location.width, screen_location.y - screen_location.height, 0.0f };
+      
+      // Define UV coordinates in texture space
+      Vec2f32 top_left_uv = { atlas_location.x, atlas_location.y };
+      Vec2f32 top_right_uv = { atlas_location.x + atlas_location.width, atlas_location.y };
+      Vec2f32 bottom_left_uv = { atlas_location.x, atlas_location.y + atlas_location.height };
+      Vec2f32 bottom_right_uv = { atlas_location.x + atlas_location.width, atlas_location.y + atlas_location.height };
+      
+      // Push first triangle (Top-left, Top-right, Bottom-left)
+      renderer_push_triangle_texture(renderer, 
+                                     top_left_pos, top_left_uv, 
+                                     top_right_pos, top_right_uv, 
+                                     bottom_left_pos, bottom_left_uv, 
+                                     font_info->font_texture);
+      
+      // Push second triangle (Top-right, Bottom-right, Bottom-left)
+      renderer_push_triangle_texture(renderer, 
+                                     top_right_pos, top_right_uv, 
+                                     bottom_right_pos, bottom_right_uv, 
+                                     bottom_left_pos, bottom_left_uv, 
+                                     font_info->font_texture);
+      
+      position.x += info->xadvance;
+    }
+  }
 }
+
 
 internal void renderer_set_uniform_mat4fv(u32 program, const char* uniform, Mat4f32 mat) {
   s32 uniform_location = glGetUniformLocation(program, uniform);

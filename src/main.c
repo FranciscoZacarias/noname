@@ -1,7 +1,8 @@
 /*
 noname:
 [x] - Add texture support to the renderer
-[ ] - Put any kind of text to the screen
+[x] - Put any kind of text to the screen
+[ ] - Try rendering text directly to the screen program and be able to say (x,y) in pixels, where the bottom left of the string goes
 [ ] - Add directional light
 [ ] - Add phong light
 [ ] - Add cube to the hovered cube face
@@ -128,10 +129,9 @@ int main(void) {
 	Mouse.ndc_y = LastY;
   
 	ProgramRenderer = renderer_init(WindowWidth, WindowHeight);
-	u32 pepper = renderer_texture_load(StringLiteral("D:\\work\\noname\\res\\pepper.png"));
   
 	Renderer_Font_Info font_info = {0};
-	renderer_font_load(&font_info, StringLiteral("D:\\work\\noname\\res\\Inconsolata.ttf"), 32);
+	renderer_font_load(&font_info, StringLiteral("D:\\work\\noname\\res\\Karmina.Otf"), 32);
   
 	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A);
 	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A);
@@ -220,7 +220,7 @@ int main(void) {
 						f32 highlight_scale = 0.8f;
 						renderer_push_cube_highlight_face(&ProgramRenderer, Cubes[i], vec4f32(0.5+0.5*sin(5*CurrentTime), 0.5+0.5*sin(5*CurrentTime), 0.0f), cuc.hovered_face, vec4f32(Cubes[i].color.x * highlight_scale, Cubes[i].color.y * highlight_scale, Cubes[i].color.z * highlight_scale));
 					} else {
-						renderer_push_cube(&ProgramRenderer, Cubes[i], COLOR_BLACK);	
+            renderer_push_cube(&ProgramRenderer, Cubes[i], COLOR_BLACK);	
 					}
 				}
 			}
@@ -233,12 +233,12 @@ int main(void) {
           vec3f32(-4.0f, 4.0f, -4.0f),
           vec3f32( 4.0f, 4.0f, -4.0f)
         };
-        renderer_push_quad_texture(&ProgramRenderer, qt, pepper);
+        // renderer_push_quad_texture(&ProgramRenderer, qt, pepper);
       }
       
       // Render text
       {
-        
+        renderer_push_string(&ProgramRenderer, &font_info, StringLiteral("There is a sign in the universe."), vec2f32(0.0f, 0.0f), COLOR_WHITE);
       }
     }
     renderer_end_frame(&ProgramRenderer, WindowWidth, WindowHeight);

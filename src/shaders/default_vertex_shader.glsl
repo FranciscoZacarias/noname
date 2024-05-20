@@ -16,8 +16,14 @@ uniform mat4 view;
 uniform mat4 projection;
 
 void main() {
-  gl_Position  = projection * view * model * vec4(a_pos, 1.0);
-
+  // NOTE(fz): This is a hack to keep text in screen space. 
+  // If we start using textures beyond text, we need to find a better way of doing this
+  if (a_has_texture > 0) {
+    gl_Position  = vec4(a_pos, 1.0);
+  } else {
+    gl_Position  = projection * view * model * vec4(a_pos, 1.0);
+  }
+  
   // out
   vertex_color         = a_color;
   vertex_uv            = a_uv;

@@ -9,4 +9,4 @@ cube_border_thickness: 5
 
 \Opengl
 wireframe_mode: false
-enable_culling: false
+enable_culling: true
