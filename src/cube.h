@@ -57,11 +57,11 @@ global Cube_Vertices CubeVerticesLocalSpace = {
 
 typedef struct Cube {
   Mat4f32 transform;
-  
   Vec4f32 color;
 } Cube;
 
 internal Cube cube_new(Vec3f32 transform, Vec4f32 color);
 internal Quad cube_get_local_space_face_quad(Cube_Face face);
+internal Vec3f32 cube_get_center(Cube cube);
 
 #endif // CUBE_H

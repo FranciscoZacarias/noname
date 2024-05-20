@@ -19,6 +19,15 @@ internal Quad scale_quad(Quad q, f32 scale) {
 	return result;
 }
 
+internal Vec3f32 quad_get_center(Quad q) {
+  Vec3f32 result = {
+    (q.p0.x + q.p1.x + q.p2.x + q.p3.x ) / 4.0,
+    (q.p0.y + q.p1.y + q.p2.y + q.p3.y ) / 4.0,
+    (q.p0.z + q.p1.z + q.p2.z + q.p3.z ) / 4.0,
+  };
+  return result;
+}
+
 b32 quad2d_contains_point(Quad2D a, Vec2f32 p) {
   b32 result = 
     a.x <= p.x &&
@@ -924,7 +933,7 @@ internal b32 is_vector_inside_rectangle(Vec3f32 p, Vec3f32 a, Vec3f32 b, Vec3f32
   
 	return result;
 }
-
+\
 internal Vec3f32 intersect_line_with_plane(Linef32 line, Vec3f32 point1, Vec3f32 point2, Vec3f32 point3) {
 	Vec3f32 result   = vec3f32(F32_MAX, F32_MAX, F32_MAX);
 	Vec3f32 plane_v1 = vec3f32(point2.x-point1.x, point2.y-point1.y, point2.z-point1.z);

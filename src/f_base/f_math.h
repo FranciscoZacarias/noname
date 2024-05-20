@@ -62,6 +62,7 @@ typedef struct Quad {
 
 internal Quad transform_quad(Quad q, Mat4f32 m);
 internal Quad scale_quad(Quad q, f32 scale);
+internal Vec3f32 quad_get_center(Quad q);
 
 // NOTE(fz): This defines a 2D Quad where (x,y) are the bottom left point of the quad!
 typedef struct Quad2D {

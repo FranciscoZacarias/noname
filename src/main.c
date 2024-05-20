@@ -17,6 +17,8 @@ noname:
 [ ] - MAX_TRIANGLES should be in allocated memory instead of a stack allocation
 [x] - Add hotloadable stats on top left
 [x] - Replace GlobalArena with a either more specific arenas or just thread context scratch arenas
+bugs:
+[ ] - When highlighting a cube, we get more triangles than we should have. We should have just the same number
 f_base:
 [x] - Add thread context module
 [ ] - Add windows window layer I.e. remove glfw dependency
@@ -88,6 +90,8 @@ global Arena* CubesArena;
 global Cube* Cubes;
 global u32 TotalCubes = 0;
 
+CubeUnderCursor CurrentCubeUnderCursor;
+
 int main(void) {
 	os_init();
 	os_file_create(StringLiteral(VARIABLES_TWEAK_FILE));
@@ -119,7 +123,7 @@ int main(void) {
   }
   
 	CubesArena  = arena_init();
-	Cubes = (Cube*)PushArray(CubesArena, Cube, 1024);
+	Cubes = (Cube*)PushArray(CubesArena, Cube, 2048);
   
 	// Camera and Mouse -----------
 	camera = camera_create();
@@ -194,67 +198,83 @@ int main(void) {
 			Raycast = vec3f32(F32_MAX, F32_MAX, F32_MAX);
 		}
     
-		Mat4f32 r = rotate_axis_mat4f32(vec3f32(-1.0f, 1.0f, 1.0f), CurrentTime);
-		Mat4f32 t = translate_mat4f32(3.0f, 3.0f, 3.0f);
-		Mat4f32 trans = mul_mat4f32(t, r);
-		trans = mul_mat4f32(r, trans);
-		Cubes[0].transform = trans;
+    //~ Game logic
+    {
+      for(u32 i = 0; i < TotalCubes; i++) {
+        if (find_cube_under_cursor(&CurrentCubeUnderCursor)) {
+          break;
+        }
+        if (i == TotalCubes-1) {
+          MemoryZeroStruct(&CurrentCubeUnderCursor);
+          CurrentCubeUnderCursor.index = U32_MAX;
+        }
+      }
+      
+      if (CurrentCubeUnderCursor.index != U32_MAX) {
+        Quad face = cube_get_local_space_face_quad(CurrentCubeUnderCursor.hovered_face);
+        face = transform_quad(face, Cubes[CurrentCubeUnderCursor.index].transform);
+        
+        Vec3f32 center = cube_get_center(Cubes[CurrentCubeUnderCursor.index]);
+        Vec3f32 direction = sub_vec3f32(center, quad_get_center(face));
+        Vec3f32 new_cube_center = add_vec3f32(center, scale_vec3f32(direction, -2.0f));
+        
+        if (F_KeyState) {
+          Cubes[TotalCubes++] = cube_new(new_cube_center, PALLETE_COLOR_B);
+        }
+      }
+    }
     
-		r = rotate_axis_mat4f32(vec3f32(1.0f, -1.0f, 1.0f), CurrentTime);
-		t = translate_mat4f32(-3.0f, 3.0f, 3.0f);
-		trans = mul_mat4f32(t, r);
-		Cubes[1].transform = trans;
-    
+    //~ Render
 		renderer_begin_frame(&ProgramRenderer, PALLETE_COLOR_D);
 		{
 			renderer_set_uniform_mat4fv(ProgramRenderer.shader_program, "model", mat4f32(1.0f));
 			renderer_set_uniform_mat4fv(ProgramRenderer.shader_program, "view", view);
 			renderer_set_uniform_mat4fv(ProgramRenderer.shader_program, "projection", projection);
       
-			renderer_push_arrow(&ProgramRenderer, vec3f32(0.0f, 0.0f, 0.0f), scale_vec3f32(vec3f32(Cubes[0].transform.m12, Cubes[0].transform.m13, Cubes[0].transform.m14), 0.5), vec4f32(0.0f, 1.0f, 1.0f), 0.5f);
-			renderer_push_arrow(&ProgramRenderer, vec3f32(0.0f, 0.0f, 0.0f), scale_vec3f32(vec3f32(Cubes[1].transform.m12, Cubes[1].transform.m13, Cubes[1].transform.m14), 0.5), vec4f32(1.0f, 1.0f, 0.0f), 0.5f);
-      
-			// Axis
-			{ 
-				f32 size = 20.0f;
-				renderer_push_arrow(&ProgramRenderer, vec3f32(-size,   0.0f,   0.0f), vec3f32(size,  0.0f,  0.0f), COLOR_RED, 0.5f);
-				renderer_push_arrow(&ProgramRenderer, vec3f32(  0.0f, -size,   0.0f), vec3f32( 0.0f, size,  0.0f), COLOR_GREEN, 0.5f);
-				renderer_push_arrow(&ProgramRenderer, vec3f32(  0.0f,   0.0f, -size), vec3f32( 0.0f,  0.0f, size), COLOR_BLUE, 0.5f);
-			}
-      
-			// Render cubes and highlight if cursor on top.
 			{
-				for(u32 i = 0; i < TotalCubes; i++) {
-					CubeUnderCursor cuc;
-					if (find_cube_under_cursor(&cuc) && cuc.index == i) {
-						f32 highlight_scale = 0.8f;
-						renderer_push_cube_highlight_face(&ProgramRenderer, Cubes[i], vec4f32(0.5+0.5*sin(5*CurrentTime), 0.5+0.5*sin(5*CurrentTime), 0.0f), cuc.hovered_face, vec4f32(Cubes[i].color.x * highlight_scale, Cubes[i].color.y * highlight_scale, Cubes[i].color.z * highlight_scale));
-					} else {
-            renderer_push_cube(&ProgramRenderer, Cubes[i], COLOR_BLACK);	
-					}
+        // Axis
+        { 
+          f32 size = 20.0f;
+          renderer_push_arrow(&ProgramRenderer, vec3f32(-size,   0.0f,   0.0f), vec3f32(size,  0.0f,  0.0f), COLOR_RED, 0.5f);
+          renderer_push_arrow(&ProgramRenderer, vec3f32(  0.0f, -size,   0.0f), vec3f32( 0.0f, size,  0.0f), COLOR_GREEN, 0.5f);
+          renderer_push_arrow(&ProgramRenderer, vec3f32(  0.0f,   0.0f, -size), vec3f32( 0.0f,  0.0f, size), COLOR_BLUE, 0.5f);
         }
         
-        // Render stuff with textures.
-        {
-        };
+        f32 highlight_scale = 0.8f;
+        if (CurrentCubeUnderCursor.index != U32_MAX) {
+          renderer_push_cube_highlight_face(&ProgramRenderer, Cubes[CurrentCubeUnderCursor.index], vec4f32(0.5+0.5*sin(5*CurrentTime), 0.5+0.5*sin(5*CurrentTime), 0.0f), CurrentCubeUnderCursor.hovered_face, vec4f32(Cubes[CurrentCubeUnderCursor.index].color.x * highlight_scale, Cubes[CurrentCubeUnderCursor.index].color.y * highlight_scale, Cubes[CurrentCubeUnderCursor.index].color.z * highlight_scale));
+        }
+        
+        for(u32 i = 0; i < TotalCubes; i++) {
+          if (CurrentCubeUnderCursor.index == U32_MAX) {
+            if (CurrentCubeUnderCursor.index == i) {
+              continue;
+            }
+          }
+          renderer_push_cube(&ProgramRenderer, Cubes[i], COLOR_BLACK);	
+        }
         
         // Render text
         {
           if (HotloadableShowStats) {
-            char fps_buffer[16] = {0};
-            s32 len = stbsp_sprintf(fps_buffer, "FPS: %d", FPS);
-            String txt = { (u64)len, (u8*)fps_buffer };
-            renderer_push_string(&ProgramRenderer, &font_info, txt, vec2f32(-0.998, 0.95), COLOR_WHITE);
+            String txt;
+            s32 len;
+            f32 y_pos = 0.95f;
             
-            char tri_buffer[64] = {0};
-            len = stbsp_sprintf(tri_buffer, "Triangles Count: %d", ProgramRenderer.triangle_count);
-            String stats_tri = { (u64)len, (u8*)tri_buffer };
-            renderer_push_string(&ProgramRenderer, &font_info, stats_tri, vec2f32(-0.998, 0.90), COLOR_WHITE);
+            // NOTE(fz): This is a but of a hack, but let's say this is a temporary thing ok..?
+#define AddStat(fmt, tag, ...) do {\
+char tag##_buffer[192] = {0}; \
+len = stbsp_sprintf(tag##_buffer, fmt, __VA_ARGS__); \
+txt.size = (u64)len; \
+txt.str  = (u8*)tag##_buffer; \
+renderer_push_string(&ProgramRenderer, &font_info, txt, vec2f32(-0.998, y_pos), COLOR_YELLOW); \
+y_pos -= 0.05f; } while(0); \
             
-            char cube_buffer[64] = {0};
-            len = stbsp_sprintf(cube_buffer, "Cube Count: %d", TotalCubes-1);
-            String stats_cube = { (u64)len, (u8*)cube_buffer };
-            renderer_push_string(&ProgramRenderer, &font_info, stats_cube, vec2f32(-0.998, 0.85), COLOR_WHITE);
+            AddStat("FPS: %d", fps, FPS);
+            AddStat("Ms/Frame: %0.4f", msframe, (f32)DeltaTime/1000);
+            AddStat("Triangles Count/Max: %d/%d", trigs, ProgramRenderer.triangle_count, MAX_TRIANGLES);
+            AddStat("Cube Count: %d", cubs, TotalCubes-1);
+            AddStat("Hovered Cube Index: %d", hovered, (CurrentCubeUnderCursor.index == U32_MAX) ? -1 : CurrentCubeUnderCursor.index);
           }
         }
       }

@@ -220,7 +220,7 @@ internal Renderer renderer_init(s32 window_width, s32 window_height) {
   
 	scratch_end(&scratch);
   
-	return result;
+  return result;
 }
 
 internal void renderer_generate_msaa_and_intermidiate_buffers(Renderer* renderer, s32 window_width, s32 window_height) {
