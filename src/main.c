@@ -2,7 +2,7 @@
 noname:
 [x] - Add texture support to the renderer
 [x] - Put any kind of text to the screen
-[ ] - Try rendering text directly to the screen program and be able to say (x,y) in pixels, where the bottom left of the string goes
+[x] - Try rendering text directly to the screen program and be able to say (x,y) in pixels, where the bottom left of the string goes
 [ ] - Add directional light
 [ ] - Add phong light
 [ ] - Add cube to the hovered cube face
@@ -59,12 +59,14 @@ typedef enum CameraMode {
 global CameraMode ActiveCameraMode = CameraMode_Select;
 global b32 LeftMouseButton = 0;
 
+// Time
+global f64 CurrentTime  = 0.0f;
 global f32 DeltaTime = 0.0f;
 global f32 LastFrame = 0.0f;
-
-f64 PreviousTime = 0.0f;
-f64 CurrentTime  = 0.0f;
-u32 FrameCounter;
+// FPS
+global f64 FpsLastTime = 0.0f;
+global s64 FrameCount = 0.0f;
+global u64 FPS = 0.0f;
 
 global Vec3f32 Raycast = {F32_MAX, F32_MAX, F32_MAX};
 
@@ -150,11 +152,18 @@ int main(void) {
 	Cubes[TotalCubes++] = cube_new(vec3f32( 8.0f, -8.0f, -8.0f), PALLETE_COLOR_B);
   
 	while(!glfwWindowShouldClose(window)) {
-		CurrentTime = glfwGetTime();
+    CurrentTime = glfwGetTime();
 		DeltaTime = CurrentTime - LastFrame;
-		LastFrame = CurrentTime;
+    LastFrame = CurrentTime;
     
-		process_input(window);
+    FrameCount += 1;
+    if (CurrentTime - FpsLastTime >= 0.1f) {
+      FPS = FrameCount / (CurrentTime - FpsLastTime);
+      FrameCount  = 0;
+      FpsLastTime = CurrentTime;
+    }
+    
+    process_input(window);
     
 		// Hotloading files
 		{
@@ -230,7 +239,22 @@ int main(void) {
         
         // Render text
         {
-          renderer_push_string(&ProgramRenderer, &font_info, StringLiteral("There is a sign in the universe."), vec2f32(-0.9, -0.9), COLOR_YELLOW);
+          if (HotloadableShowStats) {
+            char fps_buffer[16] = {0};
+            s32 len = stbsp_sprintf(fps_buffer, "FPS: %d", FPS);
+            String txt = { (u64)len, (u8*)fps_buffer };
+            renderer_push_string(&ProgramRenderer, &font_info, txt, vec2f32(-0.995, 0.95), COLOR_WHITE);
+            
+            char tri_buffer[64] = {0};
+            len = stbsp_sprintf(tri_buffer, "Triangles Count: %d", ProgramRenderer.triangle_count);
+            String stats_tri = { (u64)len, (u8*)tri_buffer };
+            renderer_push_string(&ProgramRenderer, &font_info, stats_tri, vec2f32(-0.995, 0.90), COLOR_WHITE);
+            
+            char cube_buffer[64] = {0};
+            len = stbsp_sprintf(cube_buffer, "Cube Count: %d", TotalCubes-1);
+            String stats_cube = { (u64)len, (u8*)cube_buffer };
+            renderer_push_string(&ProgramRenderer, &font_info, stats_cube, vec2f32(-0.994, 0.85), COLOR_WHITE);
+          }
         }
       }
     }
@@ -289,107 +313,107 @@ void process_input(GLFWwindow *window) {
       camera_keyboard_callback(&camera, CameraMovement_Down, DeltaTime);
     }
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
-			camera_keyboard_callback(&camera, CameraMovement_Up, DeltaTime);
-		}
-	} else {
-		if (ActiveCameraMode == CameraMode_Fly) {
-			ActiveCameraMode = CameraMode_Select;
-			LastX = WindowWidth/2;
-			LastY = WindowHeight/2;
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-			glfwSetCursorPos(window, Mouse.screen_space_x, Mouse.screen_space_y);
-		}
+      camera_keyboard_callback(&camera, CameraMovement_Up, DeltaTime);
+    }
+  } else {
+    if (ActiveCameraMode == CameraMode_Fly) {
+      ActiveCameraMode = CameraMode_Select;
+      LastX = WindowWidth/2;
+      LastY = WindowHeight/2;
+      glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+      glfwSetCursorPos(window, Mouse.screen_space_x, Mouse.screen_space_y);
+    }
     
-		if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
-			if (G_KeyState == 0 && G_KeyPreviousState == 1) {
-				G_KeyPreviousState = 0;
-				G_KeyState = 1;
-			} else {
-				G_KeyState = 0;
-			}
-		} else {
-			G_KeyPreviousState = 1;
-			G_KeyState = 0;
-		}
+    if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
+      if (G_KeyState == 0 && G_KeyPreviousState == 1) {
+        G_KeyPreviousState = 0;
+        G_KeyState = 1;
+      } else {
+        G_KeyState = 0;
+      }
+    } else {
+      G_KeyPreviousState = 1;
+      G_KeyState = 0;
+    }
     
-		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
-			if (F_KeyState == 0 && F_KeyPreviousState == 1) {
-				F_KeyPreviousState = 0;
-				F_KeyState = 1;
-			} else {
-				F_KeyState = 0;
-			}
-		} else {
-			F_KeyPreviousState = 1;
-			F_KeyState = 0;
-		}
+    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+      if (F_KeyState == 0 && F_KeyPreviousState == 1) {
+        F_KeyPreviousState = 0;
+        F_KeyState = 1;
+      } else {
+        F_KeyState = 0;
+      }
+    } else {
+      F_KeyPreviousState = 1;
+      F_KeyState = 0;
+    }
     
-		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
-			if (R_KeyState == 0 && R_KeyPreviousState == 1) {
-				R_KeyPreviousState = 0;
-				R_KeyState = 1;
-			} else {
-				R_KeyState = 0;
-			}
-		} else {
-			R_KeyPreviousState = 1;
-			R_KeyState = 0;
-		}
-	}
+    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+      if (R_KeyState == 0 && R_KeyPreviousState == 1) {
+        R_KeyPreviousState = 0;
+        R_KeyState = 1;
+      } else {
+        R_KeyState = 0;
+      }
+    } else {
+      R_KeyPreviousState = 1;
+      R_KeyState = 0;
+    }
+  }
 }
 
 void mouse_callback(GLFWwindow* window, f64 xposIn, f64 yposIn) {
-	local_persist b32 FirstMouse = 1;
+  local_persist b32 FirstMouse = 1;
   
-	if (ActiveCameraMode == CameraMode_Fly) {
-		f32 xpos = (f32)xposIn;
-		f32 ypos = (f32)yposIn;
+  if (ActiveCameraMode == CameraMode_Fly) {
+    f32 xpos = (f32)xposIn;
+    f32 ypos = (f32)yposIn;
     
-		if (FirstMouse == 1) {
-			LastX = xpos;
-			LastY = ypos;
-			FirstMouse = 0;
-		}
+    if (FirstMouse == 1) {
+      LastX = xpos;
+      LastY = ypos;
+      FirstMouse = 0;
+    }
     
-		f32 xoffset = xpos - LastX;
-		f32 yoffset = LastY - ypos;
-		LastX = xpos;
-		LastY = ypos;
+    f32 xoffset = xpos - LastX;
+    f32 yoffset = LastY - ypos;
+    LastX = xpos;
+    LastY = ypos;
     
-		camera_mouse_callback(&camera, xoffset, yoffset);
-	} else {
+    camera_mouse_callback(&camera, xoffset, yoffset);
+  } else {
     Mouse.screen_space_x = xposIn;
     Mouse.screen_space_y = yposIn;
     
     Mouse.ndc_x = (2.0f * xposIn) / WindowWidth - 1.0f;
     Mouse.ndc_y = 1.0f - (2.0f * yposIn) / WindowHeight;
-	}
+  }
 }
 
 internal b32 find_cube_under_cursor(CubeUnderCursor* result) {
-	b32 match = 0;
-	for (u32 i = 0; i < TotalCubes; i++) {
-		Cube it = Cubes[i];
-		for(u32 j = 0; j < 6; j++) {
-			Quad face = transform_quad(cube_get_local_space_face_quad(j), it.transform);
-			Vec3f32 intersection = intersect_line_with_plane(linef32(camera.position, Raycast), face.p0, face.p1, face.p2);
-			if (is_vector_inside_rectangle(intersection, face.p0, face.p1, face.p2)) {
-				if (!match) {
-					result->hovered_face = j;
-					result->index = i;
-					result->distance_to_camera = distance_vec3f32(intersection, camera.position);
-					match = 1;
-				} else {
-					f32 distance = distance_vec3f32(intersection, camera.position);
-					if (distance < result->distance_to_camera) {
-						result->hovered_face = j;
-						result->index = i;
-						result->distance_to_camera = distance;
-					}
-				}
-			}
-		}
-	}
+  b32 match = 0;
+  for (u32 i = 0; i < TotalCubes; i++) {
+    Cube it = Cubes[i];
+    for(u32 j = 0; j < 6; j++) {
+      Quad face = transform_quad(cube_get_local_space_face_quad(j), it.transform);
+      Vec3f32 intersection = intersect_line_with_plane(linef32(camera.position, Raycast), face.p0, face.p1, face.p2);
+      if (is_vector_inside_rectangle(intersection, face.p0, face.p1, face.p2)) {
+        if (!match) {
+          result->hovered_face = j;
+          result->index = i;
+          result->distance_to_camera = distance_vec3f32(intersection, camera.position);
+          match = 1;
+        } else {
+          f32 distance = distance_vec3f32(intersection, camera.position);
+          if (distance < result->distance_to_camera) {
+            result->hovered_face = j;
+            result->index = i;
+            result->distance_to_camera = distance;
+          }
+        }
+      }
+    }
+  }
   
-	return match;
+  return match;
 }

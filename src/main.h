@@ -17,6 +17,8 @@
 global s32 WindowWidth  = 1280;
 global s32 WindowHeight = 720;
 
+global b32 HotloadableShowStats = 1;
+
 //////////////////////////////////////////////
 // Third-party headers
 #include "external/stb_truetype.h"
@@ -35,7 +37,6 @@ global s32 WindowHeight = 720;
 #include "external/stb_truetype.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "external/stb_image.h"
-
 
 // *.c
 #include "cube.c"

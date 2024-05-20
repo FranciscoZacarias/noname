@@ -6,6 +6,7 @@ window_height: 720
 \Editor
 camera_speed: 16
 cube_border_thickness: 5
+show_stats: true
 
 \Opengl
 wireframe_mode: false

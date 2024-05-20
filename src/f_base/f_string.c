@@ -3,6 +3,10 @@ internal String string_new(u64 size, u8* str) {
   return result;
 }
 
+internal String string_fmt(String fmt, ...) {
+  
+}
+
 internal String string_range(u8* first, u8* range) {
   String result = (String){(u64)(range - first), first};
   return result;
@@ -32,12 +36,12 @@ internal b32 strings_match(String a, String b) {
 
 internal String_List string_split(Arena* arena, String str, String split_character) {
   String_List result = { 0 };
-
+  
   if (split_character.size != 1) {
     printf("string_split expects only one character in split_character. It got %s of size %llu\n", split_character.str, split_character.size);
     Assert(0);
   }
-
+  
   u8* cursor = str.str;
   u8* end   = str.str + str.size;
   for(; cursor < end; cursor++) {
@@ -48,7 +52,7 @@ internal String_List string_split(Arena* arena, String str, String split_charact
       break;
     }
   }
-
+  
   return result;
 }
 
@@ -82,7 +86,7 @@ internal b32 cast_string_to_b32(String str, b32* value) {
 internal b32 cast_string_to_f32(String str, f32* value) {
 	*value = 0.0f;
 	s32 decimal_position = -1;
-
+  
 	for (u64 i = 0; i < str.size; i++) {
 		if (str.str[i] >= '0'  && str.str[i] <= '9') {
 			*value = *value * 10.0f + (str.str[i] - '0');
@@ -95,11 +99,11 @@ internal b32 cast_string_to_f32(String str, f32* value) {
 			return 0;
 		}
 	}
-
+  
 	if (decimal_position != -1) {
 		*value = *value / (f32)pow(10, decimal_position);
 	}
-
+  
 	return 1;
 }
 
@@ -115,6 +119,39 @@ internal b32 cast_string_to_s32(String str, s32* value) {
 	return 1;
 }
 
-internal void print(String string) {
-  os_print_string(string);
+internal b32 char_is_alpha(u8 c) {
+  return char_is_alpha_upper(c) || char_is_alpha_lower(c);
+}
+
+internal b32 char_is_alpha_upper(u8 c) {
+  return c >= 'A' && c <= 'Z';
+}
+
+internal b32 char_is_alpha_lower(u8 c) {
+  return c >= 'a' && c <= 'z';
+}
+
+internal b32 char_is_digit(u8 c) {
+  return c >= '1' && c <= '9';
+}
+
+internal b32 char_is_symbol(u8 c) {
+  return (c == '~' || c == '!'  || c == '$' || c == '%' || c == '^' ||
+          c == '&' || c == '*'  || c == '-' || c == '=' || c == '+' ||
+          c == '<' || c == '.'  || c == '>' || c == '/' || c == '?' ||
+          c == '|' || c == '\\' || c == '{' || c == '}' || c == '(' ||
+          c == ')' || c == '\\' || c == '[' || c == ']' || c == '#' ||
+          c == ',' || c == ';'  || c == ':' || c == '@');
+}
+
+internal b32 char_is_space(u8 c) {
+  return c == ' ' || c == '\r' || c == '\t' || c == '\f' || c == '\v' || c == '\n';
+}
+
+internal u8  char_to_upper(u8 c) {
+  return (c >= 'a' && c <= 'z') ? ('A' + (c - 'a')) : c;
+}
+
+internal u8  char_to_lower(u8 c) {
+  return (c >= 'A' && c <= 'Z') ? ('a' + (c - 'A')) : c;
 }

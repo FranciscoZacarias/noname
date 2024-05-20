@@ -164,15 +164,22 @@ internal void hotload_variables() {
 				continue;
 			}
 			WindowHeight = parsed_value;
-		} else {
-			printf("Variable not loaded: "); print(line);
-		}
+    } else if (strings_match(key, StringLiteral("show_stats"))) {
+      b32 parsed_value;
+			if (!cast_string_to_b32(value, &parsed_value)) {
+				printf("Error parsing b32. Line: %lu. Value: '%s' :: %s.\n \n", line_count, value.str, VARIABLES_TWEAK_FILE);
+				continue;
+			}
+      HotloadableShowStats= parsed_value;
+    } else {
+      printf("Variable not loaded: %s\n", line.str);
+    }
     
-		if (cursor >= file.size) {
-			printf("Variables.hotload loaded!\n");
-			break;
-		}
-	}
+    if (cursor >= file.size) {
+      printf("Variables.hotload loaded!\n");
+      break;
+    }
+  }
   
-	scratch_end(&scratch);
+  scratch_end(&scratch);
 }

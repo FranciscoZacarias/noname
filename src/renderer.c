@@ -441,10 +441,11 @@ internal void renderer_font_load(Renderer_Font_Info* font_info, String file_path
 	stbtt_fontinfo finfo;
 	stbtt_pack_context packctx;
 	if (stbtt_InitFont(&finfo, (const char*)font_file.data, 0) == 0) {
-		printf("Error loading font: "); print(file_path);
+		printf("Error loading font: %s\n", file_path.str);
 		Assert(0);
 	}
-	stbtt_PackBegin(&packctx, temp_bitmap, 512, 512, 0, 1, 0);
+	
+  stbtt_PackBegin(&packctx, temp_bitmap, 512, 512, 0, 1, 0);
 	stbtt_PackSetOversampling(&packctx, 1, 1);
 	stbtt_PackFontRange(&packctx, (const char*)font_file.data, 0, font_size, 32, 95, font_info->cdata);
 	stbtt_PackEnd(&packctx);
