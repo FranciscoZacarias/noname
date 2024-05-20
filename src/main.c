@@ -5,9 +5,9 @@ noname:
 [x] - Try rendering text directly to the screen program and be able to say (x,y) in pixels, where the bottom left of the string goes
 [ ] - Add directional light
 [ ] - Add phong light
-[ ] - Add cube to the hovered cube face
+[x] - Add cube to the hovered cube face
 [ ] - Delete cubes
-[ ] - Add more robust input system
+[ ] - Add more robust (generic)input system
 [ ] - Add way to save and load levels from files
 [ ] - Add undo system for the add/remove cubes
 [ ] - Be able to select a cube on click
@@ -18,7 +18,7 @@ noname:
 [x] - Add hotloadable stats on top left
 [x] - Replace GlobalArena with a either more specific arenas or just thread context scratch arenas
 bugs:
-[ ] - When highlighting a cube, we get more triangles than we should have. We should have just the same number
+[ ] - When highlighting a cube, we get more triangles than we should have. We should have just the same 
 f_base:
 [x] - Add thread context module
 [ ] - Add windows window layer I.e. remove glfw dependency
@@ -215,8 +215,8 @@ int main(void) {
         face = transform_quad(face, Cubes[CurrentCubeUnderCursor.index].transform);
         
         Vec3f32 center = cube_get_center(Cubes[CurrentCubeUnderCursor.index]);
-        Vec3f32 direction = sub_vec3f32(center, quad_get_center(face));
-        Vec3f32 new_cube_center = add_vec3f32(center, scale_vec3f32(direction, -2.0f));
+        Vec3f32 direction = sub_vec3f32(quad_get_center(face), center);
+        Vec3f32 new_cube_center = add_vec3f32(center, scale_vec3f32(direction, 2.0f));
         
         if (F_KeyState) {
           Cubes[TotalCubes++] = cube_new(new_cube_center, PALLETE_COLOR_B);
@@ -275,6 +275,7 @@ y_pos -= 0.05f; } while(0); \
             AddStat("Triangles Count/Max: %d/%d", trigs, ProgramRenderer.triangle_count, MAX_TRIANGLES);
             AddStat("Cube Count: %d", cubs, TotalCubes-1);
             AddStat("Hovered Cube Index: %d", hovered, (CurrentCubeUnderCursor.index == U32_MAX) ? -1 : CurrentCubeUnderCursor.index);
+            
           }
         }
       }
