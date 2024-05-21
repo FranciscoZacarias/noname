@@ -5,16 +5,10 @@ project_name = "noname";
 patterns =
 {
   "*.c",
-  "*.cpp",
-  "*.jai",
-  "*.odin",
-  "*.zig",
   "*.h",
-  "*.inc",
   "*.bat",
-  "*.sh",
   "*.4coder",
-  "*.txt",
+  "Variables.hotload",
 };
 
 blacklist_patterns =
@@ -40,7 +34,6 @@ command_list =
     .cmd =
     {
       { "D:\\work\\noname\\build.bat", .os = "win" },
-      { "echo Linux build command not implemented for 4coder project.", .os = "linux" },
     },
   },
   
@@ -53,7 +46,6 @@ command_list =
     .cmd =
     {
       { "D:\\work\\noname\\run.bat", .os = "win" },
-      { "echo Linux run command not implemented for 4coder project.", .os = "linux" },
     },
   },
   

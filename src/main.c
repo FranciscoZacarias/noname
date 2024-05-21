@@ -1,25 +1,31 @@
 /*
-noname:
+> ### noname:
 [x] - Add texture support to the renderer
 [x] - Put any kind of text to the screen
 [x] - Try rendering text directly to the screen program and be able to say (x,y) in pixels, where the bottom left of the string goes
-[ ] - Add directional light
-[ ] - Add phong light
 [x] - Add cube to the hovered cube face
-[ ] - Delete cubes
-[ ] - Add more robust (generic)input system
-[ ] - Add way to save and load levels from files
-[ ] - Add undo system for the add/remove cubes
-[ ] - Be able to select a cube on click
-[ ] - Add translation gizmos to selected cube (xyz arrows) and (xy, xz, yz planes), that actually transform the cube each arrow
-[ ] - Moving cubes from gizmos must snap to the grid
-[ ] - Add some sort of post processing shake when loading variables from hotload, just to know it was loaded and feature creep
-[ ] - MAX_TRIANGLES should be in allocated memory instead of a stack allocation
 [x] - Add hotloadable stats on top left
 [x] - Replace GlobalArena with a either more specific arenas or just thread context scratch arenas
-bugs:
+[ ] - Add directional light
+[ ] - Add phong light
+[ ] - Delete cubes
+[ ] - Add more robust (generic) input system
+[ ] - Add way to save and load levels from files
+[ ] - Add undo system for the add/remove cubes
+[ ] - Add some post processing on each undo
+[ ] - Be able to select a cube on click
+[ ] - Add translation gizmos to selected cube (xyz arrows) and (xy, xz, yz planes), that actually transform the cube each arrow/plane
+[ ] - Moving cubes from gizmos must snap to the grid
+[ ] - Add text in the center of the screen (that slowly fades away), when loading variables from Variables.hotload and when recompiling shaders.
+[ ] - Change Cube color from the editor
+[ ] - MAX_TRIANGLES should be in allocated memory instead of a stack allocation
+[ ] - Extract game state and separate the game logic pass and rendering pass from the main program loops into their own modules.
+ 
+### Bugs:
+[ ] - Not really a bug, but we should check if a cube already exists in a place where the program is trying to add one. This is just a way to spot bugs, which we wouldn't be able to see, if two cubes of the same color (or not) are overlapped.
 [ ] - When highlighting a cube, we get more triangles than we should have. We should have just the same 
-f_base:
+
+### F_Base:
 [x] - Add thread context module
 [ ] - Add windows window layer I.e. remove glfw dependency
 [ ] - Cubes are still being selected (in a weird way) when the camera is in fly mode.
@@ -118,6 +124,7 @@ global f32 LastFrame = 0.0f;
 global f64 FpsLastTime = 0.0f;
 global s64 FrameCount = 0.0f;
 global u64 FPS = 0.0f;
+global f32 MsPerFrame = 0.0f;
 
 Renderer ProgramRenderer;
 
@@ -198,6 +205,7 @@ int main(void) {
       FPS = FrameCount / (CurrentTime - FpsLastTime);
       FrameCount  = 0;
       FpsLastTime = CurrentTime;
+      MsPerFrame = DeltaTime*1000;
     }
     
     
@@ -294,10 +302,9 @@ len = stbsp_sprintf(tag##_buffer, fmt, __VA_ARGS__); \
 txt.size = (u64)len; \
 txt.str  = (u8*)tag##_buffer; \
 renderer_push_string(&ProgramRenderer, &font_info, ProgramState.window_width, ProgramState.window_height, txt, vec2f32(-0.998, y_pos), COLOR_YELLOW); \
-y_pos -= 0.05f; } while(0); \
+y_pos -= 0.05f; } while(0);
             
-            AddStat("FPS: %d", fps, FPS);
-            AddStat("Ms/Frame: %0.4f", msframe, (f32)DeltaTime/1000);
+            AddStat("%0.2fms/Frame, FPS: %d", fps, MsPerFrame,  FPS);
             AddStat("Triangles Count/Max: %d/%d", trigs, ProgramRenderer.triangle_count, MAX_TRIANGLES);
             AddStat("Cube Count: %d", cubs, TotalCubes-1);
             AddStat("Hovered Cube Index: %d", hovered, (CurrentCubeUnderCursor.index == U32_MAX) ? -1 : CurrentCubeUnderCursor.index);
