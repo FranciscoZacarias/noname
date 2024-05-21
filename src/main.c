@@ -9,7 +9,7 @@
 [ ] - Add directional light
 [ ] - Add phong light
 [ ] - Delete cubes
-[ ] - Add more robust (generic)input system
+[ ] - Add more robust (generic) input system
 [ ] - Add way to save and load levels from files
 [ ] - Add undo system for the add/remove cubes
 [ ] - Add some post processing on each undo
