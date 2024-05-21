@@ -70,6 +70,7 @@ global f32 LastFrame = 0.0f;
 global f64 FpsLastTime = 0.0f;
 global s64 FrameCount = 0.0f;
 global u64 FPS = 0.0f;
+global f32 MsPerFrame = 0.0f;
 
 global Vec3f32 Raycast = {F32_MAX, F32_MAX, F32_MAX};
 
@@ -166,6 +167,7 @@ int main(void) {
       FPS = FrameCount / (CurrentTime - FpsLastTime);
       FrameCount  = 0;
       FpsLastTime = CurrentTime;
+      MsPerFrame = DeltaTime*1000;
     }
     
     process_input(window);
@@ -268,10 +270,9 @@ len = stbsp_sprintf(tag##_buffer, fmt, __VA_ARGS__); \
 txt.size = (u64)len; \
 txt.str  = (u8*)tag##_buffer; \
 renderer_push_string(&ProgramRenderer, &font_info, txt, vec2f32(-0.998, y_pos), COLOR_YELLOW); \
-y_pos -= 0.05f; } while(0); \
+y_pos -= 0.05f; } while(0);
             
-            AddStat("FPS: %d", fps, FPS);
-            AddStat("Ms/Frame: %0.4f", msframe, (f32)DeltaTime/1000);
+            AddStat("%0.2fms/Frame, FPS: %d", fps, MsPerFrame,  FPS);
             AddStat("Triangles Count/Max: %d/%d", trigs, ProgramRenderer.triangle_count, MAX_TRIANGLES);
             AddStat("Cube Count: %d", cubs, TotalCubes-1);
             AddStat("Hovered Cube Index: %d", hovered, (CurrentCubeUnderCursor.index == U32_MAX) ? -1 : CurrentCubeUnderCursor.index);
