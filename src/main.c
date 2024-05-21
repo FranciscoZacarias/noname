@@ -3,10 +3,11 @@
 [x] - Add texture support to the renderer
 [x] - Put any kind of text to the screen
 [x] - Try rendering text directly to the screen program and be able to say (x,y) in pixels, where the bottom left of the string goes
-[ ] - Drop down, quake style, in-editor developer terminal.
+[x] - Add cube to the hovered cube face
+[x] - Add hotloadable stats on top left
+[x] - Replace GlobalArena with a either more specific arenas or just thread context scratch arenas
 [ ] - Add directional light
 [ ] - Add phong light
-[x] - Add cube to the hovered cube face
 [ ] - Delete cubes
 [ ] - Add more robust (generic)input system
 [ ] - Add way to save and load levels from files
@@ -18,13 +19,11 @@
 [ ] - Add text in the center of the screen (that slowly fades away), when loading variables from Variables.hotload and when recompiling shaders.
 [ ] - Change Cube color from the editor
 [ ] - MAX_TRIANGLES should be in allocated memory instead of a stack allocation
-[x] - Add hotloadable stats on top left
-[x] - Replace GlobalArena with a either more specific arenas or just thread context scratch arenas
+[ ] - Extract game state and separate the game logic pass and rendering pass from the main program loops into their own modules.
  
 ### Bugs:
 [ ] - Not really a bug, but we should check if a cube already exists in a place where the program is trying to add one. This is just a way to spot bugs, which we wouldn't be able to see, if two cubes of the same color (or not) are overlapped.
 [ ] - When highlighting a cube, we get more triangles than we should have. We should have just the same 
-[ ] - Extract game state and separate the game logic pass and rendering pass from the main program loops into their own modules.
 
 ### F_Base:
 [x] - Add thread context module
