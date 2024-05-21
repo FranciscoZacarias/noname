@@ -95,7 +95,7 @@ internal void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_c
 internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, Vec4f32 border_color, Cube_Face highlight, Vec4f32 highlight_color);
 
 //~ Push 2D to Renderer
-internal void renderer_push_string(Renderer* renderer, Renderer_Font_Info* font_info, String text, Vec2f32 position, Vec4f32 color);
+internal void renderer_push_string(Renderer* renderer, Renderer_Font_Info* font_info, s32 window_width, s32 window_height, String text, Vec2f32 position, Vec4f32 color);
 
 //~ Shader Uniforms
 internal void renderer_set_uniform_mat4fv(u32 program, const char* uniform, Mat4f32 mat);

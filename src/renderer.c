@@ -950,13 +950,11 @@ internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, V
   }
 }
 
-
-
 // NOTE(fz): Position should be in NDC
-internal void renderer_push_string(Renderer* renderer, Renderer_Font_Info* font_info, String text, Vec2f32 position, Vec4f32 color) {
+internal void renderer_push_string(Renderer* renderer, Renderer_Font_Info* font_info, s32 window_width, s32 window_height, String text, Vec2f32 position, Vec4f32 color) {
   // NDC to screen
-  position.x = ((position.x + 1.0f) / 2.0f) * WindowWidth;
-  position.y = ((position.y + 1.0f) / 2.0f) * WindowHeight;
+  position.x = ((position.x + 1.0f) / 2.0f) * window_width;
+  position.y = ((position.y + 1.0f) / 2.0f) * window_height;
   
   for (u32 i = 0; i < text.size; i++) {
     if (text.str[i] >= 32 && text.str[i] < 128) {
@@ -975,10 +973,10 @@ internal void renderer_push_string(Renderer* renderer, Renderer_Font_Info* font_
       f32 y1 = y0 - (info->y1 - info->y0);
       
       // Convert screen space location to NDC
-      f32 ndc_x0 = (x0 / WindowWidth)  * 2.0f - 1.0f;
-      f32 ndc_y0 = (y0 / WindowHeight) * 2.0f - 1.0f;
-      f32 ndc_x1 = (x1 / WindowWidth)  * 2.0f - 1.0f;
-      f32 ndc_y1 = (y1 / WindowHeight) * 2.0f - 1.0f;
+      f32 ndc_x0 = (x0 / window_width)  * 2.0f - 1.0f;
+      f32 ndc_y0 = (y0 / window_height) * 2.0f - 1.0f;
+      f32 ndc_x1 = (x1 / window_width)  * 2.0f - 1.0f;
+      f32 ndc_y1 = (y1 / window_height) * 2.0f - 1.0f;
       
       Vec3f32 top_left_pos     = { ndc_x0, ndc_y0, 0.0f };
       Vec3f32 top_right_pos    = { ndc_x1, ndc_y0, 0.0f };

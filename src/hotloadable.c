@@ -62,7 +62,7 @@ internal String _file_get_next_line(OS_File file, u32* cursor) {
 	return result;
 }
 
-internal void hotload_variables() {
+internal void hotload_variables(s32* window_width, s32* window_height, b32* show_stats) {
 #if !ENABLE_HOTLOAD_VARIABLES
 	return;
 #endif 
@@ -156,21 +156,21 @@ internal void hotload_variables() {
 				printf("Error parsing s32. Line: %lu. Value: '%s' :: %s.\n \n", line_count, value.str, VARIABLES_TWEAK_FILE);
 				continue;
 			}
-			WindowWidth = parsed_value;
+      *window_width= parsed_value;
 		} else if (strings_match(key, StringLiteral("window_height"))) {
 			s32 parsed_value;
 			if (!cast_string_to_s32(value, &parsed_value)) {
 				printf("Error parsing s32. Line: %lu. Value: '%s' :: %s.\n \n", line_count, value.str, VARIABLES_TWEAK_FILE);
 				continue;
 			}
-			WindowHeight = parsed_value;
+      *window_height= parsed_value;
     } else if (strings_match(key, StringLiteral("show_stats"))) {
       b32 parsed_value;
 			if (!cast_string_to_b32(value, &parsed_value)) {
 				printf("Error parsing b32. Line: %lu. Value: '%s' :: %s.\n \n", line_count, value.str, VARIABLES_TWEAK_FILE);
 				continue;
 			}
-      HotloadableShowStats= parsed_value;
+      *show_stats= parsed_value;
     } else {
       printf("Variable not loaded: %s\n", line.str);
     }

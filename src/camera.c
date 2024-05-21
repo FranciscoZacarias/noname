@@ -1,4 +1,4 @@
-internal Camera camera_create() {
+internal Camera camera_init() {
 	Camera camera;
 	camera.position = vec3f32(-9.21f, 5.45f, 14.81f);
 	camera.front = vec3f32(0.56f, -0.31f, -0.77f);
@@ -6,7 +6,8 @@ internal Camera camera_create() {
 	camera.right = vec3f32(0.81f, -0.00f, 0.58f);
 	camera.pitch = -18.10f;
 	camera.yaw = -54.20f;
-	_camera_update(&camera);
+  camera.mode = CameraMode_Select;
+  _camera_update(&camera);
 	return camera;
 }
 
@@ -21,16 +22,16 @@ internal void print_camera(Camera camera) {
 internal void camera_mouse_callback(Camera* camera, f64 x_pos, f64 y_pos) {
 	camera->yaw   += (x_pos * CAMERA_SENSITIVITY);
 	camera->pitch += (y_pos * CAMERA_SENSITIVITY);
-
+  
 	if (camera->pitch >  89.0f) camera->pitch = 89.0f;
 	if (camera->pitch < -89.0f) camera->pitch = -89.0f;
-
+  
 	_camera_update(camera);
 }
 
 internal void camera_keyboard_callback(Camera* camera, Camera_Movement movement, f32 delta_time) {
 	f32 cameraSpeed = (f32)(HotloadableCameraSpeed * delta_time);
-
+  
   if (movement == CameraMovement_Front) {
     Vec3f32 delta = scale_vec3f32(camera->front, cameraSpeed);
     camera->position = add_vec3f32(camera->position, delta);
@@ -59,11 +60,11 @@ internal void camera_keyboard_callback(Camera* camera, Camera_Movement movement,
 
 internal void _camera_update(Camera* camera) {
 	Vec3f32 front = vec3f32(
-		cos(Radians(camera->yaw)) * cos(Radians(camera->pitch)),
-		sin(Radians(camera->pitch)),
-		sin(Radians(camera->yaw)) * cos(Radians(camera->pitch))
-	);
-
+                          cos(Radians(camera->yaw)) * cos(Radians(camera->pitch)),
+                          sin(Radians(camera->pitch)),
+                          sin(Radians(camera->yaw)) * cos(Radians(camera->pitch))
+                          );
+  
 	camera->front = normalize_vec3f32(front);
 	Vec3f32 right = cross_vec3f32(camera->front, WORLD_UP);
 	camera->right = normalize_vec3f32(right);

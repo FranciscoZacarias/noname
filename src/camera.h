@@ -8,6 +8,12 @@
 
 global f32 HotloadableCameraSpeed = 8.0f;
 
+
+typedef enum Camera_Mode {
+	CameraMode_Select,
+	CameraMode_Fly
+} Camera_Mode;
+
 typedef enum Camera_Movement {
 	CameraMovement_Front,
 	CameraMovement_Back,
@@ -24,9 +30,11 @@ typedef struct Camera {
 	Vec3f32 right;
 	f32 yaw;
 	f32 pitch;
+  
+  Camera_Mode mode;
 } Camera;
 
-internal Camera camera_create();
+internal Camera camera_init();
 internal void print_camera(Camera camera);
 internal void camera_mouse_callback(Camera* camera, f64 x_pos, f64 y_pos);
 internal void camera_keyboard_callback(Camera* camera, Camera_Movement movement, f32 delta_time);

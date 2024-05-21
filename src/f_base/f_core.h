@@ -221,8 +221,10 @@
 
 #if ENABLE_ASSERT
 # define Assert(c) Statement( if (!(c)){ AssertBreak(); } )
+# define AssertNoReentry() Statement(local_persist b32 triggered = 0;Assert(triggered == 0); triggered = 1;) 
 #else
 # define Assert(c)
+# define AssertNoReentry()
 #endif
 
 #define StaticAssert(c,l) typedef u8 Glue(l,__LINE__) [(c)?1:-1]
