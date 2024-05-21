@@ -3,9 +3,11 @@ noname:
 [x] - Add texture support to the renderer
 [x] - Put any kind of text to the screen
 [x] - Try rendering text directly to the screen program and be able to say (x,y) in pixels, where the bottom left of the string goes
+[x] - Add cube to the hovered cube face
+[x] - Add hotloadable stats on top left
+[x] - Replace GlobalArena with a either more specific arenas or just thread context scratch arenas
 [ ] - Add directional light
 [ ] - Add phong light
-[x] - Add cube to the hovered cube face
 [ ] - Delete cubes
 [ ] - Add more robust (generic)input system
 [ ] - Add way to save and load levels from files
@@ -15,14 +17,13 @@ noname:
 [ ] - Moving cubes from gizmos must snap to the grid
 [ ] - Add some sort of post processing shake when loading variables from hotload, just to know it was loaded and feature creep
 [ ] - MAX_TRIANGLES should be in allocated memory instead of a stack allocation
-[x] - Add hotloadable stats on top left
-[x] - Replace GlobalArena with a either more specific arenas or just thread context scratch arenas
 bugs:
-[ ] - When highlighting a cube, we get more triangles than we should have. We should have just the same 
+[x] - When highlighting a cube, we get more triangles than we should have. We should have just the same 
+[ ] - We should not push cubes into the renderer that are not visible
+[ ] - Cubes are still being selected (in a weird way) when the camera is in fly mode.
 f_base:
 [x] - Add thread context module
 [ ] - Add windows window layer I.e. remove glfw dependency
-[ ] - Cubes are still being selected (in a weird way) when the camera is in fly mode.
 */
 
 #include "main.h"
@@ -53,45 +54,6 @@ typedef struct Program_State {
 
 global Program_State ProgramState;
 
-internal void program_init(s32 window_width, s32 window_height) {
-  AssertNoReentry();
-  
-  MemoryZeroStruct(&ProgramState);
-  
-  // Screen Things
-  ProgramState.window_width  = window_width;
-  ProgramState.window_height = window_height;
-  ProgramState.show_debug_stats = 1;
-  ProgramState.near_plane = 0.1f;
-  ProgramState.far_plane = 100.f;
-  
-  
-  // Camera
-  ProgramState.camera = camera_init();
-  
-  // Mouse
-  ProgramState.mouse.last_x = window_width / 2.0f;
-  ProgramState.mouse.last_y = window_height / 2.0f;
-	ProgramState.mouse.screen_space_x = ProgramState.mouse.last_x;
-	ProgramState.mouse.screen_space_y = ProgramState.mouse.last_y;
-	ProgramState.mouse.ndc_x = ProgramState.mouse.last_x;
-	ProgramState.mouse.ndc_y = ProgramState.mouse.last_y;
-  
-  ProgramState.raycast = vec3f32(F32_MAX, F32_MAX, F32_MAX);
-}
-
-internal void program_update(Mat4f32 view, Mat4f32 projection) {
-  
-  // Update Raycast
-  if (ProgramState.camera.mode == CameraMode_Select) {
-    Vec3f32 unproject_mouse = unproject_vec3f32(vec3f32(ProgramState.mouse.ndc_x, ProgramState.mouse.ndc_y, 1.0f), projection, view);
-    ProgramState.raycast = normalize_vec3f32(sub_vec3f32(vec3f32(unproject_mouse.x, unproject_mouse.y, unproject_mouse.z), vec3f32(ProgramState.camera.position.x, ProgramState.camera.position.y, ProgramState.camera.position.z)));
-  } else {
-    ProgramState.raycast = vec3f32(F32_MAX, F32_MAX, F32_MAX);
-  }
-  
-}
-
 // Keyboard state
 global b32 F_KeyPreviousState = 1;
 global b32 F_KeyState = 0;
@@ -114,7 +76,10 @@ global f64 FpsLastTime = 0.0f;
 global s64 FrameCount = 0.0f;
 global u64 FPS = 0.0f;
 
-Renderer ProgramRenderer;
+global Renderer ProgramRenderer;
+
+internal void program_init(s32 window_width, s32 window_height);
+internal void program_update(Mat4f32 view, Mat4f32 projection);
 
 internal void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 internal void process_input(GLFWwindow *window);
@@ -123,13 +88,10 @@ internal void mouse_callback(GLFWwindow* window, f64 xpos, f64 ypos);
 int main(void) {
 	os_init();
   
-	Thread_Context tctx;
-	thread_context_init_and_equip(&tctx);
+	Thread_Context main_thread_context;
+	thread_context_init_and_equip(&main_thread_context);
   
   program_init(1280, 720);
-	
-  os_file_create(StringLiteral(VARIABLES_TWEAK_FILE));
-	hotload_variables(&ProgramState.window_width, &ProgramState.window_height, &ProgramState.show_debug_stats);
   
   game_init();
   
@@ -159,22 +121,6 @@ int main(void) {
 	Renderer_Font_Info font_info = {0};
 	renderer_font_load(&font_info, StringLiteral("D:\\work\\noname\\res\\Karmina.Otf"), 16);
   
-	game_push_cube(cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A));
-	game_push_cube(cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A));
-  game_push_cube(cube_new(vec3f32( 0.0f,  0.0f, -8.0f), PALLETE_COLOR_B));
-  game_push_cube(cube_new(vec3f32( 2.0f,  0.0f, -8.0f), PALLETE_COLOR_B));
-  game_push_cube(cube_new(vec3f32( 4.0f,  2.0f, -8.0f), PALLETE_COLOR_B));
-  game_push_cube(cube_new(vec3f32( 6.0f,  0.0f, -8.0f), PALLETE_COLOR_B));
-  game_push_cube(cube_new(vec3f32( 0.0f,  0.0f, -8.0f), PALLETE_COLOR_B));
-  game_push_cube(cube_new(vec3f32( 0.0f, -0.0f,  8.0f), PALLETE_COLOR_C));
-  game_push_cube(cube_new(vec3f32( 0.0f,  8.0f,  0.0f), PALLETE_COLOR_C));
-  game_push_cube(cube_new(vec3f32( 0.0f, -8.0f,  0.0f), PALLETE_COLOR_A));
-  game_push_cube(cube_new(vec3f32( 8.0f,  0.0f,  0.0f), PALLETE_COLOR_B));
-  game_push_cube(cube_new(vec3f32(-8.0f,  0.0f,  0.0f), PALLETE_COLOR_C));
-  game_push_cube(cube_new(vec3f32( 8.0f,  8.0f,  8.0f), PALLETE_COLOR_C));
-  game_push_cube(cube_new(vec3f32(-8.0f, -8.0f, -8.0f), PALLETE_COLOR_A));
-  game_push_cube(cube_new(vec3f32( 8.0f, -8.0f, -8.0f), PALLETE_COLOR_B));
-  
   while(!glfwWindowShouldClose(window)) {
     CurrentTime = glfwGetTime();
     DeltaTime = CurrentTime - LastFrame;
@@ -187,29 +133,16 @@ int main(void) {
       FpsLastTime = CurrentTime;
     }
     
+    //~ Perspective 
+    Mat4f32 view = look_at_mat4f32(ProgramState.camera.position, add_vec3f32(ProgramState.camera.position, ProgramState.camera.front), ProgramState.camera.up);
+    Mat4f32 projection = perspective_mat4f32(Radians(45), ProgramState.window_width, ProgramState.window_height, ProgramState.near_plane, ProgramState.far_plane);
     
-    // View
-    Mat4f32 view = mat4f32(1.0f);
-    Mat4f32 look_at = look_at_mat4f32(ProgramState.camera.position, add_vec3f32(ProgramState.camera.position, ProgramState.camera.front), ProgramState.camera.up);
-    view = mul_mat4f32(look_at, view);
-    
-    // Projection 
-    Mat4f32 projection = mat4f32(1.0f);
-    Mat4f32 perspective = perspective_mat4f32(Radians(45), ProgramState.window_width, ProgramState.window_height, ProgramState.near_plane, ProgramState.far_plane);
-    projection = mul_mat4f32(perspective, projection);
-    
+    //~ Updates
     process_input(window);
     program_update(view, projection);
     
-    // Hotloading files
-    {
-      local_persist f64 last_hotload_time = -1;
-      if (CurrentTime - last_hotload_time > 1) {
-        hotload_variables(&ProgramState.window_width, &ProgramState.window_height, &ProgramState.show_debug_stats);
-        hotload_shader_programs(&ProgramRenderer);
-        last_hotload_time = CurrentTime;
-      }
-    }
+    hotload_variables(&ProgramState.window_width, &ProgramState.window_height, &ProgramState.show_debug_stats, CurrentTime);
+    hotload_shader_programs(&ProgramRenderer, CurrentTime);
     
     //~ Game logic
     game_update(ProgramState.camera, ProgramState.raycast,F_KeyState);
@@ -230,13 +163,14 @@ int main(void) {
           renderer_push_arrow(&ProgramRenderer, vec3f32(  0.0f,   0.0f, -size), vec3f32( 0.0f,  0.0f, size), COLOR_BLUE, 0.5f);
         }
         
-        f32 highlight_scale = 0.8f;
-        if (GameState.cube_under_cursor.index != U32_MAX) {
-          renderer_push_cube_highlight_face(&ProgramRenderer, GameState.cubes[GameState.cube_under_cursor.index], vec4f32(0.5+0.5*sin(5*CurrentTime), 0.5+0.5*sin(5*CurrentTime), 0.0f), GameState.cube_under_cursor.hovered_face, vec4f32(GameState.cubes[GameState.cube_under_cursor.index].color.x * highlight_scale, GameState.cubes[GameState.cube_under_cursor.index].color.y * highlight_scale, GameState.cubes[GameState.cube_under_cursor.index].color.z * highlight_scale));
-        }
-        
+        // Render cubes
         for(u32 i = 0; i < GameState.total_cubes; i++) {
-          renderer_push_cube(&ProgramRenderer, GameState.cubes[i], COLOR_BLACK);	
+          if (GameState.cube_under_cursor.index == i) {
+            f32 highlight_scale = 0.8f;
+            renderer_push_cube_highlight_face(&ProgramRenderer, GameState.cubes[GameState.cube_under_cursor.index], vec4f32(0.5+0.5*sin(5*CurrentTime), 0.5+0.5*sin(5*CurrentTime), 0.0f), GameState.cube_under_cursor.hovered_face, vec4f32(GameState.cubes[GameState.cube_under_cursor.index].color.x * highlight_scale, GameState.cubes[GameState.cube_under_cursor.index].color.y * highlight_scale, GameState.cubes[GameState.cube_under_cursor.index].color.z * highlight_scale));
+          } else {
+            renderer_push_cube(&ProgramRenderer, GameState.cubes[i], COLOR_BLACK);	
+          }
         }
         
         // Render text
@@ -274,6 +208,49 @@ y_pos -= 0.05f; } while(0); \
   glfwTerminate();
   return 0;
 }
+
+
+internal void program_init(s32 window_width, s32 window_height) {
+  AssertNoReentry();
+  
+  MemoryZeroStruct(&ProgramState);
+  
+  // Screen Things
+  ProgramState.window_width  = window_width;
+  ProgramState.window_height = window_height;
+  ProgramState.show_debug_stats = 1;
+  ProgramState.near_plane = 0.1f;
+  ProgramState.far_plane = 100.f;
+  
+  
+  // Camera
+  ProgramState.camera = camera_init();
+  
+  // Mouse
+  ProgramState.mouse.last_x = window_width / 2.0f;
+  ProgramState.mouse.last_y = window_height / 2.0f;
+	ProgramState.mouse.screen_space_x = ProgramState.mouse.last_x;
+	ProgramState.mouse.screen_space_y = ProgramState.mouse.last_y;
+	ProgramState.mouse.ndc_x = ProgramState.mouse.last_x;
+	ProgramState.mouse.ndc_y = ProgramState.mouse.last_y;
+  
+  ProgramState.raycast = vec3f32(F32_MAX, F32_MAX, F32_MAX);
+  
+  os_file_create(StringLiteral(VARIABLES_TWEAK_FILE));
+	// NOTE(fz): CurrentTime in this call is set to max to make sure we load it immediately.
+  hotload_variables(&ProgramState.window_width, &ProgramState.window_height, &ProgramState.show_debug_stats, F64_MAX);
+}
+
+internal void program_update(Mat4f32 view, Mat4f32 projection) {
+  // Update Raycast
+  if (ProgramState.camera.mode == CameraMode_Select) {
+    Vec3f32 unproject_mouse = unproject_vec3f32(vec3f32(ProgramState.mouse.ndc_x, ProgramState.mouse.ndc_y, 1.0f), projection, view);
+    ProgramState.raycast = normalize_vec3f32(sub_vec3f32(vec3f32(unproject_mouse.x, unproject_mouse.y, unproject_mouse.z), vec3f32(ProgramState.camera.position.x, ProgramState.camera.position.y, ProgramState.camera.position.z)));
+  } else {
+    ProgramState.raycast = vec3f32(F32_MAX, F32_MAX, F32_MAX);
+  }
+}
+
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
   glViewport(0, 0, width, height);

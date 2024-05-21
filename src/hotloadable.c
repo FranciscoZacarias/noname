@@ -1,5 +1,11 @@
-internal void hotload_shader_programs(Renderer* renderer) {
-	if (FirstEntry) {
+internal void hotload_shader_programs(Renderer* renderer, f64 current_time) {
+  local_persist f64 last_load_check = 0.;
+  if (current_time - last_load_check < 1) {
+    return;
+  }
+  last_load_check = current_time;
+  
+  if (FirstEntry) {
 		DefaultVertexShaderLastModified   = os_file_get_last_modified_time(StringLiteral(DEFAULT_VERTEX_SHADER));
 		DefaultFragmentShaderLastModified = os_file_get_last_modified_time(StringLiteral(DEFAULT_FRAGMENT_SHADER));
 		ScreenVertexShaderLastModified    = os_file_get_last_modified_time(StringLiteral(SCREEN_VERTEX_SHADER));
@@ -62,11 +68,17 @@ internal String _file_get_next_line(OS_File file, u32* cursor) {
 	return result;
 }
 
-internal void hotload_variables(s32* window_width, s32* window_height, b32* show_stats) {
+internal void hotload_variables(s32* window_width, s32* window_height, b32* show_stats, f64 current_time) {
 #if !ENABLE_HOTLOAD_VARIABLES
 	return;
 #endif 
-	Arena_Temp scratch = scratch_begin(0, 0);
+  local_persist f64 last_load_check = 0.0;
+  if (current_time - last_load_check < 1) {
+    return;
+  }
+  last_load_check = current_time;
+  
+  Arena_Temp scratch = scratch_begin(0, 0);
   
 	u64 variables_tweak_last_modified = os_file_get_last_modified_time(StringLiteral(VARIABLES_TWEAK_FILE));
 	if (VariablesTweakFileLastModified == variables_tweak_last_modified) {

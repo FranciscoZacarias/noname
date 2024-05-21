@@ -2,12 +2,12 @@
 #ifndef CUBE_H
 #define CUBE_H
 
-//   3------2
-//  /|     /|
-// 7------6 |
-// | 0----|-1
-// |/     |/
-// 4------5
+//   3--------2
+//  /|       /|
+// 7--------6 |
+// | 0------|-1
+// |/       |/
+// 4--------5
 //
 // Each vertex number should correspond to an index
 // in any implementation logic for this Cube structure

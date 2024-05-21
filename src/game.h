@@ -10,7 +10,7 @@ typedef struct Cube_Under_Cursor {
 } Cube_Under_Cursor;
 
 typedef struct Game_State {
-  Arena* cubes_arena;
+  Arena* arena;
   Cube* cubes;
   u32 total_cubes;
   
