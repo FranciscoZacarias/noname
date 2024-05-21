@@ -38,19 +38,10 @@ typedef struct Mouse_State {
   f32 last_y;
 } Mouse_State;
 
-// TODO(fz): Move to game module
-typedef struct CubeUnderCursor {
-	Cube_Face hovered_face;
-	u32 index;
-	f32 distance_to_camera;
-} CubeUnderCursor;
-
 typedef struct Program_State {
   s32 window_width;
   s32 window_height;
-  
   b32 show_debug_stats;
-  
   f32 near_plane;
   f32 far_plane;
   
@@ -125,16 +116,9 @@ global u64 FPS = 0.0f;
 
 Renderer ProgramRenderer;
 
-internal b32 find_cube_under_cursor(CubeUnderCursor* result); // TODO(Fz): Move to game module
 internal void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 internal void process_input(GLFWwindow *window);
 internal void mouse_callback(GLFWwindow* window, f64 xpos, f64 ypos);
-
-global Arena* CubesArena;
-global Cube* Cubes;
-global u32 TotalCubes = 0;
-
-CubeUnderCursor CurrentCubeUnderCursor;
 
 int main(void) {
 	os_init();
@@ -146,6 +130,8 @@ int main(void) {
 	
   os_file_create(StringLiteral(VARIABLES_TWEAK_FILE));
 	hotload_variables(&ProgramState.window_width, &ProgramState.window_height, &ProgramState.show_debug_stats);
+  
+  game_init();
   
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -168,33 +154,30 @@ int main(void) {
     Assert(0);
   }
   
-	CubesArena  = arena_init();
-	Cubes = (Cube*)PushArray(CubesArena, Cube, 2048);
-  
 	ProgramRenderer = renderer_init(ProgramState.window_width, ProgramState.window_height);
   
 	Renderer_Font_Info font_info = {0};
 	renderer_font_load(&font_info, StringLiteral("D:\\work\\noname\\res\\Karmina.Otf"), 16);
   
-	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A);
-	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A);
-	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f, -8.0f), PALLETE_COLOR_B);
-	Cubes[TotalCubes++] = cube_new(vec3f32( 2.0f,  0.0f, -8.0f), PALLETE_COLOR_B);
-	Cubes[TotalCubes++] = cube_new(vec3f32( 4.0f,  2.0f, -8.0f), PALLETE_COLOR_B);
-	Cubes[TotalCubes++] = cube_new(vec3f32( 6.0f,  0.0f, -8.0f), PALLETE_COLOR_B);
-	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  0.0f, -8.0f), PALLETE_COLOR_B);
-	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f, -0.0f,  8.0f), PALLETE_COLOR_C);
-	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f,  8.0f,  0.0f), PALLETE_COLOR_C);
-	Cubes[TotalCubes++] = cube_new(vec3f32( 0.0f, -8.0f,  0.0f), PALLETE_COLOR_A);
-	Cubes[TotalCubes++] = cube_new(vec3f32( 8.0f,  0.0f,  0.0f), PALLETE_COLOR_B);
-	Cubes[TotalCubes++] = cube_new(vec3f32(-8.0f,  0.0f,  0.0f), PALLETE_COLOR_C);
-	Cubes[TotalCubes++] = cube_new(vec3f32( 8.0f,  8.0f,  8.0f), PALLETE_COLOR_C);
-	Cubes[TotalCubes++] = cube_new(vec3f32(-8.0f, -8.0f, -8.0f), PALLETE_COLOR_A);
-	Cubes[TotalCubes++] = cube_new(vec3f32( 8.0f, -8.0f, -8.0f), PALLETE_COLOR_B);
+	game_push_cube(cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A));
+	game_push_cube(cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A));
+  game_push_cube(cube_new(vec3f32( 0.0f,  0.0f, -8.0f), PALLETE_COLOR_B));
+  game_push_cube(cube_new(vec3f32( 2.0f,  0.0f, -8.0f), PALLETE_COLOR_B));
+  game_push_cube(cube_new(vec3f32( 4.0f,  2.0f, -8.0f), PALLETE_COLOR_B));
+  game_push_cube(cube_new(vec3f32( 6.0f,  0.0f, -8.0f), PALLETE_COLOR_B));
+  game_push_cube(cube_new(vec3f32( 0.0f,  0.0f, -8.0f), PALLETE_COLOR_B));
+  game_push_cube(cube_new(vec3f32( 0.0f, -0.0f,  8.0f), PALLETE_COLOR_C));
+  game_push_cube(cube_new(vec3f32( 0.0f,  8.0f,  0.0f), PALLETE_COLOR_C));
+  game_push_cube(cube_new(vec3f32( 0.0f, -8.0f,  0.0f), PALLETE_COLOR_A));
+  game_push_cube(cube_new(vec3f32( 8.0f,  0.0f,  0.0f), PALLETE_COLOR_B));
+  game_push_cube(cube_new(vec3f32(-8.0f,  0.0f,  0.0f), PALLETE_COLOR_C));
+  game_push_cube(cube_new(vec3f32( 8.0f,  8.0f,  8.0f), PALLETE_COLOR_C));
+  game_push_cube(cube_new(vec3f32(-8.0f, -8.0f, -8.0f), PALLETE_COLOR_A));
+  game_push_cube(cube_new(vec3f32( 8.0f, -8.0f, -8.0f), PALLETE_COLOR_B));
   
-	while(!glfwWindowShouldClose(window)) {
+  while(!glfwWindowShouldClose(window)) {
     CurrentTime = glfwGetTime();
-		DeltaTime = CurrentTime - LastFrame;
+    DeltaTime = CurrentTime - LastFrame;
     LastFrame = CurrentTime;
     
     FrameCount += 1;
@@ -205,63 +188,40 @@ int main(void) {
     }
     
     
-		// View
-		Mat4f32 view = mat4f32(1.0f);
-		Mat4f32 look_at = look_at_mat4f32(ProgramState.camera.position, add_vec3f32(ProgramState.camera.position, ProgramState.camera.front), ProgramState.camera.up);
-		view = mul_mat4f32(look_at, view);
+    // View
+    Mat4f32 view = mat4f32(1.0f);
+    Mat4f32 look_at = look_at_mat4f32(ProgramState.camera.position, add_vec3f32(ProgramState.camera.position, ProgramState.camera.front), ProgramState.camera.up);
+    view = mul_mat4f32(look_at, view);
     
-		// Projection 
-		Mat4f32 projection = mat4f32(1.0f);
-		Mat4f32 perspective = perspective_mat4f32(Radians(45), ProgramState.window_width, ProgramState.window_height, ProgramState.near_plane, ProgramState.far_plane);
-		projection = mul_mat4f32(perspective, projection);
+    // Projection 
+    Mat4f32 projection = mat4f32(1.0f);
+    Mat4f32 perspective = perspective_mat4f32(Radians(45), ProgramState.window_width, ProgramState.window_height, ProgramState.near_plane, ProgramState.far_plane);
+    projection = mul_mat4f32(perspective, projection);
     
     process_input(window);
     program_update(view, projection);
     
-		// Hotloading files
-		{
-			local_persist f64 last_hotload_time = -1;
-			if (CurrentTime - last_hotload_time > 1) {
-				hotload_variables(&ProgramState.window_width, &ProgramState.window_height, &ProgramState.show_debug_stats);
-        hotload_shader_programs(&ProgramRenderer);
-				last_hotload_time = CurrentTime;
-			}
-		}
-    
-    //~ Game logic
+    // Hotloading files
     {
-      for(u32 i = 0; i < TotalCubes; i++) {
-        if (find_cube_under_cursor(&CurrentCubeUnderCursor)) {
-          break;
-        }
-        if (i == TotalCubes-1) {
-          MemoryZeroStruct(&CurrentCubeUnderCursor);
-          CurrentCubeUnderCursor.index = U32_MAX;
-        }
-      }
-      
-      if (CurrentCubeUnderCursor.index != U32_MAX) {
-        Quad face = cube_get_local_space_face_quad(CurrentCubeUnderCursor.hovered_face);
-        face = transform_quad(face, Cubes[CurrentCubeUnderCursor.index].transform);
-        
-        Vec3f32 center = cube_get_center(Cubes[CurrentCubeUnderCursor.index]);
-        Vec3f32 direction = sub_vec3f32(quad_get_center(face), center);
-        Vec3f32 new_cube_center = add_vec3f32(center, scale_vec3f32(direction, 2.0f));
-        
-        if (F_KeyState) {
-          Cubes[TotalCubes++] = cube_new(new_cube_center, PALLETE_COLOR_B);
-        }
+      local_persist f64 last_hotload_time = -1;
+      if (CurrentTime - last_hotload_time > 1) {
+        hotload_variables(&ProgramState.window_width, &ProgramState.window_height, &ProgramState.show_debug_stats);
+        hotload_shader_programs(&ProgramRenderer);
+        last_hotload_time = CurrentTime;
       }
     }
     
+    //~ Game logic
+    game_update(ProgramState.camera, ProgramState.raycast,F_KeyState);
+    
     //~ Render
-		renderer_begin_frame(&ProgramRenderer, PALLETE_COLOR_D);
-		{
-			renderer_set_uniform_mat4fv(ProgramRenderer.shader_program, "model", mat4f32(1.0f));
-			renderer_set_uniform_mat4fv(ProgramRenderer.shader_program, "view", view);
-			renderer_set_uniform_mat4fv(ProgramRenderer.shader_program, "projection", projection);
+    renderer_begin_frame(&ProgramRenderer, PALLETE_COLOR_D);
+    {
+      renderer_set_uniform_mat4fv(ProgramRenderer.shader_program, "model", mat4f32(1.0f));
+      renderer_set_uniform_mat4fv(ProgramRenderer.shader_program, "view", view);
+      renderer_set_uniform_mat4fv(ProgramRenderer.shader_program, "projection", projection);
       
-			{
+      {
         // Axis
         { 
           f32 size = 20.0f;
@@ -271,17 +231,12 @@ int main(void) {
         }
         
         f32 highlight_scale = 0.8f;
-        if (CurrentCubeUnderCursor.index != U32_MAX) {
-          renderer_push_cube_highlight_face(&ProgramRenderer, Cubes[CurrentCubeUnderCursor.index], vec4f32(0.5+0.5*sin(5*CurrentTime), 0.5+0.5*sin(5*CurrentTime), 0.0f), CurrentCubeUnderCursor.hovered_face, vec4f32(Cubes[CurrentCubeUnderCursor.index].color.x * highlight_scale, Cubes[CurrentCubeUnderCursor.index].color.y * highlight_scale, Cubes[CurrentCubeUnderCursor.index].color.z * highlight_scale));
+        if (GameState.cube_under_cursor.index != U32_MAX) {
+          renderer_push_cube_highlight_face(&ProgramRenderer, GameState.cubes[GameState.cube_under_cursor.index], vec4f32(0.5+0.5*sin(5*CurrentTime), 0.5+0.5*sin(5*CurrentTime), 0.0f), GameState.cube_under_cursor.hovered_face, vec4f32(GameState.cubes[GameState.cube_under_cursor.index].color.x * highlight_scale, GameState.cubes[GameState.cube_under_cursor.index].color.y * highlight_scale, GameState.cubes[GameState.cube_under_cursor.index].color.z * highlight_scale));
         }
         
-        for(u32 i = 0; i < TotalCubes; i++) {
-          if (CurrentCubeUnderCursor.index == U32_MAX) {
-            if (CurrentCubeUnderCursor.index == i) {
-              continue;
-            }
-          }
-          renderer_push_cube(&ProgramRenderer, Cubes[i], COLOR_BLACK);	
+        for(u32 i = 0; i < GameState.total_cubes; i++) {
+          renderer_push_cube(&ProgramRenderer, GameState.cubes[i], COLOR_BLACK);	
         }
         
         // Render text
@@ -303,8 +258,8 @@ y_pos -= 0.05f; } while(0); \
             AddStat("FPS: %d", fps, FPS);
             AddStat("Ms/Frame: %0.2f", msframe, (f32)DeltaTime/1000);
             AddStat("Triangles Count/Max: %d/%d", trigs, ProgramRenderer.triangle_count, MAX_TRIANGLES);
-            AddStat("Cube Count: %d", cubs, TotalCubes-1);
-            AddStat("Hovered Cube Index: %d", hovered, (CurrentCubeUnderCursor.index == U32_MAX) ? -1 : CurrentCubeUnderCursor.index);
+            AddStat("Cube Count: %d", cubs, GameState.total_cubes-1);
+            AddStat("Hovered Cube Index: %d", hovered, (GameState.cube_under_cursor.index == U32_MAX) ? -1 : GameState.cube_under_cursor.index);
             
           }
         }
@@ -440,32 +395,4 @@ void mouse_callback(GLFWwindow* window, f64 xposIn, f64 yposIn) {
     ProgramState.mouse.ndc_x = (2.0f * xposIn) / ProgramState.window_width - 1.0f;
     ProgramState.mouse.ndc_y = 1.0f - (2.0f * yposIn) / ProgramState.window_height;
   }
-}
-
-internal b32 find_cube_under_cursor(CubeUnderCursor* result) {
-  b32 match = 0;
-  for (u32 i = 0; i < TotalCubes; i++) {
-    Cube it = Cubes[i];
-    for(u32 j = 0; j < 6; j++) {
-      Quad face = transform_quad(cube_get_local_space_face_quad(j), it.transform);
-      Vec3f32 intersection = intersect_line_with_plane(linef32(ProgramState.camera.position, ProgramState.raycast), face.p0, face.p1, face.p2);
-      if (is_vector_inside_rectangle(intersection, face.p0, face.p1, face.p2)) {
-        if (!match) {
-          result->hovered_face = j;
-          result->index = i;
-          result->distance_to_camera = distance_vec3f32(intersection, ProgramState.camera.position);
-          match = 1;
-        } else {
-          f32 distance = distance_vec3f32(intersection, ProgramState.camera.position);
-          if (distance < result->distance_to_camera) {
-            result->hovered_face = j;
-            result->index = i;
-            result->distance_to_camera = distance;
-          }
-        }
-      }
-    }
-  }
-  
-  return match;
 }

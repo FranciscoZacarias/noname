@@ -26,6 +26,7 @@
 #include "renderer.h"
 #include "camera.h"
 #include "hotloadable.h"
+#include "game.h"
 
 //////////////////////////////////////////////
 // Third-party source
@@ -40,6 +41,6 @@
 #include "renderer.c"
 #include "camera.c"
 #include "hotloadable.c"
-
+#include "game.c"
 
 #endif // MAIN_H
