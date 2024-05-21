@@ -172,7 +172,10 @@ internal void hotload_variables(s32* window_width, s32* window_height, b32* show
 			}
       *show_stats= parsed_value;
     } else {
+      char temp = line.str[line.size-1];
+      line.str[line.size] = '\0';
       printf("Variable not loaded: %s\n", line.str);
+      line.str[line.size] = temp;
     }
     
     if (cursor >= file.size) {

@@ -1,31 +1,25 @@
 /*
-> ### noname:
+noname:
 [x] - Add texture support to the renderer
 [x] - Put any kind of text to the screen
 [x] - Try rendering text directly to the screen program and be able to say (x,y) in pixels, where the bottom left of the string goes
-[x] - Add cube to the hovered cube face
-[x] - Add hotloadable stats on top left
-[x] - Replace GlobalArena with a either more specific arenas or just thread context scratch arenas
 [ ] - Add directional light
 [ ] - Add phong light
+[x] - Add cube to the hovered cube face
 [ ] - Delete cubes
-[ ] - Add more robust (generic) input system
+[ ] - Add more robust (generic)input system
 [ ] - Add way to save and load levels from files
 [ ] - Add undo system for the add/remove cubes
-[ ] - Add some post processing on each undo
 [ ] - Be able to select a cube on click
-[ ] - Add translation gizmos to selected cube (xyz arrows) and (xy, xz, yz planes), that actually transform the cube each arrow/plane
+[ ] - Add translation gizmos to selected cube (xyz arrows) and (xy, xz, yz planes), that actually transform the cube each arrow
 [ ] - Moving cubes from gizmos must snap to the grid
-[ ] - Add text in the center of the screen (that slowly fades away), when loading variables from Variables.hotload and when recompiling shaders.
-[ ] - Change Cube color from the editor
+[ ] - Add some sort of post processing shake when loading variables from hotload, just to know it was loaded and feature creep
 [ ] - MAX_TRIANGLES should be in allocated memory instead of a stack allocation
-[ ] - Extract game state and separate the game logic pass and rendering pass from the main program loops into their own modules.
- 
-### Bugs:
-[ ] - Not really a bug, but we should check if a cube already exists in a place where the program is trying to add one. This is just a way to spot bugs, which we wouldn't be able to see, if two cubes of the same color (or not) are overlapped.
+[x] - Add hotloadable stats on top left
+[x] - Replace GlobalArena with a either more specific arenas or just thread context scratch arenas
+bugs:
 [ ] - When highlighting a cube, we get more triangles than we should have. We should have just the same 
-
-### F_Base:
+f_base:
 [x] - Add thread context module
 [ ] - Add windows window layer I.e. remove glfw dependency
 [ ] - Cubes are still being selected (in a weird way) when the camera is in fly mode.
@@ -52,14 +46,17 @@ typedef struct CubeUnderCursor {
 } CubeUnderCursor;
 
 typedef struct Program_State {
+  s32 window_width;
+  s32 window_height;
+  
+  b32 show_debug_stats;
+  
+  f32 near_plane;
+  f32 far_plane;
   
   Camera camera;
   Mouse_State mouse;
   Vec3f32 raycast;
-  
-  s32 window_width;
-  s32 window_height;
-  b32 show_debug_stats;
   
 } Program_State;
 
@@ -69,6 +66,14 @@ internal void program_init(s32 window_width, s32 window_height) {
   AssertNoReentry();
   
   MemoryZeroStruct(&ProgramState);
+  
+  // Screen Things
+  ProgramState.window_width  = window_width;
+  ProgramState.window_height = window_height;
+  ProgramState.show_debug_stats = 1;
+  ProgramState.near_plane = 0.1f;
+  ProgramState.far_plane = 100.f;
+  
   
   // Camera
   ProgramState.camera = camera_init();
@@ -82,10 +87,6 @@ internal void program_init(s32 window_width, s32 window_height) {
 	ProgramState.mouse.ndc_y = ProgramState.mouse.last_y;
   
   ProgramState.raycast = vec3f32(F32_MAX, F32_MAX, F32_MAX);
-  
-  ProgramState.window_width  = window_width;
-  ProgramState.window_height = window_height;
-  ProgramState.show_debug_stats = 1;
 }
 
 internal void program_update(Mat4f32 view, Mat4f32 projection) {
@@ -99,9 +100,6 @@ internal void program_update(Mat4f32 view, Mat4f32 projection) {
   }
   
 }
-
-global f32 NearPlane = 0.1f;
-global f32 FarPlane = 100.0f;
 
 // Keyboard state
 global b32 F_KeyPreviousState = 1;
@@ -124,7 +122,6 @@ global f32 LastFrame = 0.0f;
 global f64 FpsLastTime = 0.0f;
 global s64 FrameCount = 0.0f;
 global u64 FPS = 0.0f;
-global f32 MsPerFrame = 0.0f;
 
 Renderer ProgramRenderer;
 
@@ -141,14 +138,14 @@ CubeUnderCursor CurrentCubeUnderCursor;
 
 int main(void) {
 	os_init();
-	os_file_create(StringLiteral(VARIABLES_TWEAK_FILE));
   
 	Thread_Context tctx;
 	thread_context_init_and_equip(&tctx);
   
-	hotload_variables(&ProgramState.window_width, &ProgramState.window_height, &ProgramState.show_debug_stats);
-  
   program_init(1280, 720);
+	
+  os_file_create(StringLiteral(VARIABLES_TWEAK_FILE));
+	hotload_variables(&ProgramState.window_width, &ProgramState.window_height, &ProgramState.show_debug_stats);
   
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -205,7 +202,6 @@ int main(void) {
       FPS = FrameCount / (CurrentTime - FpsLastTime);
       FrameCount  = 0;
       FpsLastTime = CurrentTime;
-      MsPerFrame = DeltaTime*1000;
     }
     
     
@@ -216,7 +212,7 @@ int main(void) {
     
 		// Projection 
 		Mat4f32 projection = mat4f32(1.0f);
-		Mat4f32 perspective = perspective_mat4f32(Radians(45), ProgramState.window_width, ProgramState.window_height, NearPlane, FarPlane);
+		Mat4f32 perspective = perspective_mat4f32(Radians(45), ProgramState.window_width, ProgramState.window_height, ProgramState.near_plane, ProgramState.far_plane);
 		projection = mul_mat4f32(perspective, projection);
     
     process_input(window);
@@ -302,9 +298,10 @@ len = stbsp_sprintf(tag##_buffer, fmt, __VA_ARGS__); \
 txt.size = (u64)len; \
 txt.str  = (u8*)tag##_buffer; \
 renderer_push_string(&ProgramRenderer, &font_info, ProgramState.window_width, ProgramState.window_height, txt, vec2f32(-0.998, y_pos), COLOR_YELLOW); \
-y_pos -= 0.05f; } while(0);
+y_pos -= 0.05f; } while(0); \
             
-            AddStat("%0.2fms/Frame, FPS: %d", fps, MsPerFrame,  FPS);
+            AddStat("FPS: %d", fps, FPS);
+            AddStat("Ms/Frame: %0.2f", msframe, (f32)DeltaTime/1000);
             AddStat("Triangles Count/Max: %d/%d", trigs, ProgramRenderer.triangle_count, MAX_TRIANGLES);
             AddStat("Cube Count: %d", cubs, TotalCubes-1);
             AddStat("Hovered Cube Index: %d", hovered, (CurrentCubeUnderCursor.index == U32_MAX) ? -1 : CurrentCubeUnderCursor.index);

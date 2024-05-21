@@ -1,6 +1,7 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+#define APP_NAME "noname"
 #define ENABLE_HOTLOAD_VARIABLES 1
 #define ENABLE_ASSERT 1
 
@@ -40,6 +41,5 @@
 #include "camera.c"
 #include "hotloadable.c"
 
-#define APP_NAME "noname"
 
 #endif // MAIN_H
