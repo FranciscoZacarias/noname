@@ -28,11 +28,11 @@ internal void game_init() {
 // TODO(fz): Argument add_cube is a bit hacked
 // This is a temporary thing until we have a more robust
 // input system
-internal void game_update(Camera camera, Vec3f32 raycast, b32 add_cube) {
+internal void game_update(Camera* camera, Vec3f32 raycast, b32 add_cube) {
   
   //~ Find cube under cursor
   for(u32 i = 0; i < GameState.total_cubes; i++) {
-    if (find_cube_under_cursor(camera, raycast, &GameState.cube_under_cursor)) {
+    if (find_cube_under_cursor(*camera, raycast, &GameState.cube_under_cursor)) {
       break;
     }
     if (i == GameState.total_cubes-1) {

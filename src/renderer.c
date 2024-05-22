@@ -218,371 +218,442 @@ internal Renderer renderer_init(s32 window_width, s32 window_height) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   
+  MemoryZeroStruct(&result.font_info);
+  if (!renderer_font_load(&result.font_info, StringLiteral("D:\\work\\noname\\res\\Karmina.Otf"), 16)) {
+    printf("Unable to load font!\n");
+    Assert(0);
+  }
+  
 	scratch_end(&scratch);
   
   return result;
 }
 
+internal void renderer_update(Program_State program_state, Game_State game_state, Renderer* renderer, Mat4f32 view, Mat4f32 projection) {
+  renderer_begin_frame(renderer, PALLETE_COLOR_D);
+  
+  //~ Perspective
+  renderer_set_uniform_mat4fv(renderer->shader_program, "model", mat4f32(1.0f));
+  renderer_set_uniform_mat4fv(renderer->shader_program, "view", view);
+  renderer_set_uniform_mat4fv(renderer->shader_program, "projection", projection);
+  
+  //~ Axis
+  f32 size = 20.0f;
+  renderer_push_arrow(renderer, vec3f32(-size,   0.0f,   0.0f), vec3f32(size,  0.0f,  0.0f), COLOR_RED, 0.5f);
+  renderer_push_arrow(renderer, vec3f32(  0.0f, -size,   0.0f), vec3f32( 0.0f, size,  0.0f), COLOR_GREEN, 0.5f);
+  renderer_push_arrow(renderer, vec3f32(  0.0f,   0.0f, -size), vec3f32( 0.0f,  0.0f, size), COLOR_BLUE, 0.5f);
+  
+  //~ Program State
+  for(u32 i = 0; i < game_state.total_cubes; i++) {
+    if (game_state.cube_under_cursor.index == i) {
+      f32 highlight_scale = 0.8f;
+      renderer_push_cube_highlight_face(renderer, game_state.cubes[game_state.cube_under_cursor.index], vec4f32(0.5+0.5*sin(5*program_state.current_time), 0.5+0.5*sin(5*program_state.current_time), 0.0f), game_state.cube_under_cursor.hovered_face, vec4f32(game_state.cubes[game_state.cube_under_cursor.index].color.x * highlight_scale, game_state.cubes[game_state.cube_under_cursor.index].color.y * highlight_scale, game_state.cubes[game_state.cube_under_cursor.index].color.z * highlight_scale));
+    } else {
+      renderer_push_cube(renderer, game_state.cubes[i], COLOR_BLACK);	
+    }
+  }
+  
+  //~ Text
+  if (program_state.show_debug_stats) {
+    String txt;
+    s32 len;
+    f32 y_pos = 0.95f;
+    
+    // TODO(Fz): We cant have shit like this
+    // NOTE(fz): This is a hack to have less friction just writing strings stats while we dont have better things to work with
+#define AddStat(fmt, tag, ...) do {\
+char tag##_buffer[160] = {0}; \
+len = stbsp_sprintf(tag##_buffer, fmt, __VA_ARGS__); \
+txt.size = (u64)len; \
+txt.str  = (u8*)tag##_buffer; \
+renderer_push_string(renderer, program_state.window_width, program_state.window_height, txt, vec2f32(-0.998, y_pos), COLOR_YELLOW); \
+y_pos -= 0.05f; } while(0); 
+    
+    local_persist f64 fps_last_time = 0.0f;
+    local_persist s64 frame_count   = 0.0f;
+    local_persist u64 dt_fps        = 0.0f;
+    
+    frame_count += 1;
+    if (program_state.current_time - fps_last_time >= 0.1f) {
+      dt_fps= frame_count / (program_state.current_time - fps_last_time);
+      frame_count  = 0;
+      fps_last_time = program_state.current_time;
+    }
+    
+    AddStat("FPS: %d", fps, dt_fps);
+    AddStat("Ms/Frame: %0.2f", msframe, (f32)program_state.delta_time/1000);
+    AddStat("Triangles Count/Max: %d/%d", trigs, renderer->triangle_count, MAX_TRIANGLES);
+    AddStat("Cube Count: %d", cubs, game_state.total_cubes-1);
+    AddStat("Hovered Cube Index: %d", hovered, (game_state.cube_under_cursor.index == U32_MAX) ? -1 : game_state.cube_under_cursor.index);
+    
+  }
+  
+  renderer_end_frame(renderer, program_state.window_width, program_state.window_height);
+}
+
 internal void renderer_generate_msaa_and_intermidiate_buffers(Renderer* renderer, s32 window_width, s32 window_height) {
-	// Delete and recreate MSAA framebuffer
-	glBindFramebuffer(GL_FRAMEBUFFER, renderer->msaa_frame_buffer_object);
-	glDeleteTextures(1, &renderer->msaa_texture_color_buffer_multisampled);
-	glDeleteRenderbuffers(1, &renderer->msaa_render_buffer_object);
+  // Delete and recreate MSAA framebuffer
+  glBindFramebuffer(GL_FRAMEBUFFER, renderer->msaa_frame_buffer_object);
+  glDeleteTextures(1, &renderer->msaa_texture_color_buffer_multisampled);
+  glDeleteRenderbuffers(1, &renderer->msaa_render_buffer_object);
   
-	// Regen MSAA buffer
-	glGenFramebuffers(1, &renderer->msaa_frame_buffer_object);
+  // Regen MSAA buffer
+  glGenFramebuffers(1, &renderer->msaa_frame_buffer_object);
   
-	glGenTextures(1, &renderer->msaa_texture_color_buffer_multisampled);
-	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, renderer->msaa_texture_color_buffer_multisampled);
-	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, MSAA_SAMPLES, GL_RGB, window_width, window_height, GL_True);
-	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+  glGenTextures(1, &renderer->msaa_texture_color_buffer_multisampled);
+  glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, renderer->msaa_texture_color_buffer_multisampled);
+  glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, MSAA_SAMPLES, GL_RGB, window_width, window_height, GL_True);
+  glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
   
-	glGenRenderbuffers(1, &renderer->msaa_render_buffer_object);
-	glBindRenderbuffer(GL_RENDERBUFFER, renderer->msaa_render_buffer_object);
-	glRenderbufferStorageMultisample(GL_RENDERBUFFER, MSAA_SAMPLES, GL_DEPTH24_STENCIL8, window_width, window_height);
-	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+  glGenRenderbuffers(1, &renderer->msaa_render_buffer_object);
+  glBindRenderbuffer(GL_RENDERBUFFER, renderer->msaa_render_buffer_object);
+  glRenderbufferStorageMultisample(GL_RENDERBUFFER, MSAA_SAMPLES, GL_DEPTH24_STENCIL8, window_width, window_height);
+  glBindRenderbuffer(GL_RENDERBUFFER, 0);
   
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderer->msaa_frame_buffer_object);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, renderer->msaa_texture_color_buffer_multisampled, 0);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderer->msaa_render_buffer_object);
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderer->msaa_frame_buffer_object);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, renderer->msaa_texture_color_buffer_multisampled, 0);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderer->msaa_render_buffer_object);
   
-	u32 msaa_fbo_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	if (msaa_fbo_status != GL_FRAMEBUFFER_COMPLETE) {
-		printf("ERROR::GL_FRAMEBUFFER:: Render Buffer Object is not complete. Value: %u. ", msaa_fbo_status);
-		Assert(0);
-	}
+  u32 msaa_fbo_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+  if (msaa_fbo_status != GL_FRAMEBUFFER_COMPLETE) {
+    printf("ERROR::GL_FRAMEBUFFER:: Render Buffer Object is not complete. Value: %u. ", msaa_fbo_status);
+    Assert(0);
+  }
   
-	// --- Intermidiate fbo for post processing
-	glGenFramebuffers(1, &renderer->postprocessing_fbo);
-	glDeleteTextures(1, &renderer->screen_texture);
+  // --- Intermidiate fbo for post processing
+  glGenFramebuffers(1, &renderer->postprocessing_fbo);
+  glDeleteTextures(1, &renderer->screen_texture);
   
-	// create color attachment texture
-	glGenTextures(1, &renderer->screen_texture);
-	glBindTexture(GL_TEXTURE_2D, renderer->screen_texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window_width, window_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  // create color attachment texture
+  glGenTextures(1, &renderer->screen_texture);
+  glBindTexture(GL_TEXTURE_2D, renderer->screen_texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window_width, window_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   
-	// attach to intermidiate_fbo
-	glBindFramebuffer(GL_FRAMEBUFFER, renderer->postprocessing_fbo);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderer->screen_texture, 0);
+  // attach to intermidiate_fbo
+  glBindFramebuffer(GL_FRAMEBUFFER, renderer->postprocessing_fbo);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderer->screen_texture, 0);
   
-	u32 postprocessing_fbo = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	if (postprocessing_fbo != GL_FRAMEBUFFER_COMPLETE) {
-		printf("ERROR::GL_FRAMEBUFFER:: Render Buffer Object is not complete. Value: %u. ", postprocessing_fbo);
-		Assert(0);
-	}
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  u32 postprocessing_fbo = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+  if (postprocessing_fbo != GL_FRAMEBUFFER_COMPLETE) {
+    printf("ERROR::GL_FRAMEBUFFER:: Render Buffer Object is not complete. Value: %u. ", postprocessing_fbo);
+    Assert(0);
+  }
+  glBindTexture(GL_TEXTURE_2D, 0);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 internal void renderer_recompile_default_shader(Arena* arena, Renderer* renderer) {
-	Arena_Temp scratch = scratch_begin(0, 0);
+  Arena_Temp scratch = scratch_begin(0, 0);
   
-	u32 vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-	{
-		OS_File vertex_shader_source = os_file_load_entire_file(scratch.arena, StringLiteral(DEFAULT_VERTEX_SHADER));
-		glShaderSource(vertex_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
-		glCompileShader(vertex_shader);
-		{
-			s32 success;
-			glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
-			if (!success) {
-				char infoLog[1024];
-				glGetShaderInfoLog(vertex_shader, 1024, NULL, infoLog);
-				printf("Error %d while re-compiling default vertex shader. Log: %s", success, infoLog);
-				return;
-			}
-		}
-	}
+  u32 vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+  {
+    OS_File vertex_shader_source = os_file_load_entire_file(scratch.arena, StringLiteral(DEFAULT_VERTEX_SHADER));
+    glShaderSource(vertex_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
+    glCompileShader(vertex_shader);
+    {
+      s32 success;
+      glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
+      if (!success) {
+        char infoLog[1024];
+        glGetShaderInfoLog(vertex_shader, 1024, NULL, infoLog);
+        printf("Error %d while re-compiling default vertex shader. Log: %s", success, infoLog);
+        return;
+      }
+    }
+  }
   
-	u32 fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-	{
-		OS_File fragment_shader_source = os_file_load_entire_file(scratch.arena, StringLiteral(DEFAULT_FRAGMENT_SHADER));
-		glShaderSource(fragment_shader, 1, &fragment_shader_source.data, &(GLint)fragment_shader_source.size);
-		glCompileShader(fragment_shader);
-		{
-			s32 success;
-			glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
-			if (!success) {
-				char infoLog[1024];
-				glGetShaderInfoLog(fragment_shader, 1024, NULL, infoLog);
-				printf("Error %d while re-compiling default fragment shader. Log: %s", success, infoLog);
-				glDeleteShader(vertex_shader);
-				return;
-			}
-		}
-	}
+  u32 fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+  {
+    OS_File fragment_shader_source = os_file_load_entire_file(scratch.arena, StringLiteral(DEFAULT_FRAGMENT_SHADER));
+    glShaderSource(fragment_shader, 1, &fragment_shader_source.data, &(GLint)fragment_shader_source.size);
+    glCompileShader(fragment_shader);
+    {
+      s32 success;
+      glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
+      if (!success) {
+        char infoLog[1024];
+        glGetShaderInfoLog(fragment_shader, 1024, NULL, infoLog);
+        printf("Error %d while re-compiling default fragment shader. Log: %s", success, infoLog);
+        glDeleteShader(vertex_shader);
+        return;
+      }
+    }
+  }
   
-	u32 shader_program = glCreateProgram();
-	{
-		glAttachShader(shader_program, vertex_shader);
-		glAttachShader(shader_program, fragment_shader);
-		glLinkProgram(shader_program);
-		{
-			s32 success;
-			glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
-			if(!success) {
-				char infoLog[1024];
-				glGetProgramInfoLog(shader_program, 1024, NULL, infoLog);
-				printf("Error %d linking re-compiled default shader program. Log: %s", success, infoLog);
-				glDeleteShader(vertex_shader);
-				glDeleteShader(fragment_shader);
-				return;
-			}
-		}
-	}
-	
-	// If we got to this point, everything was recompiled and attached successfully.
-	// Just replace them in the renderer.
-	glDeleteProgram(renderer->shader_program);
+  u32 shader_program = glCreateProgram();
+  {
+    glAttachShader(shader_program, vertex_shader);
+    glAttachShader(shader_program, fragment_shader);
+    glLinkProgram(shader_program);
+    {
+      s32 success;
+      glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
+      if(!success) {
+        char infoLog[1024];
+        glGetProgramInfoLog(shader_program, 1024, NULL, infoLog);
+        printf("Error %d linking re-compiled default shader program. Log: %s", success, infoLog);
+        glDeleteShader(vertex_shader);
+        glDeleteShader(fragment_shader);
+        return;
+      }
+    }
+  }
   
-	renderer->shader_program = shader_program;
+  // If we got to this point, everything was recompiled and attached successfully.
+  // Just replace them in the renderer.
+  glDeleteProgram(renderer->shader_program);
   
-	glDetachShader(renderer->shader_program, vertex_shader);
-	glDetachShader(renderer->shader_program, fragment_shader);
-	glDeleteShader(vertex_shader);
-	glDeleteShader(fragment_shader);
+  renderer->shader_program = shader_program;
   
-	printf("Default shader re-compiled!\n");
+  glDetachShader(renderer->shader_program, vertex_shader);
+  glDetachShader(renderer->shader_program, fragment_shader);
+  glDeleteShader(vertex_shader);
+  glDeleteShader(fragment_shader);
   
-	scratch_end(&scratch);
+  printf("Default shader re-compiled!\n");
+  
+  scratch_end(&scratch);
 }
 
 internal void renderer_recompile_screen_shader(Arena* arena, Renderer* renderer) {
-	Arena_Temp scratch = scratch_begin(0, 0);
+  Arena_Temp scratch = scratch_begin(0, 0);
   
-	u32 vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-	{
-		OS_File vertex_shader_source = os_file_load_entire_file(scratch.arena, StringLiteral(SCREEN_VERTEX_SHADER));
-		glShaderSource(vertex_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
-		glCompileShader(vertex_shader);
-		{
-			s32 success;
-			glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
-			if (!success) {
-				char infoLog[1024];
-				glGetShaderInfoLog(vertex_shader, 1024, NULL, infoLog);
-				printf("Error %d re-compiling screen vertex shader. Log: %s", success, infoLog);
-				return;
-			}
-		}
-	}
+  u32 vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+  {
+    OS_File vertex_shader_source = os_file_load_entire_file(scratch.arena, StringLiteral(SCREEN_VERTEX_SHADER));
+    glShaderSource(vertex_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
+    glCompileShader(vertex_shader);
+    {
+      s32 success;
+      glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
+      if (!success) {
+        char infoLog[1024];
+        glGetShaderInfoLog(vertex_shader, 1024, NULL, infoLog);
+        printf("Error %d re-compiling screen vertex shader. Log: %s", success, infoLog);
+        return;
+      }
+    }
+  }
   
-	u32 fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-	{
-		OS_File vertex_shader_source = os_file_load_entire_file(scratch.arena, StringLiteral(SCREEN_FRAGMENT_SHADER));
-		glShaderSource(fragment_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
-		glCompileShader(fragment_shader);
-		{
-			s32 success;
-			glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
-			if (!success) {
-				char infoLog[1024];
-				glGetShaderInfoLog(fragment_shader, 1024, NULL, infoLog);
-				printf("Error %d compiling screen fragment shader. Log: %s", success, infoLog);
-				glDeleteShader(vertex_shader);
-				return;
-			}
-		}
-	}
+  u32 fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+  {
+    OS_File vertex_shader_source = os_file_load_entire_file(scratch.arena, StringLiteral(SCREEN_FRAGMENT_SHADER));
+    glShaderSource(fragment_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
+    glCompileShader(fragment_shader);
+    {
+      s32 success;
+      glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
+      if (!success) {
+        char infoLog[1024];
+        glGetShaderInfoLog(fragment_shader, 1024, NULL, infoLog);
+        printf("Error %d compiling screen fragment shader. Log: %s", success, infoLog);
+        glDeleteShader(vertex_shader);
+        return;
+      }
+    }
+  }
   
-	u32 screen_program = glCreateProgram();
-	{
-		glAttachShader(screen_program, vertex_shader);
-		glAttachShader(screen_program, fragment_shader);
-		glLinkProgram(screen_program);
-		{
-			s32 success;
-			glGetProgramiv(screen_program, GL_LINK_STATUS, &success);
-			if(!success) {
-				char infoLog[1024];
-				glGetProgramInfoLog(screen_program, 1024, NULL, infoLog);
-				printf("Error %d linking shader program. Log: %s", success, infoLog);
-				glDeleteShader(vertex_shader);
-				glDeleteShader(fragment_shader);
-				return;
-			}
-		}
-	}
+  u32 screen_program = glCreateProgram();
+  {
+    glAttachShader(screen_program, vertex_shader);
+    glAttachShader(screen_program, fragment_shader);
+    glLinkProgram(screen_program);
+    {
+      s32 success;
+      glGetProgramiv(screen_program, GL_LINK_STATUS, &success);
+      if(!success) {
+        char infoLog[1024];
+        glGetProgramInfoLog(screen_program, 1024, NULL, infoLog);
+        printf("Error %d linking shader program. Log: %s", success, infoLog);
+        glDeleteShader(vertex_shader);
+        glDeleteShader(fragment_shader);
+        return;
+      }
+    }
+  }
   
-	// If we got to this point, everything was recompiled and attached successfully.
-	// Just replace them in the renderer.
-	glDeleteProgram(renderer->screen_program);
+  // If we got to this point, everything was recompiled and attached successfully.
+  // Just replace them in the renderer.
+  glDeleteProgram(renderer->screen_program);
   
-	renderer->screen_program = screen_program;
+  renderer->screen_program = screen_program;
   
-	glDetachShader(renderer->screen_program, vertex_shader);
-	glDetachShader(renderer->screen_program, fragment_shader);
-	glDeleteShader(vertex_shader);
-	glDeleteShader(fragment_shader);
+  glDetachShader(renderer->screen_program, vertex_shader);
+  glDetachShader(renderer->screen_program, fragment_shader);
+  glDeleteShader(vertex_shader);
+  glDeleteShader(fragment_shader);
   
-	printf("Screen shader re-compiled!\n");
+  printf("Screen shader re-compiled!\n");
   
-	scratch_end(&scratch);
+  scratch_end(&scratch);
 }
 
 internal void renderer_free(Renderer* renderer) {
-	glDeleteVertexArrays(1, &renderer->vao);
-	glDeleteBuffers(1, &renderer->triangle_vbo);
-	glDeleteProgram(renderer->shader_program);
+  glDeleteVertexArrays(1, &renderer->vao);
+  glDeleteBuffers(1, &renderer->triangle_vbo);
+  glDeleteProgram(renderer->shader_program);
   
-	glDeleteVertexArrays(1, &renderer->screen_vao);
-	glDeleteBuffers(1, &renderer->screen_vbo);
-	glDeleteProgram(renderer->screen_program);
+  glDeleteVertexArrays(1, &renderer->screen_vao);
+  glDeleteBuffers(1, &renderer->screen_vbo);
+  glDeleteProgram(renderer->screen_program);
 }
 
-internal void renderer_font_load(Renderer_Font_Info* font_info, String file_path, f32 font_size) {
-	Arena_Temp scratch = scratch_begin(0, 0);
+internal b32 renderer_font_load(Renderer_Font_Info* font_info, String file_path, f32 font_size) {
+  Arena_Temp scratch = scratch_begin(0, 0);
   
-	OS_File font_file = os_file_load_entire_file(scratch.arena, file_path);
+  OS_File font_file = os_file_load_entire_file(scratch.arena, file_path);
   
-	u8 temp_bitmap[512 * 512];
-	stbtt_fontinfo finfo;
-	stbtt_pack_context packctx;
-	if (stbtt_InitFont(&finfo, (const char*)font_file.data, 0) == 0) {
-		printf("Error loading font: %s\n", file_path.str);
-		Assert(0);
-	}
-	
+  u8 temp_bitmap[512 * 512];
+  stbtt_fontinfo finfo;
+  stbtt_pack_context packctx;
+  if (stbtt_InitFont(&finfo, (const char*)font_file.data, 0) == 0) {
+    printf("Error loading font: %s\n", file_path.str);
+    Assert(0);
+  }
+  
   stbtt_PackBegin(&packctx, temp_bitmap, 512, 512, 0, 1, 0);
-	stbtt_PackSetOversampling(&packctx, 1, 1);
-	stbtt_PackFontRange(&packctx, (const char*)font_file.data, 0, font_size, 32, 95, font_info->cdata);
-	stbtt_PackEnd(&packctx);
+  stbtt_PackSetOversampling(&packctx, 1, 1);
+  stbtt_PackFontRange(&packctx, (const char*)font_file.data, 0, font_size, 32, 95, font_info->cdata);
+  stbtt_PackEnd(&packctx);
   
-	glGenTextures(1, &font_info->font_texture);
-	glBindTexture(GL_TEXTURE_2D, font_info->font_texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, 512, 512, 0, GL_RED, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	GLint swizzles[4] = { GL_ONE, GL_ONE, GL_ONE, GL_RED };
-	glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzles);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 512, 512, GL_RED, GL_UNSIGNED_BYTE, temp_bitmap);
-	
-	font_info->scale = stbtt_ScaleForPixelHeight(&finfo, font_size);
-	stbtt_GetFontVMetrics(&finfo, &font_info->ascent, &font_info->descent, NULL);
-	font_info->baseline = (s32) (font_info->ascent * font_info->scale);
-	font_info->font_size = font_size;
+  glGenTextures(1, &font_info->font_texture);
+  glBindTexture(GL_TEXTURE_2D, font_info->font_texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, 512, 512, 0, GL_RED, GL_UNSIGNED_BYTE, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  GLint swizzles[4] = { GL_ONE, GL_ONE, GL_ONE, GL_RED };
+  glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzles);
+  glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 512, 512, GL_RED, GL_UNSIGNED_BYTE, temp_bitmap);
   
-	scratch_end(&scratch);
+  font_info->scale = stbtt_ScaleForPixelHeight(&finfo, font_size);
+  stbtt_GetFontVMetrics(&finfo, &font_info->ascent, &font_info->descent, NULL);
+  font_info->baseline = (s32) (font_info->ascent * font_info->scale);
+  font_info->font_size = font_size;
+  
+  scratch_end(&scratch);
+  
+  // TODO(fz): We should actually check if everything went ok instead of just return truel
+  return 1;
 }
 
 internal u32 renderer_texture_load(String file_path) {
-	s32 width, height, channels;
-	stbi_set_flip_vertically_on_load(1);
-	u8* data = stbi_load((const char*)file_path.str, &width, &height, &channels, 0);
-	
-	u32 id;
-	glGenTextures(1, &id);
-	glBindTexture(GL_TEXTURE_2D, id);
-	
-	if (channels == 3) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	} else  if (channels == 4) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	} else {
-		printf("Error :: Unexpected number of channels when loading a texture.\n");
-		Assert(0);
-	}
+  s32 width, height, channels;
+  stbi_set_flip_vertically_on_load(1);
+  u8* data = stbi_load((const char*)file_path.str, &width, &height, &channels, 0);
   
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	
-	if (channels == 3) {
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
-	} else if (channels == 4) {
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	}
-	
-	stbi_image_free(data);
-	return id;
+  u32 id;
+  glGenTextures(1, &id);
+  glBindTexture(GL_TEXTURE_2D, id);
+  
+  if (channels == 3) {
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  } else  if (channels == 4) {
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+  } else {
+    printf("Error :: Unexpected number of channels when loading a texture.\n");
+    Assert(0);
+  }
+  
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  
+  if (channels == 3) {
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
+  } else if (channels == 4) {
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+  }
+  
+  stbi_image_free(data);
+  return id;
 }
 
 internal void renderer_begin_frame(Renderer* renderer, Vec4f32 background_color) {
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderer->msaa_frame_buffer_object);
-	glClearColor(background_color.x, background_color.y, background_color.z, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glEnable(GL_DEPTH_TEST);
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderer->msaa_frame_buffer_object);
+  glClearColor(background_color.x, background_color.y, background_color.z, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glEnable(GL_DEPTH_TEST);
   
-	renderer->triangle_count = 0;
-	renderer->texture_count = 0;
+  renderer->triangle_count = 0;
+  renderer->texture_count = 0;
   
-	glUseProgram(renderer->shader_program);
+  glUseProgram(renderer->shader_program);
 }
 
 void renderer_end_frame(Renderer* renderer, s32 window_width, s32 window_height) {
-	for (u32 i = 0; i < renderer->texture_count; i += 1) {
-		glActiveTexture(GL_TEXTURE0 + i);
-		glBindTexture(GL_TEXTURE_2D, renderer->textures[i]);
-	}
+  for (u32 i = 0; i < renderer->texture_count; i += 1) {
+    glActiveTexture(GL_TEXTURE0 + i);
+    glBindTexture(GL_TEXTURE_2D, renderer->textures[i]);
+  }
   
-	glBindVertexArray(renderer->vao);
-	glBindBuffer(GL_ARRAY_BUFFER, renderer->triangle_vbo);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, renderer->triangle_count * 3 * sizeof(Renderer_Vertex), renderer->triangle_data);
+  glBindVertexArray(renderer->vao);
+  glBindBuffer(GL_ARRAY_BUFFER, renderer->triangle_vbo);
+  glBufferSubData(GL_ARRAY_BUFFER, 0, renderer->triangle_count * 3 * sizeof(Renderer_Vertex), renderer->triangle_data);
   
-	if (HotloadableEnableCulling) {
-		glEnable(GL_CULL_FACE);
-		glCullFace(GL_FRONT);
-		glFrontFace(GL_CCW);
-	}
-	if (HotloadableEnableWireframeMode) {
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	}
-	glDrawArrays(GL_TRIANGLES, 0, renderer->triangle_count * 3);
-	glDisable(GL_CULL_FACE);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  if (HotloadableEnableCulling) {
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
+    glFrontFace(GL_CCW);
+  }
+  if (HotloadableEnableWireframeMode) {
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  }
+  glDrawArrays(GL_TRIANGLES, 0, renderer->triangle_count * 3);
+  glDisable(GL_CULL_FACE);
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, renderer->msaa_frame_buffer_object);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderer->postprocessing_fbo);	
-	glBlitFramebuffer(0, 0, window_width, window_height, 0, 0, window_width, window_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+  glBindFramebuffer(GL_READ_FRAMEBUFFER, renderer->msaa_frame_buffer_object);
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderer->postprocessing_fbo);	
+  glBlitFramebuffer(0, 0, window_width, window_height, 0, 0, window_width, window_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
   
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-	glDisable(GL_DEPTH_TEST);
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT);
+  glDisable(GL_DEPTH_TEST);
   
-	glUseProgram(renderer->screen_program);
-	glBindVertexArray(renderer->screen_vao);glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, renderer->screen_texture);
-	renderer_set_uniform_s32(renderer->screen_program, "window_width", window_width);
-	renderer_set_uniform_s32(renderer->screen_program, "window_height", window_height);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
+  glUseProgram(renderer->screen_program);
+  glBindVertexArray(renderer->screen_vao);glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, renderer->screen_texture);
+  renderer_set_uniform_s32(renderer->screen_program, "window_width", window_width);
+  renderer_set_uniform_s32(renderer->screen_program, "window_height", window_height);
+  glDrawArrays(GL_TRIANGLES, 0, 6);
   
-	glUseProgram(0);
-	glBindVertexArray(0);
-	glBindTexture(GL_TEXTURE_2D, 0);
+  glUseProgram(0);
+  glBindVertexArray(0);
+  glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 internal void renderer_push_triangle(Renderer* renderer, Vec3f32 a_position, Vec4f32 a_color, Vec3f32 b_position, Vec4f32 b_color, Vec3f32 c_position, Vec4f32 c_color) {
-	if ((renderer->triangle_count + 1) >= MAX_TRIANGLES) {
-		printf("Error :: Renderer :: Too many triangles!");
-		Assert(0);
-	}
+  if ((renderer->triangle_count + 1) >= MAX_TRIANGLES) {
+    printf("Error :: Renderer :: Too many triangles!");
+    Assert(0);
+  }
   
-	s64 index = renderer->triangle_count * 3;
-	renderer->triangle_data[index+0].position      = a_position;
-	renderer->triangle_data[index+0].color         = a_color;
-	renderer->triangle_data[index+0].uv            = vec2f32(0.0f, 0.0f);
-	renderer->triangle_data[index+0].texture_index = F32_MAX;
-	renderer->triangle_data[index+0].has_texture   = 0.0;
+  s64 index = renderer->triangle_count * 3;
+  renderer->triangle_data[index+0].position      = a_position;
+  renderer->triangle_data[index+0].color         = a_color;
+  renderer->triangle_data[index+0].uv            = vec2f32(0.0f, 0.0f);
+  renderer->triangle_data[index+0].texture_index = F32_MAX;
+  renderer->triangle_data[index+0].has_texture   = 0.0;
   
-	renderer->triangle_data[index+1].position      = b_position;
-	renderer->triangle_data[index+1].color         = b_color;
-	renderer->triangle_data[index+1].uv            = vec2f32(0.0f, 0.0f);
-	renderer->triangle_data[index+1].texture_index = F32_MAX;
-	renderer->triangle_data[index+1].has_texture   = 0.0;
+  renderer->triangle_data[index+1].position      = b_position;
+  renderer->triangle_data[index+1].color         = b_color;
+  renderer->triangle_data[index+1].uv            = vec2f32(0.0f, 0.0f);
+  renderer->triangle_data[index+1].texture_index = F32_MAX;
+  renderer->triangle_data[index+1].has_texture   = 0.0;
   
-	renderer->triangle_data[index+2].position      = c_position;
-	renderer->triangle_data[index+2].color         = c_color;
-	renderer->triangle_data[index+2].uv            = vec2f32(0.0f, 0.0f);
-	renderer->triangle_data[index+2].texture_index = F32_MAX;
-	renderer->triangle_data[index+2].has_texture   = 0.0;
+  renderer->triangle_data[index+2].position      = c_position;
+  renderer->triangle_data[index+2].color         = c_color;
+  renderer->triangle_data[index+2].uv            = vec2f32(0.0f, 0.0f);
+  renderer->triangle_data[index+2].texture_index = F32_MAX;
+  renderer->triangle_data[index+2].has_texture   = 0.0;
   
-	renderer->triangle_count += 1;
+  renderer->triangle_count += 1;
 }
 
 internal void renderer_push_triangle_texture_color(Renderer* renderer, Vec3f32 a_position, Vec2f32 a_uv, Vec3f32 b_position, Vec2f32 b_uv, Vec3f32 c_position, Vec2f32 c_uv, Vec4f32 color, u32 texture) {
@@ -951,14 +1022,16 @@ internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, V
 }
 
 // NOTE(fz): Position should be in NDC
-internal void renderer_push_string(Renderer* renderer, Renderer_Font_Info* font_info, s32 window_width, s32 window_height, String text, Vec2f32 position, Vec4f32 color) {
+internal void renderer_push_string(Renderer* renderer, s32 window_width, s32 window_height, String text, Vec2f32 position, Vec4f32 color) {
   // NDC to screen
   position.x = ((position.x + 1.0f) / 2.0f) * window_width;
   position.y = ((position.y + 1.0f) / 2.0f) * window_height;
   
+  Renderer_Font_Info font_info = renderer->font_info;
+  
   for (u32 i = 0; i < text.size; i++) {
     if (text.str[i] >= 32 && text.str[i] < 128) {
-      stbtt_packedchar* info = &font_info->cdata[text.str[i] - 32];
+      stbtt_packedchar* info = &font_info.cdata[text.str[i] - 32];
       f32 size = 512.0f;
       
       Quad2D atlas_location = {
@@ -993,12 +1066,12 @@ internal void renderer_push_string(Renderer* renderer, Renderer_Font_Info* font_
                                            top_left_pos, top_left_uv, 
                                            top_right_pos, top_right_uv, 
                                            bottom_left_pos, bottom_left_uv, 
-                                           color, font_info->font_texture);
+                                           color, font_info.font_texture);
       renderer_push_triangle_texture_color(renderer, 
                                            top_right_pos, top_right_uv, 
                                            bottom_right_pos, bottom_right_uv, 
                                            bottom_left_pos, bottom_left_uv, 
-                                           color, font_info->font_texture);
+                                           color, font_info.font_texture);
       
       position.x += info->xadvance;
     }

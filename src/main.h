@@ -23,10 +23,10 @@
 // *.h
 #include "cube.h"
 #include "utils.h"
-#include "renderer.h"
 #include "camera.h"
-#include "hotloadable.h"
 #include "game.h"
+#include "renderer.h"
+#include "hotloadable.h"
 
 //////////////////////////////////////////////
 // Third-party source
@@ -38,9 +38,9 @@
 // *.c
 #include "cube.c"
 #include "utils.c"
-#include "renderer.c"
 #include "camera.c"
-#include "hotloadable.c"
 #include "game.c"
+#include "renderer.c"
+#include "hotloadable.c"
 
 #endif // MAIN_H
