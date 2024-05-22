@@ -14,6 +14,7 @@ noname:
 [ ] - Add more robust (generic)input system
 [ ] - Add way to save and load levels from files
 [ ] - Add undo system for the add/remove cubes
+[ ] - For a selected cube, add a small UI to configure stuff about it (like colors) 
 [ ] - Be able to select a cube on click
 [ ] - Add translation gizmos to selected cube (xyz arrows) and (xy, xz, yz planes), that actually transform the cube each arrow
 [ ] - Moving cubes from gizmos must snap to the grid
