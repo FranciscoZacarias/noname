@@ -6,9 +6,11 @@ noname:
 [x] - Add cube to the hovered cube face
 [x] - Add hotloadable stats on top left
 [x] - Replace GlobalArena with a either more specific arenas or just thread context scratch arenas
+[x] - Delete cubes
+[x] - MAX_TRIANGLES should be in allocated memory instead of a stack allocation
 [ ] - Add directional light
 [ ] - Add phong light
-[ ] - Delete cubes
+[ ] - Add logs to the screen that fade after 1 second or so.
 [ ] - Add more robust (generic)input system
 [ ] - Add way to save and load levels from files
 [ ] - Add undo system for the add/remove cubes
@@ -16,11 +18,11 @@ noname:
 [ ] - Add translation gizmos to selected cube (xyz arrows) and (xy, xz, yz planes), that actually transform the cube each arrow
 [ ] - Moving cubes from gizmos must snap to the grid
 [ ] - Add some sort of post processing shake when loading variables from hotload, just to know it was loaded and feature creep
-[x] - MAX_TRIANGLES should be in allocated memory instead of a stack allocation
-[ ] - Where should renderer live?
+[ ] - Where should Program_State live?
 bugs:
 [x] - When highlighting a cube, we get more triangles than we should have. We should have just the same 
-[ ] - We should not push cubes into the renderer that are not visible
+[ ] - Font rendering is not taking into account the aspect ratio of the screen
+[ ] - We should not push cubes into the renderer that are not visible on the frustum
 [ ] - Cubes are still being selected (in a weird way) when the camera is in fly mode.
 f_base:
 [x] - Add thread context module
@@ -41,7 +43,7 @@ global b32 R_KeyState = 0;
 
 global b32 LeftMouseButton = 0;
 
-internal void program_init(s32 window_width, s32 window_height);
+internal void program_init();
 internal void program_update(Mat4f32 view, Mat4f32 projection);
 
 internal void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -54,7 +56,7 @@ int main(void) {
 	Thread_Context main_thread_context;
 	thread_context_init_and_equip(&main_thread_context);
   
-  program_init(1280, 720);
+  program_init();
   
   game_init();
   
@@ -81,9 +83,6 @@ int main(void) {
   
 	ProgramRenderer = renderer_init(ProgramState.window_width, ProgramState.window_height);
   
-	Renderer_Font_Info font_info = {0};
-	renderer_font_load(&font_info, StringLiteral("D:\\work\\noname\\res\\Karmina.Otf"), 16);
-  
   while(!glfwWindowShouldClose(window)) {
     //~ Perspective 
     Mat4f32 view = look_at_mat4f32(ProgramState.camera.position, add_vec3f32(ProgramState.camera.position, ProgramState.camera.front), ProgramState.camera.up);
@@ -97,7 +96,7 @@ int main(void) {
     hotload_shader_programs(&ProgramRenderer, ProgramState.current_time);
     
     //~ Game logic
-    game_update(&ProgramState.camera, ProgramState.raycast,F_KeyState);
+    game_update(&ProgramState.camera, ProgramState.raycast, F_KeyState, G_KeyState);
     
     //~ Render
     renderer_update(ProgramState, GameState, &ProgramRenderer, view, projection);
@@ -111,18 +110,24 @@ int main(void) {
 }
 
 
-internal void program_init(s32 window_width, s32 window_height) {
+internal void program_init() {
   AssertNoReentry();
   
   MemoryZeroStruct(&ProgramState);
+  
+  os_file_create(StringLiteral(VARIABLES_TWEAK_FILE));
+  // NOTE(fz): CurrentTime in this call is set to max to make sure we load it immediately.
+  hotload_variables(&ProgramState.window_width, &ProgramState.window_height, &ProgramState.show_debug_stats, F64_MAX);
+  
+  if (ProgramState.window_width == 0 || ProgramState.window_height == 0) {
+    ProgramState.window_width  = 1280;
+    ProgramState.window_height = 720;
+  }
   
   ProgramState.current_time = 0.0f;
   ProgramState.delta_time   = 0.0f;
   ProgramState.last_frame   = 0.0f;
   
-  // Screen Things
-  ProgramState.window_width  = window_width;
-  ProgramState.window_height = window_height;
   ProgramState.show_debug_stats = 1;
   ProgramState.near_plane = 0.1f;
   ProgramState.far_plane  = 100.f;
@@ -131,18 +136,14 @@ internal void program_init(s32 window_width, s32 window_height) {
   ProgramState.camera = camera_init();
   
   // Mouse
-  ProgramState.mouse.last_x = window_width / 2.0f;
-  ProgramState.mouse.last_y = window_height / 2.0f;
+  ProgramState.mouse.last_x = ProgramState.window_width / 2.0f;
+  ProgramState.mouse.last_y = ProgramState.window_height / 2.0f;
   ProgramState.mouse.screen_space_x = ProgramState.mouse.last_x;
   ProgramState.mouse.screen_space_y = ProgramState.mouse.last_y;
   ProgramState.mouse.ndc_x = ProgramState.mouse.last_x;
   ProgramState.mouse.ndc_y = ProgramState.mouse.last_y;
   
   ProgramState.raycast = vec3f32(F32_MAX, F32_MAX, F32_MAX);
-  
-  os_file_create(StringLiteral(VARIABLES_TWEAK_FILE));
-  // NOTE(fz): CurrentTime in this call is set to max to make sure we load it immediately.
-  hotload_variables(&ProgramState.window_width, &ProgramState.window_height, &ProgramState.show_debug_stats, F64_MAX);
 }
 
 internal void program_update(Mat4f32 view, Mat4f32 projection) {

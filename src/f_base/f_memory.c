@@ -6,21 +6,21 @@ internal Arena* arena_init() {
 
 internal Arena* arena_init_sized(u64 reserve, u64 commit) {
   void* memory = NULL;
-
+  
   u64 page_size = os_memory_get_page_size();
   reserve = AlignPow2(reserve, page_size);
   commit  = AlignPow2(commit,  page_size);
-
+  
   Assert(ARENA_HEADER_SIZE < commit && commit <= reserve);
-
+  
   memory  = os_memory_reserve(reserve);
   if(!os_memory_commit(memory, commit)) {
     memory = NULL;
     os_memory_release(memory, reserve);
   }
-
+  
   Arena* arena = (Arena*) memory;
-
+  
   if (arena) {
     arena->reserved    = reserve;
     arena->commited    = commit;
@@ -31,7 +31,7 @@ internal Arena* arena_init_sized(u64 reserve, u64 commit) {
     printf("Error setting arena's memory");
     Assert(0);
   }
-
+  
   return arena;
 }
 
@@ -44,7 +44,7 @@ internal void* arena_push(Arena* arena, u64 size) {
 internal void* arena_push_no_zero(Arena* arena, u64 size) {
   u64 position_memory = AlignPow2(arena->position, arena->align);
   u64 new_position    = position_memory + size;
-
+  
   if (arena->commited < new_position) {
     u64 commit_aligned = AlignPow2(new_position, arena->commit_size);
     u64 commit_clamped = ClampTop(commit_aligned, arena->reserved);
@@ -56,12 +56,12 @@ internal void* arena_push_no_zero(Arena* arena, u64 size) {
       Assert(0);
     }
   }
-
+  
   void* memory = NULL;
-
+  
   memory = (u8*)arena + position_memory;;
   arena->position = new_position;
-
+  
   return memory;
 }
 
@@ -93,8 +93,9 @@ internal void  arena_free(Arena* arena) {
 }
 
 internal void arena_print(Arena *arena) {
-	printf("Arena { reserved: %llu, commited: %llu, commit_size: %llu, position: %llu, align: %llu }\n",
-		arena->reserved, arena->commited, arena->commit_size, arena->position, arena->align);
+  f32 committed_percentage = ((double)arena->position / arena->commited) * 100.0;
+  printf("Arena { reserved: %llu, commited: %llu, commit_size: %llu, position: %llu, align: %llu, committed_percentage: %.2f%% }\n",
+         arena->reserved, arena->commited, arena->commit_size, arena->position, arena->align, committed_percentage);
 }
 
 internal Arena_Temp arena_temp_begin(Arena* arena) {

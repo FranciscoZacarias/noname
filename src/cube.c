@@ -3,6 +3,7 @@ internal Cube cube_new(Vec3f32 position, Vec4f32 color) {
   Cube result = { 0 };
   result.transform = translate_mat4f32(position.x, position.y, position.z);;
   result.color     = color;
+  result.is_dead   = 0;
   return result;
 }
 

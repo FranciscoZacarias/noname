@@ -5,7 +5,7 @@ internal Renderer renderer_init(s32 window_width, s32 window_height) {
   
   result.arena  = arena_init();
   
-  result.triangles_max   = 8196;
+  result.triangles_max   = Kilobytes(16);
   result.triangles_data  = (Renderer_Vertex*)PushArray(result.arena, Renderer_Vertex, result.triangles_max*3);
   result.triangles_count = 0;
   
@@ -255,6 +255,10 @@ internal void renderer_update(Program_State program_state, Game_State game_state
   
   //~ Program State
   for(u32 i = 0; i < game_state.total_cubes; i++) {
+    if (game_state.cubes[i].is_dead) {
+      continue;
+    }
+    
     if (game_state.cube_under_cursor.index == i) {
       f32 highlight_scale = 0.8f;
       renderer_push_cube_highlight_face(renderer, game_state.cubes[game_state.cube_under_cursor.index], vec4f32(0.5+0.5*sin(5*program_state.current_time), 0.5+0.5*sin(5*program_state.current_time), 0.0f), game_state.cube_under_cursor.hovered_face, vec4f32(game_state.cubes[game_state.cube_under_cursor.index].color.x * highlight_scale, game_state.cubes[game_state.cube_under_cursor.index].color.y * highlight_scale, game_state.cubes[game_state.cube_under_cursor.index].color.z * highlight_scale));
@@ -293,9 +297,9 @@ y_pos -= 0.05f; } while(0);
     AddStat("FPS: %d", fps, dt_fps);
     AddStat("Ms/Frame: %0.2f", msframe, (f32)program_state.delta_time/1000);
     AddStat("Triangles Count/Max: %d/%d", trigs, renderer->triangles_count, renderer->triangles_max);
-    AddStat("Cube Count: %d", cubs, game_state.total_cubes-1);
+    AddStat("Cube Count: %d", cubs, game_cubes_alive_count());
     AddStat("Hovered Cube Index: %d", hovered, (game_state.cube_under_cursor.index == U32_MAX) ? -1 : game_state.cube_under_cursor.index);
-    
+    AddStat("Total empty slots: %u", emptyslots, game_state.total_empty_cube_slots);
   }
   
   renderer_end_frame(renderer, program_state.window_width, program_state.window_height);
