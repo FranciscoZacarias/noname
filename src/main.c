@@ -16,7 +16,7 @@ noname:
 [ ] - Add translation gizmos to selected cube (xyz arrows) and (xy, xz, yz planes), that actually transform the cube each arrow
 [ ] - Moving cubes from gizmos must snap to the grid
 [ ] - Add some sort of post processing shake when loading variables from hotload, just to know it was loaded and feature creep
-[ ] - MAX_TRIANGLES should be in allocated memory instead of a stack allocation
+[x] - MAX_TRIANGLES should be in allocated memory instead of a stack allocation
 [ ] - Where should renderer live?
 bugs:
 [x] - When highlighting a cube, we get more triangles than we should have. We should have just the same 
@@ -125,7 +125,7 @@ internal void program_init(s32 window_width, s32 window_height) {
   ProgramState.window_height = window_height;
   ProgramState.show_debug_stats = 1;
   ProgramState.near_plane = 0.1f;
-  ProgramState.far_plane = 100.f;
+  ProgramState.far_plane  = 100.f;
   
   // Camera
   ProgramState.camera = camera_init();

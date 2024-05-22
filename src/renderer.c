@@ -1,222 +1,232 @@
 
 internal Renderer renderer_init(s32 window_width, s32 window_height) {
-	Arena_Temp scratch = scratch_begin(0, 0);
 	Renderer result;
   MemoryZeroStruct(&result);
   
-	// --- Compile shader
-	u32 vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-	{
-		OS_File vertex_shader_source = os_file_load_entire_file(scratch.arena, StringLiteral(DEFAULT_VERTEX_SHADER));
-		glShaderSource(vertex_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
-		glCompileShader(vertex_shader);
-		{
-			s32 success;
-			glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
-			if (!success) {
-				char infoLog[1024];
-				glGetShaderInfoLog(vertex_shader, 1024, NULL, infoLog);
-				printf("Error %d compiling default vertex shader. Log: %s", success, infoLog);
-				Assert(0);
-			}
-		}
-	}
+  result.arena  = arena_init();
   
-	u32 fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-	{
-		OS_File fragment_shader_source = os_file_load_entire_file(scratch.arena, StringLiteral(DEFAULT_FRAGMENT_SHADER));
-		glShaderSource(fragment_shader, 1, &fragment_shader_source.data, &(GLint)fragment_shader_source.size);
-		glCompileShader(fragment_shader);
-		{
-			s32 success;
-			glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
-			if (!success) {
-				char infoLog[1024];
-				glGetShaderInfoLog(fragment_shader, 1024, NULL, infoLog);
-				printf("Error %d compiling default fragment shader. Log: %s", success, infoLog);
-				Assert(0);
-			}
-		}
-	}
+  result.triangles_max   = 8196;
+  result.triangles_data  = (Renderer_Vertex*)PushArray(result.arena, Renderer_Vertex, result.triangles_max*3);
+  result.triangles_count = 0;
   
-	result.shader_program = glCreateProgram();
-	{
-		glAttachShader(result.shader_program, vertex_shader);
-		glAttachShader(result.shader_program, fragment_shader);
-		glLinkProgram(result.shader_program);
-		{
-			s32 success;
-			glGetProgramiv(result.shader_program, GL_LINK_STATUS, &success);
-			if(!success) {
-				char infoLog[1024];
-				glGetProgramInfoLog(result.shader_program, 1024, NULL, infoLog);
-				printf("Error %d linking shader program. Log: %s", success, infoLog);
-				Assert(0);
-			}
-		}
-	}
+  result.textures_max   = 8;
+  result.textures       = (u32*)PushArray(result.arena, u32, result.textures_max);
+  result.textures_count = 0;
   
-	glDetachShader(result.shader_program, vertex_shader);
-	glDetachShader(result.shader_program, fragment_shader);
-	glDeleteShader(vertex_shader);
-	glDeleteShader(fragment_shader);
+  Arena_Temp scratch = scratch_begin(0, 0);
   
-	// --- VAO, VBO
-	glGenVertexArrays(1, &result.vao);
-	glBindVertexArray(result.vao);
+  // --- Compile shader
+  u32 vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+  {
+    OS_File vertex_shader_source = os_file_load_entire_file(scratch.arena, StringLiteral(DEFAULT_VERTEX_SHADER));
+    glShaderSource(vertex_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
+    glCompileShader(vertex_shader);
+    {
+      s32 success;
+      glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
+      if (!success) {
+        char infoLog[1024];
+        glGetShaderInfoLog(vertex_shader, 1024, NULL, infoLog);
+        printf("Error %d compiling default vertex shader. Log: %s", success, infoLog);
+        Assert(0);
+      }
+    }
+  }
   
-	// Triangles vbo
-	{
-		glGenBuffers(1, &result.triangle_vbo);
-		glBindBuffer(GL_ARRAY_BUFFER, result.triangle_vbo);
-		glBufferData(GL_ARRAY_BUFFER, MAX_TRIANGLES_VERTICES * sizeof(Renderer_Vertex), NULL, GL_DYNAMIC_DRAW);
-		
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, sizeof(Renderer_Vertex), (void*) OffsetOfMember(Renderer_Vertex, position));
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(1, 4, GL_FLOAT, GL_False, sizeof(Renderer_Vertex), (void*) OffsetOfMember(Renderer_Vertex, color));
-		glEnableVertexAttribArray(1);
+  u32 fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+  {
+    OS_File fragment_shader_source = os_file_load_entire_file(scratch.arena, StringLiteral(DEFAULT_FRAGMENT_SHADER));
+    glShaderSource(fragment_shader, 1, &fragment_shader_source.data, &(GLint)fragment_shader_source.size);
+    glCompileShader(fragment_shader);
+    {
+      s32 success;
+      glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
+      if (!success) {
+        char infoLog[1024];
+        glGetShaderInfoLog(fragment_shader, 1024, NULL, infoLog);
+        printf("Error %d compiling default fragment shader. Log: %s", success, infoLog);
+        Assert(0);
+      }
+    }
+  }
+  
+  result.shader_program = glCreateProgram();
+  {
+    glAttachShader(result.shader_program, vertex_shader);
+    glAttachShader(result.shader_program, fragment_shader);
+    glLinkProgram(result.shader_program);
+    {
+      s32 success;
+      glGetProgramiv(result.shader_program, GL_LINK_STATUS, &success);
+      if(!success) {
+        char infoLog[1024];
+        glGetProgramInfoLog(result.shader_program, 1024, NULL, infoLog);
+        printf("Error %d linking shader program. Log: %s", success, infoLog);
+        Assert(0);
+      }
+    }
+  }
+  
+  glDetachShader(result.shader_program, vertex_shader);
+  glDetachShader(result.shader_program, fragment_shader);
+  glDeleteShader(vertex_shader);
+  glDeleteShader(fragment_shader);
+  
+  // --- VAO, VBO
+  glGenVertexArrays(1, &result.vao);
+  glBindVertexArray(result.vao);
+  
+  // Triangles vbo
+  {
+    glGenBuffers(1, &result.triangle_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, result.triangle_vbo);
+    glBufferData(GL_ARRAY_BUFFER, result.triangles_max * 3 * sizeof(Renderer_Vertex), NULL, GL_DYNAMIC_DRAW);
     
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_False, sizeof(Renderer_Vertex), (void*) OffsetOfMember(Renderer_Vertex, uv));
-		glEnableVertexAttribArray(2);
-		glVertexAttribPointer(3, 1, GL_FLOAT, GL_False, sizeof(Renderer_Vertex), (void*) OffsetOfMember(Renderer_Vertex, texture_index));
-		glEnableVertexAttribArray(3);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_False, sizeof(Renderer_Vertex), (void*) OffsetOfMember(Renderer_Vertex, position));
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_False, sizeof(Renderer_Vertex), (void*) OffsetOfMember(Renderer_Vertex, color));
+    glEnableVertexAttribArray(1);
     
-		glVertexAttribPointer(4, 1, GL_INT, GL_False, sizeof(Renderer_Vertex), (void*) OffsetOfMember(Renderer_Vertex, has_texture));
-		glEnableVertexAttribArray(4);
-	}
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_False, sizeof(Renderer_Vertex), (void*) OffsetOfMember(Renderer_Vertex, uv));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(3, 1, GL_FLOAT, GL_False, sizeof(Renderer_Vertex), (void*) OffsetOfMember(Renderer_Vertex, texture_index));
+    glEnableVertexAttribArray(3);
+    
+    glVertexAttribPointer(4, 1, GL_INT, GL_False, sizeof(Renderer_Vertex), (void*) OffsetOfMember(Renderer_Vertex, has_texture));
+    glEnableVertexAttribArray(4);
+  }
   
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindVertexArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
   
-	// --- MSAA: FBO and RBO setup
-	glGenFramebuffers(1, &result.msaa_frame_buffer_object);
+  // --- MSAA: FBO and RBO setup
+  glGenFramebuffers(1, &result.msaa_frame_buffer_object);
   
-	glGenTextures(1, &result.msaa_texture_color_buffer_multisampled);
-	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, result.msaa_texture_color_buffer_multisampled);
-	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, MSAA_SAMPLES, GL_RGB, window_width, window_height, GL_True);
-	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+  glGenTextures(1, &result.msaa_texture_color_buffer_multisampled);
+  glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, result.msaa_texture_color_buffer_multisampled);
+  glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, MSAA_SAMPLES, GL_RGB, window_width, window_height, GL_True);
+  glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
   
-	glGenRenderbuffers(1, &result.msaa_render_buffer_object);
-	glBindRenderbuffer(GL_RENDERBUFFER, result.msaa_render_buffer_object);
-	glRenderbufferStorageMultisample(GL_RENDERBUFFER, MSAA_SAMPLES, GL_DEPTH24_STENCIL8, window_width, window_height);
-	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+  glGenRenderbuffers(1, &result.msaa_render_buffer_object);
+  glBindRenderbuffer(GL_RENDERBUFFER, result.msaa_render_buffer_object);
+  glRenderbufferStorageMultisample(GL_RENDERBUFFER, MSAA_SAMPLES, GL_DEPTH24_STENCIL8, window_width, window_height);
+  glBindRenderbuffer(GL_RENDERBUFFER, 0);
   
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, result.msaa_frame_buffer_object);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, result.msaa_texture_color_buffer_multisampled, 0);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, result.msaa_render_buffer_object);
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, result.msaa_frame_buffer_object);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, result.msaa_texture_color_buffer_multisampled, 0);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, result.msaa_render_buffer_object);
   
-	u32 msaa_fbo_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	if (msaa_fbo_status != GL_FRAMEBUFFER_COMPLETE) {
-		printf("ERROR::GL_FRAMEBUFFER:: Render Buffer Object is not complete. Value: %u. ", msaa_fbo_status);
-		Assert(0);
-	}
+  u32 msaa_fbo_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+  if (msaa_fbo_status != GL_FRAMEBUFFER_COMPLETE) {
+    printf("ERROR::GL_FRAMEBUFFER:: Render Buffer Object is not complete. Value: %u. ", msaa_fbo_status);
+    Assert(0);
+  }
   
-	// --- Intermidiate fbo for post processing
-	glGenFramebuffers(1, &result.postprocessing_fbo);
+  // --- Intermidiate fbo for post processing
+  glGenFramebuffers(1, &result.postprocessing_fbo);
   
-	// create color attachment texture
-	glGenTextures(1, &result.screen_texture);
-	glBindTexture(GL_TEXTURE_2D, result.screen_texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window_width, window_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  // create color attachment texture
+  glGenTextures(1, &result.screen_texture);
+  glBindTexture(GL_TEXTURE_2D, result.screen_texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window_width, window_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   
-	// attach to intermidiate_fbo
-	glBindFramebuffer(GL_FRAMEBUFFER, result.postprocessing_fbo);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, result.screen_texture, 0);
+  // attach to intermidiate_fbo
+  glBindFramebuffer(GL_FRAMEBUFFER, result.postprocessing_fbo);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, result.screen_texture, 0);
   
-	u32 postprocessing_fbo = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	if (postprocessing_fbo != GL_FRAMEBUFFER_COMPLETE) {
-		printf("ERROR::GL_FRAMEBUFFER:: Render Buffer Object is not complete. Value: %u. ", postprocessing_fbo);
-		Assert(0);
-	}
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  u32 postprocessing_fbo = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+  if (postprocessing_fbo != GL_FRAMEBUFFER_COMPLETE) {
+    printf("ERROR::GL_FRAMEBUFFER:: Render Buffer Object is not complete. Value: %u. ", postprocessing_fbo);
+    Assert(0);
+  }
+  glBindTexture(GL_TEXTURE_2D, 0);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
-	// --- Screen shader
+  // --- Screen shader
   u32 screen_vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-	{
-		OS_File vertex_shader_source = os_file_load_entire_file(scratch.arena, StringLiteral(SCREEN_VERTEX_SHADER));
-		glShaderSource(screen_vertex_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
-		glCompileShader(screen_vertex_shader);
-		{
-			s32 success;
-			glGetShaderiv(screen_vertex_shader, GL_COMPILE_STATUS, &success);
-			if (!success) {
-				char infoLog[1024];
-				glGetShaderInfoLog(screen_vertex_shader, 1024, NULL, infoLog);
-				printf("Error %d compiling screen vertex shader. Log: %s", success, infoLog);
-				Assert(0);
-			}
-		}
-	}
+  {
+    OS_File vertex_shader_source = os_file_load_entire_file(scratch.arena, StringLiteral(SCREEN_VERTEX_SHADER));
+    glShaderSource(screen_vertex_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
+    glCompileShader(screen_vertex_shader);
+    {
+      s32 success;
+      glGetShaderiv(screen_vertex_shader, GL_COMPILE_STATUS, &success);
+      if (!success) {
+        char infoLog[1024];
+        glGetShaderInfoLog(screen_vertex_shader, 1024, NULL, infoLog);
+        printf("Error %d compiling screen vertex shader. Log: %s", success, infoLog);
+        Assert(0);
+      }
+    }
+  }
   
-	u32 screen_fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-	{
-		OS_File vertex_shader_source = os_file_load_entire_file(scratch.arena, StringLiteral(SCREEN_FRAGMENT_SHADER));
-		glShaderSource(screen_fragment_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
-		glCompileShader(screen_fragment_shader);
-		{
-			s32 success;
-			glGetShaderiv(screen_fragment_shader, GL_COMPILE_STATUS, &success);
-			if (!success) {
-				char infoLog[1024];
-				glGetShaderInfoLog(screen_fragment_shader, 1024, NULL, infoLog);
-				printf("Error %d compiling screen fragment shader. Log: %s", success, infoLog);
-				Assert(0);
-			}
-		}
-	}
+  u32 screen_fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+  {
+    OS_File vertex_shader_source = os_file_load_entire_file(scratch.arena, StringLiteral(SCREEN_FRAGMENT_SHADER));
+    glShaderSource(screen_fragment_shader, 1, &vertex_shader_source.data, &(GLint)vertex_shader_source.size);
+    glCompileShader(screen_fragment_shader);
+    {
+      s32 success;
+      glGetShaderiv(screen_fragment_shader, GL_COMPILE_STATUS, &success);
+      if (!success) {
+        char infoLog[1024];
+        glGetShaderInfoLog(screen_fragment_shader, 1024, NULL, infoLog);
+        printf("Error %d compiling screen fragment shader. Log: %s", success, infoLog);
+        Assert(0);
+      }
+    }
+  }
   
-	result.screen_program = glCreateProgram();
-	{
-		glAttachShader(result.screen_program, screen_vertex_shader);
-		glAttachShader(result.screen_program, screen_fragment_shader);
-		glLinkProgram(result.screen_program);
-		{
-			s32 success;
-			glGetProgramiv(result.screen_program, GL_LINK_STATUS, &success);
-			if(!success) {
-				char infoLog[1024];
-				glGetProgramInfoLog(result.screen_program, 1024, NULL, infoLog);
-				printf("Error %d linking shader program. Log: %s", success, infoLog);
-				Assert(0);
-			}
-		}
-	}
+  result.screen_program = glCreateProgram();
+  {
+    glAttachShader(result.screen_program, screen_vertex_shader);
+    glAttachShader(result.screen_program, screen_fragment_shader);
+    glLinkProgram(result.screen_program);
+    {
+      s32 success;
+      glGetProgramiv(result.screen_program, GL_LINK_STATUS, &success);
+      if(!success) {
+        char infoLog[1024];
+        glGetProgramInfoLog(result.screen_program, 1024, NULL, infoLog);
+        printf("Error %d linking shader program. Log: %s", success, infoLog);
+        Assert(0);
+      }
+    }
+  }
   
-	f32 quad_vertices[] = {
-		-1.0f,  1.0f,
-		-1.0f, -1.0f,
+  f32 quad_vertices[] = {
+    -1.0f,  1.0f,
+    -1.0f, -1.0f,
     1.0f, -1.0f,
-		-1.0f,  1.0f,
+    -1.0f,  1.0f,
     1.0f, -1.0f,
     1.0f,  1.0f
-	};
+  };
   
-	glGenVertexArrays(1, &result.screen_vao);
-	glGenBuffers(1, &result.screen_vbo);
+  glGenVertexArrays(1, &result.screen_vao);
+  glGenBuffers(1, &result.screen_vbo);
   
-	glBindVertexArray(result.screen_vao);
-	glBindBuffer(GL_ARRAY_BUFFER, result.screen_vbo);
+  glBindVertexArray(result.screen_vao);
+  glBindBuffer(GL_ARRAY_BUFFER, result.screen_vbo);
   
-	glBufferData(GL_ARRAY_BUFFER, sizeof(quad_vertices), quad_vertices, GL_STATIC_DRAW);
-	
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_False, 2 * sizeof(f32), (void*)0);
-	glEnableVertexAttribArray(0);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(quad_vertices), quad_vertices, GL_STATIC_DRAW);
   
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_False, 2 * sizeof(f32), (void*)0);
+  glEnableVertexAttribArray(0);
   
-	u32 texture_location = glGetUniformLocation(result.shader_program, "u_texture");
-	s32 textures[MAX_TEXTURES];
-	for (s32 i = 0; i < MAX_TEXTURES; i += 1) {
-		textures[i] = i;
-	}
-	glUniform1iv(texture_location, 8, textures);
-	
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBindVertexArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  
+  u32 texture_location = glGetUniformLocation(result.shader_program, "u_texture");
+  for (s32 i = 0; i < result.textures_max; i += 1) {
+    result.textures[i]= i;
+  }
+  glUniform1iv(texture_location, result.textures_max, result.textures);
+  
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   
   MemoryZeroStruct(&result.font_info);
   if (!renderer_font_load(&result.font_info, StringLiteral("D:\\work\\noname\\res\\Karmina.Otf"), 16)) {
@@ -224,7 +234,7 @@ internal Renderer renderer_init(s32 window_width, s32 window_height) {
     Assert(0);
   }
   
-	scratch_end(&scratch);
+  scratch_end(&scratch);
   
   return result;
 }
@@ -282,7 +292,7 @@ y_pos -= 0.05f; } while(0);
     
     AddStat("FPS: %d", fps, dt_fps);
     AddStat("Ms/Frame: %0.2f", msframe, (f32)program_state.delta_time/1000);
-    AddStat("Triangles Count/Max: %d/%d", trigs, renderer->triangle_count, MAX_TRIANGLES);
+    AddStat("Triangles Count/Max: %d/%d", trigs, renderer->triangles_count, renderer->triangles_max);
     AddStat("Cube Count: %d", cubs, game_state.total_cubes-1);
     AddStat("Hovered Cube Index: %d", hovered, (game_state.cube_under_cursor.index == U32_MAX) ? -1 : game_state.cube_under_cursor.index);
     
@@ -579,21 +589,21 @@ internal void renderer_begin_frame(Renderer* renderer, Vec4f32 background_color)
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
   
-  renderer->triangle_count = 0;
-  renderer->texture_count = 0;
+  renderer->triangles_count = 0;
+  renderer->textures_count  = 0;
   
   glUseProgram(renderer->shader_program);
 }
 
 void renderer_end_frame(Renderer* renderer, s32 window_width, s32 window_height) {
-  for (u32 i = 0; i < renderer->texture_count; i += 1) {
+  for (u32 i = 0; i < renderer->textures_count; i += 1) {
     glActiveTexture(GL_TEXTURE0 + i);
     glBindTexture(GL_TEXTURE_2D, renderer->textures[i]);
   }
   
   glBindVertexArray(renderer->vao);
   glBindBuffer(GL_ARRAY_BUFFER, renderer->triangle_vbo);
-  glBufferSubData(GL_ARRAY_BUFFER, 0, renderer->triangle_count * 3 * sizeof(Renderer_Vertex), renderer->triangle_data);
+  glBufferSubData(GL_ARRAY_BUFFER, 0, renderer->triangles_count * 3 * sizeof(Renderer_Vertex), renderer->triangles_data);
   
   if (HotloadableEnableCulling) {
     glEnable(GL_CULL_FACE);
@@ -603,7 +613,7 @@ void renderer_end_frame(Renderer* renderer, s32 window_width, s32 window_height)
   if (HotloadableEnableWireframeMode) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   }
-  glDrawArrays(GL_TRIANGLES, 0, renderer->triangle_count * 3);
+  glDrawArrays(GL_TRIANGLES, 0, renderer->triangles_count * 3);
   glDisable(GL_CULL_FACE);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   
@@ -629,36 +639,36 @@ void renderer_end_frame(Renderer* renderer, s32 window_width, s32 window_height)
 }
 
 internal void renderer_push_triangle(Renderer* renderer, Vec3f32 a_position, Vec4f32 a_color, Vec3f32 b_position, Vec4f32 b_color, Vec3f32 c_position, Vec4f32 c_color) {
-  if ((renderer->triangle_count + 1) >= MAX_TRIANGLES) {
+  if ((renderer->triangles_count + 1) >= renderer->triangles_max) {
     printf("Error :: Renderer :: Too many triangles!");
     Assert(0);
   }
   
-  s64 index = renderer->triangle_count * 3;
-  renderer->triangle_data[index+0].position      = a_position;
-  renderer->triangle_data[index+0].color         = a_color;
-  renderer->triangle_data[index+0].uv            = vec2f32(0.0f, 0.0f);
-  renderer->triangle_data[index+0].texture_index = F32_MAX;
-  renderer->triangle_data[index+0].has_texture   = 0.0;
+  s64 index = renderer->triangles_count * 3;
+  renderer->triangles_data[index+0].position      = a_position;
+  renderer->triangles_data[index+0].color         = a_color;
+  renderer->triangles_data[index+0].uv            = vec2f32(0.0f, 0.0f);
+  renderer->triangles_data[index+0].texture_index = F32_MAX;
+  renderer->triangles_data[index+0].has_texture   = 0.0;
   
-  renderer->triangle_data[index+1].position      = b_position;
-  renderer->triangle_data[index+1].color         = b_color;
-  renderer->triangle_data[index+1].uv            = vec2f32(0.0f, 0.0f);
-  renderer->triangle_data[index+1].texture_index = F32_MAX;
-  renderer->triangle_data[index+1].has_texture   = 0.0;
+  renderer->triangles_data[index+1].position      = b_position;
+  renderer->triangles_data[index+1].color         = b_color;
+  renderer->triangles_data[index+1].uv            = vec2f32(0.0f, 0.0f);
+  renderer->triangles_data[index+1].texture_index = F32_MAX;
+  renderer->triangles_data[index+1].has_texture   = 0.0;
   
-  renderer->triangle_data[index+2].position      = c_position;
-  renderer->triangle_data[index+2].color         = c_color;
-  renderer->triangle_data[index+2].uv            = vec2f32(0.0f, 0.0f);
-  renderer->triangle_data[index+2].texture_index = F32_MAX;
-  renderer->triangle_data[index+2].has_texture   = 0.0;
+  renderer->triangles_data[index+2].position      = c_position;
+  renderer->triangles_data[index+2].color         = c_color;
+  renderer->triangles_data[index+2].uv            = vec2f32(0.0f, 0.0f);
+  renderer->triangles_data[index+2].texture_index = F32_MAX;
+  renderer->triangles_data[index+2].has_texture   = 0.0;
   
-  renderer->triangle_count += 1;
+  renderer->triangles_count += 1;
 }
 
 internal void renderer_push_triangle_texture_color(Renderer* renderer, Vec3f32 a_position, Vec2f32 a_uv, Vec3f32 b_position, Vec2f32 b_uv, Vec3f32 c_position, Vec2f32 c_uv, Vec4f32 color, u32 texture) {
   u64 texture_index = U64_MAX;
-  for (u64 i = 0; i < renderer->texture_count; i += 1) {
+  for (u64 i = 0; i < renderer->textures_count; i += 1) {
     if (renderer->textures[i] == texture) {
       texture_index = i;
       break;
@@ -668,34 +678,34 @@ internal void renderer_push_triangle_texture_color(Renderer* renderer, Vec3f32 a
   // TODO(fz): If we add more textures than MAX_TEXTURES, we still have to handle that.
   // TODO(fz): This should probably be in renderer_load_texture.
   // TODO(fz): Do we need to clean them up? Didn't implement it yet because I think now they are kept during the lifetime of the program
-  if (texture_index == U64_MAX && renderer->texture_count < MAX_TEXTURES) {
-    renderer->textures[renderer->texture_count] = texture;
-    texture_index = renderer->texture_count;
-    renderer->texture_count += 1;
+  if (texture_index == U64_MAX && renderer->textures_count < renderer->textures_max) {
+    renderer->textures[renderer->textures_count] = texture;
+    texture_index = renderer->textures_count;
+    renderer->textures_count += 1;
   }
   
-  Assert(texture_index >= 0 && texture_index <= MAX_TEXTURES);
+  Assert(texture_index >= 0 && texture_index <= renderer->textures_max);
   
-  s64 index = renderer->triangle_count * 3;
-  renderer->triangle_data[index+0].position      = a_position;
-  renderer->triangle_data[index+0].color         = color;
-  renderer->triangle_data[index+0].uv            = a_uv;
-  renderer->triangle_data[index+0].texture_index = texture_index;
-  renderer->triangle_data[index+0].has_texture   = 1.0;
+  s64 index = renderer->triangles_count * 3;
+  renderer->triangles_data[index+0].position      = a_position;
+  renderer->triangles_data[index+0].color         = color;
+  renderer->triangles_data[index+0].uv            = a_uv;
+  renderer->triangles_data[index+0].texture_index = texture_index;
+  renderer->triangles_data[index+0].has_texture   = 1.0;
   
-  renderer->triangle_data[index+1].position      = b_position;
-  renderer->triangle_data[index+1].color         = color;
-  renderer->triangle_data[index+1].uv            = b_uv;
-  renderer->triangle_data[index+1].texture_index = texture_index;
-  renderer->triangle_data[index+1].has_texture   = 1.0;
+  renderer->triangles_data[index+1].position      = b_position;
+  renderer->triangles_data[index+1].color         = color;
+  renderer->triangles_data[index+1].uv            = b_uv;
+  renderer->triangles_data[index+1].texture_index = texture_index;
+  renderer->triangles_data[index+1].has_texture   = 1.0;
   
-  renderer->triangle_data[index+2].position      = c_position;
-  renderer->triangle_data[index+2].color         = color;
-  renderer->triangle_data[index+2].uv            = c_uv;
-  renderer->triangle_data[index+2].texture_index = texture_index;
-  renderer->triangle_data[index+2].has_texture   = 1.0;
+  renderer->triangles_data[index+2].position      = c_position;
+  renderer->triangles_data[index+2].color         = color;
+  renderer->triangles_data[index+2].uv            = c_uv;
+  renderer->triangles_data[index+2].texture_index = texture_index;
+  renderer->triangles_data[index+2].has_texture   = 1.0;
   
-  renderer->triangle_count += 1;
+  renderer->triangles_count += 1;
 }
 
 internal void renderer_push_triangle_texture(Renderer* renderer, Vec3f32 a_position, Vec2f32 a_uv, Vec3f32 b_position, Vec2f32 b_uv, Vec3f32 c_position, Vec2f32 c_uv, u32 texture) {
@@ -772,7 +782,7 @@ internal void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4
 }
 
 internal void renderer_push_quad(Renderer* renderer, Quad quad, Vec4f32 color) {
-  if ((renderer->triangle_count + 2) >= MAX_TRIANGLES) {
+  if ((renderer->triangles_count + 2) >= renderer->triangles_max) {
     printf("Error :: Renderer :: Too many triangles!");
     Assert(0);
   }

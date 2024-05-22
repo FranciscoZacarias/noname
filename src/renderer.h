@@ -4,11 +4,6 @@
 
 #define MSAA_SAMPLES 8
 
-#define MAX_TRIANGLES 2048
-#define MAX_TRIANGLES_VERTICES (MAX_TRIANGLES * 3)
-
-#define MAX_TEXTURES 8
-
 #define DEFAULT_VERTEX_SHADER   "D:\\work\\noname\\src\\shaders\\default_vertex_shader.glsl"
 #define DEFAULT_FRAGMENT_SHADER "D:\\work\\noname\\src\\shaders\\default_fragment_shader.glsl"
 #define SCREEN_VERTEX_SHADER    "D:\\work\\noname\\src\\shaders\\screen_vertex_shader.glsl"
@@ -66,11 +61,14 @@ typedef struct Renderer {
   u32 screen_vbo;
   
   // Data
-  Renderer_Vertex triangle_data[MAX_TRIANGLES_VERTICES];
-  u32 triangle_count;
+  Arena* arena;
+  Renderer_Vertex* triangles_data;
+  u32 triangles_count;
+  u32 triangles_max;
   
-	u32 textures[MAX_TEXTURES];
-	u32 texture_count;
+	u32* textures;
+  u32 textures_count;
+  u32 textures_max;
 } Renderer;
 
 global Renderer ProgramRenderer;
