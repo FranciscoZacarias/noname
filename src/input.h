@@ -3,13 +3,13 @@
 #ifndef INPUT_H
 #define INPUT_H
 
-typedef enum Mouse_Buttons {
+typedef enum Mouse_Button {
   MouseButton_Left,
   MouseButton_Right,
   MouseButton_Middle,
   
   MouseButton_Count,
-} Mouse_Buttons;
+} Mouse_Button;
 
 #define KeyboardKey(name, code) KeyboardKey_##name = code
 
@@ -169,13 +169,22 @@ global Input_State InputState = { 0 };
 internal void input_init();
 internal void input_update();
 
+
+//~ Keyboard keys
+internal b32  input_is_key_up(Keyboard_Key key);
+internal b32  input_is_key_down(Keyboard_Key key);
+internal b32  input_was_key_up(Keyboard_Key key);
+internal b32  input_was_key_down(Keyboard_Key key);
+internal b32  input_is_key_pressed(Keyboard_Key key);
 internal void input_process_keyboard_key(Keyboard_Key key, b8 is_pressed);
 
-internal b32 input_is_key_up(Keyboard_Key key);
-internal b32 input_is_key_down(Keyboard_Key key);
-internal b32 input_was_key_up(Keyboard_Key key);
-internal b32 input_was_key_down(Keyboard_Key key);
-
-internal b32 input_is_key_pressed(Keyboard_Key key);
+//~ Mouse Buttons
+internal b32  input_is_button_up(Mouse_Button button);
+internal b32  input_is_button_down(Mouse_Button button);
+internal b32  input_was_button_up(Mouse_Button button);
+internal b32  input_was_button_down(Mouse_Button button);
+internal b32  input_is_button_pressed(Mouse_Button button);
+internal void input_process_mouse_button(Mouse_Button button, b32 is_pressed);
+internal void input_process_mouse_cursor(s32 x, s32 y);
 
 #endif //INPUT_H

@@ -19,6 +19,7 @@ noname:
 [ ] - Add translation gizmos to selected cube (xyz arrows) and (xy, xz, yz planes), that actually transform the cube each arrow
 [ ] - Moving cubes from gizmos must snap to the grid
 [ ] - Add some sort of post processing shake when loading variables from hotload, just to know it was loaded and feature creep
+[ ] - Stuff that is not glfw but core to the program, should be in like a program or core module. Like the Program_State stuff for example.
 [ ] - Where should Program_State live?
 bugs:
 [x] - When highlighting a cube, we get more triangles than we should have. We should have just the same 
@@ -32,15 +33,14 @@ f_base:
 
 #include "main.h"
 
-global b32 LeftMouseButton = 0;
-
 internal void program_init();
 internal void program_update(Mat4f32 view, Mat4f32 projection);
 
 internal void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 internal void process_input(GLFWwindow *window);
 internal void keyboard_callback(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods);
-internal void mouse_callback(GLFWwindow* window, f64 x_position, f64 y_position);
+internal void mouse_cursor_callback(GLFWwindow* window, f64 x_position, f64 y_position);
+internal void mouse_button_callback(GLFWwindow* window, s32 button, s32 action, s32 mods);
 
 int main(void) {
 	os_init();
@@ -67,14 +67,15 @@ int main(void) {
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   
   glfwSetKeyCallback(window, keyboard_callback);
-	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetCursorPosCallback(window, mouse_cursor_callback);
+  glfwSetMouseButtonCallback(window, mouse_button_callback);
   
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     printf("Failed to initialize GLAD");
     Assert(0);
   }
   
-	ProgramRenderer = renderer_init(&ProgramState);
+  ProgramRenderer = renderer_init(&ProgramState);
   
   while(!glfwWindowShouldClose(window)) {
     hotload_variables(&ProgramState);
@@ -89,7 +90,6 @@ int main(void) {
     Mat4f32 projection = perspective_mat4f32(Radians(45), ProgramState.window_width, ProgramState.window_height, ProgramState.near_plane, ProgramState.far_plane);
     
     //~ Updates
-    process_input(window);
     program_update(view, projection);
     
     //~ Game logic
@@ -98,11 +98,15 @@ int main(void) {
     //~ Render
     renderer_update(GameState, &ProgramRenderer, view, projection);
     
-    //~ Input
-    input_update();
+    //~ Non-game and Non-renderer related 
+    if (input_is_key_pressed(KeyboardKey_ESCAPE)) {
+      printf("Program exited from pressing Escape!\n");
+      glfwSetWindowShouldClose(window, 1);
+    }
     
-    printf("\nMouse: Current (%.2f, %.2f)\n", InputState.mouse_current.screen_space_x, InputState.mouse_current.screen_space_y);
-    printf("Mouse: Previous (%.2f, %.2f)\n", InputState.mouse_previous.screen_space_x, InputState.mouse_previous.screen_space_y);
+    //~ Input
+    // NOTE(fz): Keep at the end! Otherwise the current 
+    input_update();
     
     glfwSwapBuffers(window);
     glfwPollEvents();
@@ -166,52 +170,38 @@ internal void framebuffer_size_callback(GLFWwindow* window, int width, int heigh
   renderer_generate_msaa_and_intermidiate_buffers(&ProgramRenderer);
 }
 
-internal void process_input(GLFWwindow *window) {
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-    printf("Program exited from pressing Escape!\n");
-    glfwSetWindowShouldClose(window, 1);
-  }
-  
-  if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-    LeftMouseButton = 1;
-  } else {
-    LeftMouseButton = 0;
-  }
-  
-  if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-    if (ProgramState.camera.mode == CameraMode_Select) {
-      ProgramState.camera.mode = CameraMode_Fly;
-      glfwSetCursorPos(window, InputState.mouse_previous.screen_space_x, InputState.mouse_previous.screen_space_y);
-      glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    }
-    
-  } else {
-    if (ProgramState.camera.mode == CameraMode_Fly) {
-      ProgramState.camera.mode = CameraMode_Select;
-      glfwSetCursorPos(window, InputState.mouse_previous.screen_space_x, InputState.mouse_previous.screen_space_y);
-      glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    }
-  }
-}
-
 internal void keyboard_callback(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods) {
-  if (key >= 0 && key < KEYBOARD_STATE_SIZE) {
+  // NOTE(fz): ESC key in Win32 is 0x1b but for glfw is 256. Just glfw hacks.
+  if (key == 256) { 
+    key = 0x1B;
+  }
+  
+  if (key >= 0 && key <= KEYBOARD_STATE_SIZE) {
     b32 is_pressed = (action != GLFW_RELEASE);
     input_process_keyboard_key(key, is_pressed);
   }
 }
 
-internal void mouse_callback(GLFWwindow* window, f64 x_position, f64 y_position) {
-  local_persist b32 FirstMouse = 1;
+internal void mouse_cursor_callback(GLFWwindow* window, f64 x_position, f64 y_position) {
+  input_process_mouse_cursor(x_position, y_position);
+}
+
+internal void mouse_button_callback(GLFWwindow* window, s32 button, s32 action, s32 mods) {
   
-  if (ProgramState.camera.mode == CameraMode_Fly) {
-    f32 xoffset = x_position - InputState.mouse_previous.screen_space_x;
-    f32 yoffset = InputState.mouse_previous.screen_space_y - y_position;
-    InputState.mouse_current.screen_space_x = x_position;
-    InputState.mouse_current.screen_space_y = y_position;
-    camera_mouse_callback(&ProgramState.camera, xoffset, yoffset);
+  // NOTE(fz): This is hacky code but because I dont want to call
+  // glfw stuff on the input layer. I'd rather just have the mess here.
+  // Hopefully to be removed when replaced by native API.
+  b32 is_pressed = (action != GLFW_RELEASE);
+  if (button == MouseButton_Right && is_pressed) {
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   } else {
-    InputState.mouse_current.screen_space_x = x_position;
-    InputState.mouse_current.screen_space_y = y_position;
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
   }
+  
+  // NOTE(fz): Lass than 3 as per GLFW define for mouse buttons, 
+  // They are respectively 0, 1, 2 for left, right and middle buttons.
+  if (button < 3) {
+    input_process_mouse_button(button, is_pressed);
+  }
+  
 }

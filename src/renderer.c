@@ -296,7 +296,7 @@ y_pos -= 0.05f; } while(0);
     }
     
     AddStat("FPS: %d", fps, dt_fps);
-    AddStat("Ms/Frame: %0.2f", msframe, (f32)renderer->program_state->delta_time/1000);
+    AddStat("Ms/Frame: %0.2f", msframe, (f32)renderer->program_state->delta_time*1000);
     AddStat("Triangles Count/Max: %d/%d", trigs, renderer->triangles_count, renderer->triangles_max);
     AddStat("Cube Count: %d", cubs, game_cubes_alive_count());
     AddStat("Hovered Cube Index: %d", hovered, (game_state.cube_under_cursor.index == U32_MAX) ? -1 : game_state.cube_under_cursor.index);
