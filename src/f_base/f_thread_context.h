@@ -7,7 +7,7 @@ typedef struct Thread_Context {
 
 C_LINKAGE thread_static Thread_Context* ThreadContextThreadLocal = 0;
 
-internal void thread_context_init_and_equip(Thread_Context* thread_context);
+internal void thread_context_init_and_attach(Thread_Context* thread_context);
 internal void thread_context_free();
 internal Thread_Context* thread_context_get_equipped();
 

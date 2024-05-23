@@ -41,6 +41,7 @@
 #include "external/stb_image.h"
 
 //~ *.h
+#include "input.h"
 #include "cube.h"
 #include "camera.h"
 #include "game.h"
@@ -54,6 +55,7 @@
 #include "external/stb_image.h"
 
 //~ *.c
+#include "input.c"
 #include "cube.c"
 #include "camera.c"
 #include "game.c"

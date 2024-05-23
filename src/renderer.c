@@ -1,6 +1,8 @@
 
 internal Renderer renderer_init(Program_State* program_state) {
-	Renderer result;
+	AssertNoReentry();
+  
+  Renderer result;
   MemoryZeroStruct(&result);
   
   result.program_state = program_state;

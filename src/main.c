@@ -49,17 +49,18 @@ internal void program_update(Mat4f32 view, Mat4f32 projection);
 
 internal void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 internal void process_input(GLFWwindow *window);
+internal void keyboard_callback(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods);
 internal void mouse_callback(GLFWwindow* window, f64 xpos, f64 ypos);
 
 int main(void) {
 	os_init();
   
 	Thread_Context main_thread_context;
-	thread_context_init_and_equip(&main_thread_context);
+	thread_context_init_and_attach(&main_thread_context);
   
   program_init();
-  
   game_init();
+  input_init();
   
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -75,6 +76,7 @@ int main(void) {
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   
+  glfwSetKeyCallback(window, keyboard_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
   
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -103,6 +105,9 @@ int main(void) {
     
     //~ Render
     renderer_update(GameState, &ProgramRenderer, view, projection);
+    
+    //~ Input
+    input_update();
     
     glfwSwapBuffers(window);
     glfwPollEvents();
@@ -164,7 +169,7 @@ internal void program_update(Mat4f32 view, Mat4f32 projection) {
 }
 
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+internal void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
   glViewport(0, 0, width, height);
   ProgramState.window_width  = width;
   ProgramState.window_height = height;
@@ -172,7 +177,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
   renderer_generate_msaa_and_intermidiate_buffers(&ProgramRenderer);
 }
 
-void process_input(GLFWwindow *window) {
+internal void process_input(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     printf("Program exited from pressing Escape!\n");
     glfwSetWindowShouldClose(window, 1);
@@ -258,7 +263,14 @@ void process_input(GLFWwindow *window) {
   }
 }
 
-void mouse_callback(GLFWwindow* window, f64 xposIn, f64 yposIn) {
+internal void keyboard_callback(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods) {
+  if (key >= 0 && key < KEYBOARD_STATE_SIZE) {
+    b32 is_pressed = (action != GLFW_RELEASE);
+    input_process_keyboard_key(key, is_pressed);
+  }
+}
+
+internal void mouse_callback(GLFWwindow* window, f64 xposIn, f64 yposIn) {
   local_persist b32 FirstMouse = 1;
   
   if (ProgramState.camera.mode == CameraMode_Fly) {
