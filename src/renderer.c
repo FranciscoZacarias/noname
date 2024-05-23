@@ -1,8 +1,9 @@
 
-internal Renderer renderer_init(s32 window_width, s32 window_height) {
+internal Renderer renderer_init(Program_State* program_state) {
 	Renderer result;
   MemoryZeroStruct(&result);
   
+  result.program_state = program_state;
   result.arena  = arena_init();
   
   result.triangles_max   = Kilobytes(16);
@@ -104,12 +105,12 @@ internal Renderer renderer_init(s32 window_width, s32 window_height) {
   
   glGenTextures(1, &result.msaa_texture_color_buffer_multisampled);
   glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, result.msaa_texture_color_buffer_multisampled);
-  glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, MSAA_SAMPLES, GL_RGB, window_width, window_height, GL_True);
+  glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, MSAA_SAMPLES, GL_RGB, program_state->window_width, program_state->window_height, GL_True);
   glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
   
   glGenRenderbuffers(1, &result.msaa_render_buffer_object);
   glBindRenderbuffer(GL_RENDERBUFFER, result.msaa_render_buffer_object);
-  glRenderbufferStorageMultisample(GL_RENDERBUFFER, MSAA_SAMPLES, GL_DEPTH24_STENCIL8, window_width, window_height);
+  glRenderbufferStorageMultisample(GL_RENDERBUFFER, MSAA_SAMPLES, GL_DEPTH24_STENCIL8, program_state->window_width, program_state->window_height);
   glBindRenderbuffer(GL_RENDERBUFFER, 0);
   
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, result.msaa_frame_buffer_object);
@@ -128,7 +129,7 @@ internal Renderer renderer_init(s32 window_width, s32 window_height) {
   // create color attachment texture
   glGenTextures(1, &result.screen_texture);
   glBindTexture(GL_TEXTURE_2D, result.screen_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window_width, window_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, program_state->window_width, program_state->window_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   
@@ -239,9 +240,7 @@ internal Renderer renderer_init(s32 window_width, s32 window_height) {
   return result;
 }
 
-internal void renderer_update(Program_State program_state, Game_State game_state, Renderer* renderer, Mat4f32 view, Mat4f32 projection) {
-  renderer_begin_frame(renderer, PALLETE_COLOR_D);
-  
+internal void renderer_update(Game_State game_state, Renderer* renderer, Mat4f32 view, Mat4f32 projection) {
   //~ Perspective
   renderer_set_uniform_mat4fv(renderer->shader_program, "model", mat4f32(1.0f));
   renderer_set_uniform_mat4fv(renderer->shader_program, "view", view);
@@ -249,9 +248,9 @@ internal void renderer_update(Program_State program_state, Game_State game_state
   
   //~ Axis
   f32 size = 20.0f;
-  renderer_push_arrow(renderer, vec3f32(-size,   0.0f,   0.0f), vec3f32(size,  0.0f,  0.0f), COLOR_RED, 0.5f);
-  renderer_push_arrow(renderer, vec3f32(  0.0f, -size,   0.0f), vec3f32( 0.0f, size,  0.0f), COLOR_GREEN, 0.5f);
-  renderer_push_arrow(renderer, vec3f32(  0.0f,   0.0f, -size), vec3f32( 0.0f,  0.0f, size), COLOR_BLUE, 0.5f);
+  renderer_push_arrow(renderer, vec3f32(-size,   0.0f,   0.0f), vec3f32(size,  0.0f,  0.0f), Color_Red, 0.5f);
+  renderer_push_arrow(renderer, vec3f32(  0.0f, -size,   0.0f), vec3f32( 0.0f, size,  0.0f), Color_Green, 0.5f);
+  renderer_push_arrow(renderer, vec3f32(  0.0f,   0.0f, -size), vec3f32( 0.0f,  0.0f, size), Color_Blue, 0.5f);
   
   //~ Program State
   for(u32 i = 0; i < game_state.total_cubes; i++) {
@@ -261,14 +260,14 @@ internal void renderer_update(Program_State program_state, Game_State game_state
     
     if (game_state.cube_under_cursor.index == i) {
       f32 highlight_scale = 0.8f;
-      renderer_push_cube_highlight_face(renderer, game_state.cubes[game_state.cube_under_cursor.index], vec4f32(0.5+0.5*sin(5*program_state.current_time), 0.5+0.5*sin(5*program_state.current_time), 0.0f), game_state.cube_under_cursor.hovered_face, vec4f32(game_state.cubes[game_state.cube_under_cursor.index].color.x * highlight_scale, game_state.cubes[game_state.cube_under_cursor.index].color.y * highlight_scale, game_state.cubes[game_state.cube_under_cursor.index].color.z * highlight_scale));
+      renderer_push_cube_highlight_face(renderer, game_state.cubes[game_state.cube_under_cursor.index], vec4f32(0.5+0.5*sin(5*renderer->program_state->current_time), 0.5+0.5*sin(5*renderer->program_state->current_time), 0.0f), game_state.cube_under_cursor.hovered_face, vec4f32(game_state.cubes[game_state.cube_under_cursor.index].color.x * highlight_scale, game_state.cubes[game_state.cube_under_cursor.index].color.y * highlight_scale, game_state.cubes[game_state.cube_under_cursor.index].color.z * highlight_scale));
     } else {
-      renderer_push_cube(renderer, game_state.cubes[i], COLOR_BLACK);	
+      renderer_push_cube(renderer, game_state.cubes[i], Color_Black);	
     }
   }
   
   //~ Text
-  if (program_state.show_debug_stats) {
+  if (renderer->program_state->show_debug_stats) {
     String txt;
     s32 len;
     f32 y_pos = 0.95f;
@@ -280,7 +279,7 @@ char tag##_buffer[160] = {0}; \
 len = stbsp_sprintf(tag##_buffer, fmt, __VA_ARGS__); \
 txt.size = (u64)len; \
 txt.str  = (u8*)tag##_buffer; \
-renderer_push_string(renderer, program_state.window_width, program_state.window_height, txt, vec2f32(-0.998, y_pos), COLOR_YELLOW); \
+renderer_push_string(renderer, txt, vec2f32(-0.998, y_pos), Color_Yellow); \
 y_pos -= 0.05f; } while(0); 
     
     local_persist f64 fps_last_time = 0.0f;
@@ -288,24 +287,24 @@ y_pos -= 0.05f; } while(0);
     local_persist u64 dt_fps        = 0.0f;
     
     frame_count += 1;
-    if (program_state.current_time - fps_last_time >= 0.1f) {
-      dt_fps= frame_count / (program_state.current_time - fps_last_time);
+    if (renderer->program_state->current_time - fps_last_time >= 0.1f) {
+      dt_fps= frame_count / (renderer->program_state->current_time - fps_last_time);
       frame_count  = 0;
-      fps_last_time = program_state.current_time;
+      fps_last_time = renderer->program_state->current_time;
     }
     
     AddStat("FPS: %d", fps, dt_fps);
-    AddStat("Ms/Frame: %0.2f", msframe, (f32)program_state.delta_time/1000);
+    AddStat("Ms/Frame: %0.2f", msframe, (f32)renderer->program_state->delta_time/1000);
     AddStat("Triangles Count/Max: %d/%d", trigs, renderer->triangles_count, renderer->triangles_max);
     AddStat("Cube Count: %d", cubs, game_cubes_alive_count());
     AddStat("Hovered Cube Index: %d", hovered, (game_state.cube_under_cursor.index == U32_MAX) ? -1 : game_state.cube_under_cursor.index);
     AddStat("Total empty slots: %u", emptyslots, game_state.total_empty_cube_slots);
   }
   
-  renderer_end_frame(renderer, program_state.window_width, program_state.window_height);
+  renderer_end_frame(renderer);
 }
 
-internal void renderer_generate_msaa_and_intermidiate_buffers(Renderer* renderer, s32 window_width, s32 window_height) {
+internal void renderer_generate_msaa_and_intermidiate_buffers(Renderer* renderer) {
   // Delete and recreate MSAA framebuffer
   glBindFramebuffer(GL_FRAMEBUFFER, renderer->msaa_frame_buffer_object);
   glDeleteTextures(1, &renderer->msaa_texture_color_buffer_multisampled);
@@ -316,12 +315,12 @@ internal void renderer_generate_msaa_and_intermidiate_buffers(Renderer* renderer
   
   glGenTextures(1, &renderer->msaa_texture_color_buffer_multisampled);
   glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, renderer->msaa_texture_color_buffer_multisampled);
-  glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, MSAA_SAMPLES, GL_RGB, window_width, window_height, GL_True);
+  glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, MSAA_SAMPLES, GL_RGB, renderer->program_state->window_width, renderer->program_state->window_height, GL_True);
   glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
   
   glGenRenderbuffers(1, &renderer->msaa_render_buffer_object);
   glBindRenderbuffer(GL_RENDERBUFFER, renderer->msaa_render_buffer_object);
-  glRenderbufferStorageMultisample(GL_RENDERBUFFER, MSAA_SAMPLES, GL_DEPTH24_STENCIL8, window_width, window_height);
+  glRenderbufferStorageMultisample(GL_RENDERBUFFER, MSAA_SAMPLES, GL_DEPTH24_STENCIL8, renderer->program_state->window_width, renderer->program_state->window_height);
   glBindRenderbuffer(GL_RENDERBUFFER, 0);
   
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderer->msaa_frame_buffer_object);
@@ -341,7 +340,7 @@ internal void renderer_generate_msaa_and_intermidiate_buffers(Renderer* renderer
   // create color attachment texture
   glGenTextures(1, &renderer->screen_texture);
   glBindTexture(GL_TEXTURE_2D, renderer->screen_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window_width, window_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, renderer->program_state->window_width, renderer->program_state->window_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   
@@ -599,7 +598,7 @@ internal void renderer_begin_frame(Renderer* renderer, Vec4f32 background_color)
   glUseProgram(renderer->shader_program);
 }
 
-void renderer_end_frame(Renderer* renderer, s32 window_width, s32 window_height) {
+void renderer_end_frame(Renderer* renderer) {
   for (u32 i = 0; i < renderer->textures_count; i += 1) {
     glActiveTexture(GL_TEXTURE0 + i);
     glBindTexture(GL_TEXTURE_2D, renderer->textures[i]);
@@ -623,7 +622,7 @@ void renderer_end_frame(Renderer* renderer, s32 window_width, s32 window_height)
   
   glBindFramebuffer(GL_READ_FRAMEBUFFER, renderer->msaa_frame_buffer_object);
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderer->postprocessing_fbo);	
-  glBlitFramebuffer(0, 0, window_width, window_height, 0, 0, window_width, window_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+  glBlitFramebuffer(0, 0, renderer->program_state->window_width, renderer->program_state->window_height, 0, 0, renderer->program_state->window_width, renderer->program_state->window_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
   
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -633,8 +632,8 @@ void renderer_end_frame(Renderer* renderer, s32 window_width, s32 window_height)
   glUseProgram(renderer->screen_program);
   glBindVertexArray(renderer->screen_vao);glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, renderer->screen_texture);
-  renderer_set_uniform_s32(renderer->screen_program, "window_width", window_width);
-  renderer_set_uniform_s32(renderer->screen_program, "window_height", window_height);
+  renderer_set_uniform_s32(renderer->screen_program, "window_width", renderer->program_state->window_width);
+  renderer_set_uniform_s32(renderer->screen_program, "window_height", renderer->program_state->window_height);
   glDrawArrays(GL_TRIANGLES, 0, 6);
   
   glUseProgram(0);
@@ -713,7 +712,7 @@ internal void renderer_push_triangle_texture_color(Renderer* renderer, Vec3f32 a
 }
 
 internal void renderer_push_triangle_texture(Renderer* renderer, Vec3f32 a_position, Vec2f32 a_uv, Vec3f32 b_position, Vec2f32 b_uv, Vec3f32 c_position, Vec2f32 c_uv, u32 texture) {
-  renderer_push_triangle_texture_color(renderer, a_position, a_uv, b_position, b_uv, c_position, c_uv, COLOR_WHITE, texture);
+  renderer_push_triangle_texture_color(renderer, a_position, a_uv, b_position, b_uv, c_position, c_uv, Color_White, texture);
 }
 
 internal void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color, f32 scale) {
@@ -809,7 +808,7 @@ internal void renderer_push_quad_texture(Renderer* renderer, Quad quad, u32 text
 }
 
 internal void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_color) {
-  renderer_push_cube_highlight_face(renderer, cube, border_color, -1, COLOR_BLACK);
+  renderer_push_cube_highlight_face(renderer, cube, border_color, -1, Color_Black);
 }
 
 internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, Vec4f32 border_color, Cube_Face highlight, Vec4f32 highlight_color) {
@@ -1036,10 +1035,10 @@ internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, V
 }
 
 // NOTE(fz): Position should be in NDC
-internal void renderer_push_string(Renderer* renderer, s32 window_width, s32 window_height, String text, Vec2f32 position, Vec4f32 color) {
+internal void renderer_push_string(Renderer* renderer, String text, Vec2f32 position, Vec4f32 color) {
   // NDC to screen
-  position.x = ((position.x + 1.0f) / 2.0f) * window_width;
-  position.y = ((position.y + 1.0f) / 2.0f) * window_height;
+  position.x = ((position.x + 1.0f) / 2.0f) * renderer->program_state->window_width;
+  position.y = ((position.y + 1.0f) / 2.0f) * renderer->program_state->window_height;
   
   Renderer_Font_Info font_info = renderer->font_info;
   
@@ -1060,10 +1059,10 @@ internal void renderer_push_string(Renderer* renderer, s32 window_width, s32 win
       f32 y1 = y0 - (info->y1 - info->y0);
       
       // Convert screen space location to NDC
-      f32 ndc_x0 = (x0 / window_width)  * 2.0f - 1.0f;
-      f32 ndc_y0 = (y0 / window_height) * 2.0f - 1.0f;
-      f32 ndc_x1 = (x1 / window_width)  * 2.0f - 1.0f;
-      f32 ndc_y1 = (y1 / window_height) * 2.0f - 1.0f;
+      f32 ndc_x0 = (x0 / renderer->program_state->window_width)  * 2.0f - 1.0f;
+      f32 ndc_y0 = (y0 / renderer->program_state->window_height) * 2.0f - 1.0f;
+      f32 ndc_x1 = (x1 / renderer->program_state->window_width)  * 2.0f - 1.0f;
+      f32 ndc_y1 = (y1 / renderer->program_state->window_height) * 2.0f - 1.0f;
       
       Vec3f32 top_left_pos     = { ndc_x0, ndc_y0, 0.0f };
       Vec3f32 top_right_pos    = { ndc_x1, ndc_y0, 0.0f };

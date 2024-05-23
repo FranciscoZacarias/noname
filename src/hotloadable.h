@@ -16,6 +16,6 @@ internal void hotload_shader_programs(Renderer* renderer, f64 current_time);
 global u64 VariablesTweakFileLastModified = 0;
 global b32 StartupVariablesLoaded = 0;
 
-internal void hotload_variables(s32* window_width, s32* window_height, b32* show_stats, f64 current_time);
+internal void hotload_variables(Program_State* program_state);
 
 #endif // HOTLOAD_VARIABLES_H

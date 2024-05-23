@@ -68,15 +68,17 @@ internal String _file_get_next_line(OS_File file, u32* cursor) {
 	return result;
 }
 
-internal void hotload_variables(s32* window_width, s32* window_height, b32* show_stats, f64 current_time) {
+internal void hotload_variables(Program_State* program_state) {
 #if !ENABLE_HOTLOAD_VARIABLES
 	return;
 #endif 
-  local_persist f64 last_load_check = 0.0;
-  if (current_time - last_load_check < 1) {
-    return;
+  if (StartupVariablesLoaded) {
+    local_persist f64 last_load_check = 0.0;
+    if (program_state->current_time - last_load_check < 1) {
+      return;
+    }
+    last_load_check = program_state->current_time;
   }
-  last_load_check = current_time;
   
   Arena_Temp scratch = scratch_begin(0, 0);
   
@@ -168,21 +170,21 @@ internal void hotload_variables(s32* window_width, s32* window_height, b32* show
 				printf("Error parsing s32. Line: %lu. Value: '%s' :: %s.\n \n", line_count, value.str, VARIABLES_TWEAK_FILE);
 				continue;
 			}
-      *window_width= parsed_value;
+      program_state->window_width = parsed_value;
 		} else if (strings_match(key, StringLiteral("window_height"))) {
 			s32 parsed_value;
 			if (!cast_string_to_s32(value, &parsed_value)) {
 				printf("Error parsing s32. Line: %lu. Value: '%s' :: %s.\n \n", line_count, value.str, VARIABLES_TWEAK_FILE);
 				continue;
 			}
-      *window_height= parsed_value;
+      program_state->window_height = parsed_value;
     } else if (strings_match(key, StringLiteral("show_stats"))) {
       b32 parsed_value;
 			if (!cast_string_to_b32(value, &parsed_value)) {
 				printf("Error parsing b32. Line: %lu. Value: '%s' :: %s.\n \n", line_count, value.str, VARIABLES_TWEAK_FILE);
 				continue;
 			}
-      *show_stats= parsed_value;
+      program_state->show_debug_stats = parsed_value;
     } else {
       char temp = line.str[line.size-1];
       line.str[line.size] = '\0';

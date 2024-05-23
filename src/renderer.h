@@ -31,6 +31,7 @@ typedef struct Renderer_Vertex {
 } Renderer_Vertex;
 
 typedef struct Renderer {
+  Program_State* program_state;
   Renderer_Font_Info font_info;
   
   // Default shader program
@@ -73,20 +74,20 @@ typedef struct Renderer {
 
 global Renderer ProgramRenderer;
 
-internal Renderer renderer_init(s32 window_width, s32 window_height);
-internal void renderer_update(Program_State program_state, Game_State game_state, Renderer* renderer, Mat4f32 view, Mat4f32 projection);
+internal Renderer renderer_init(Program_State* program_state);
+internal void renderer_update(Game_State game_state, Renderer* renderer, Mat4f32 view, Mat4f32 projection);
 internal void renderer_free(Renderer* renderer);
 
 //~ Helpers
-internal void renderer_generate_msaa_and_intermidiate_buffers(Renderer* renderer, s32 window_width, s32 window_height);
+internal void renderer_generate_msaa_and_intermidiate_buffers(Renderer* renderer);
 internal void renderer_recompile_default_shader(Arena* arena, Renderer* renderer);
 internal void renderer_recompile_screen_shader(Arena* arena, Renderer* renderer);
 
 //~ Setup
-internal b32 renderer_font_load(Renderer_Font_Info* font_info, String file_path, f32 font_size);
+internal b32  renderer_font_load(Renderer_Font_Info* font_info, String file_path, f32 font_size);
 internal u32  renderer_texture_load(String file_path);
 internal void renderer_begin_frame(Renderer* renderer, Vec4f32 background_color);
-internal void renderer_end_frame(Renderer* renderer, s32 window_width, s32 window_height);
+internal void renderer_end_frame(Renderer* renderer);
 
 //~ Push 3D to Renderer
 internal void renderer_push_triangle(Renderer* renderer, Vec3f32 a_position, Vec4f32 a_color, Vec3f32 b_position, Vec4f32 b_color, Vec3f32 c_position, Vec4f32 c_color);
@@ -98,7 +99,7 @@ internal void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_c
 internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, Vec4f32 border_color, Cube_Face highlight, Vec4f32 highlight_color);
 
 //~ Push 2D to Renderer
-internal void renderer_push_string(Renderer* renderer, s32 window_width, s32 window_height, String text, Vec2f32 position, Vec4f32 color);
+internal void renderer_push_string(Renderer* renderer, String text, Vec2f32 position, Vec4f32 color);
 
 //~ Shader Uniforms
 internal void renderer_set_uniform_mat4fv(u32 program, const char* uniform, Mat4f32 mat);

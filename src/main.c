@@ -82,9 +82,11 @@ int main(void) {
     Assert(0);
   }
   
-	ProgramRenderer = renderer_init(ProgramState.window_width, ProgramState.window_height);
+	ProgramRenderer = renderer_init(&ProgramState);
   
   while(!glfwWindowShouldClose(window)) {
+    renderer_begin_frame(&ProgramRenderer, PALLETE_COLOR_D);
+    
     //~ Perspective 
     Mat4f32 view = look_at_mat4f32(ProgramState.camera.position, add_vec3f32(ProgramState.camera.position, ProgramState.camera.front), ProgramState.camera.up);
     Mat4f32 projection = perspective_mat4f32(Radians(45), ProgramState.window_width, ProgramState.window_height, ProgramState.near_plane, ProgramState.far_plane);
@@ -93,14 +95,14 @@ int main(void) {
     process_input(window);
     program_update(view, projection);
     
-    hotload_variables(&ProgramState.window_width, &ProgramState.window_height, &ProgramState.show_debug_stats, ProgramState.current_time);
+    hotload_variables(&ProgramState);
     hotload_shader_programs(&ProgramRenderer, ProgramState.current_time);
     
     //~ Game logic
     game_update(&ProgramState.camera, ProgramState.raycast, F_KeyState, G_KeyState);
     
     //~ Render
-    renderer_update(ProgramState, GameState, &ProgramRenderer, view, projection);
+    renderer_update(GameState, &ProgramRenderer, view, projection);
     
     glfwSwapBuffers(window);
     glfwPollEvents();
@@ -118,7 +120,7 @@ internal void program_init() {
   
   os_file_create(StringLiteral(VARIABLES_TWEAK_FILE));
   // NOTE(fz): CurrentTime in this call is set to max to make sure we load it immediately.
-  hotload_variables(&ProgramState.window_width, &ProgramState.window_height, &ProgramState.show_debug_stats, F64_MAX);
+  hotload_variables(&ProgramState);
   
   if (ProgramState.window_width == 0 || ProgramState.window_height == 0) {
     ProgramState.window_width  = 1280;
@@ -167,7 +169,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
   ProgramState.window_width  = width;
   ProgramState.window_height = height;
   
-  renderer_generate_msaa_and_intermidiate_buffers(&ProgramRenderer, ProgramState.window_width, ProgramState.window_height);
+  renderer_generate_msaa_and_intermidiate_buffers(&ProgramRenderer);
 }
 
 void process_input(GLFWwindow *window) {

@@ -7,14 +7,14 @@
 #define ENABLE_ASSERT 1
 
 //~ Colors
-#define COLOR_WHITE vec4f32(1.0f, 1.0f, 1.0f)
-#define COLOR_BLACK vec4f32(0.0f, 0.0f, 0.0f)
+#define Color_White vec4f32(1.0f, 1.0f, 1.0f)
+#define Color_Black vec4f32(0.0f, 0.0f, 0.0f)
 
-#define COLOR_RED    vec4f32(1.0f, 0.0f, 0.0f)
-#define COLOR_GREEN  vec4f32(0.0f, 1.0f, 0.0f)
-#define COLOR_BLUE   vec4f32(0.0f, 0.0f, 1.0f)
-#define COLOR_YELLOW vec4f32(1.0f, 1.0f, 0.0f)
-#define COLOR_PURPLE vec4f32(1.0f, 0.0f, 1.0f)
+#define Color_Red    vec4f32(1.0f, 0.0f, 0.0f)
+#define Color_Green  vec4f32(0.0f, 1.0f, 0.0f)
+#define Color_Blue   vec4f32(0.0f, 0.0f, 1.0f)
+#define Color_Yellow vec4f32(1.0f, 1.0f, 0.0f)
+#define Color_Purple vec4f32(1.0f, 0.0f, 1.0f)
 
 #if 1
 # define PALLETE_COLOR_A vec4f32(0.894f, 0.772f, 0.620f)
