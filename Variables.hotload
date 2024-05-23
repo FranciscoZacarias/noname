@@ -10,7 +10,6 @@ show_stats: true
 near_plane: 0.1
 far_plane: 100.0
 
-
 \Opengl
 wireframe_mode: false
 enable_culling: true

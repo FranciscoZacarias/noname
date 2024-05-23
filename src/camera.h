@@ -36,8 +36,8 @@ typedef struct Camera {
 
 internal Camera camera_init();
 internal void print_camera(Camera camera);
+internal void camera_update(Camera* camera, f32 delta_time);
 internal void camera_mouse_callback(Camera* camera, f64 x_pos, f64 y_pos);
-internal void camera_keyboard_callback(Camera* camera, Camera_Movement movement, f32 delta_time);
 internal void _camera_update(Camera* camera);
 
 #endif // CAMERA_H

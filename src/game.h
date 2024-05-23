@@ -3,18 +3,8 @@
 #ifndef GAME_H
 #define GAME_H
 
-//~ TODO(fz): Mouse_State and Program_State shouldn't be in game.h.
+//~ TODO(fz): Program_State shouldn't be in game.h.
 // Need to find a better place to put them, that is not the main file.
-typedef struct Mouse_State {
-	f32 screen_space_x;
-	f32 screen_space_y;
-  
-	f32 ndc_x;
-	f32 ndc_y;
-  
-  f32 last_x;
-  f32 last_y;
-} Mouse_State;
 
 typedef struct Program_State {
   f64 current_time;
@@ -28,11 +18,11 @@ typedef struct Program_State {
   f32 far_plane;
   
   Camera camera;
-  Mouse_State mouse;
   Vec3f32 raycast;
   
 } Program_State;
 
+global Program_State ProgramState;
 
 typedef struct Cube_Under_Cursor {
 	Cube_Face hovered_face;
@@ -55,7 +45,7 @@ typedef struct Game_State {
 global Game_State GameState;
 
 internal void game_init();
-internal void game_update(Camera* camera, Vec3f32 raycast, b32 add_cube, b32 remove_cube);
+internal void game_update(Camera* camera, Vec3f32 raycast);
 
 internal u32 game_cubes_alive_count();
 

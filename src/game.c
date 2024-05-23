@@ -30,7 +30,7 @@ internal void game_init() {
 // TODO(fz): Argument add_cube is a bit hacked
 // This is a temporary thing until we have a more robust
 // input system
-internal void game_update(Camera* camera, Vec3f32 raycast, b32 add_cube, b32 remove_cube) {
+internal void game_update(Camera* camera, Vec3f32 raycast) {
   
   //~ Find cube under cursor
   if (!find_cube_under_cursor(*camera, raycast, &GameState.cube_under_cursor)) {
@@ -40,7 +40,7 @@ internal void game_update(Camera* camera, Vec3f32 raycast, b32 add_cube, b32 rem
   // Add cube if add_cube pushed
   if (GameState.cube_under_cursor.index != U32_MAX) {
     
-    if (add_cube) {
+    if (input_is_key_pressed(KeyboardKey_F)) {
       Quad face = cube_get_local_space_face_quad(GameState.cube_under_cursor.hovered_face);
       face      = transform_quad(face, GameState.cubes[GameState.cube_under_cursor.index].transform);
       Vec3f32 center = cube_get_center(GameState.cubes[GameState.cube_under_cursor.index]);
@@ -48,7 +48,7 @@ internal void game_update(Camera* camera, Vec3f32 raycast, b32 add_cube, b32 rem
       Vec3f32 new_cube_center = add_vec3f32(center, scale_vec3f32(direction, 2.0f));
       
       game_push_cube(cube_new(new_cube_center, PALLETE_COLOR_B));
-    } else if (remove_cube) {
+    } else if (input_is_key_pressed(KeyboardKey_G)) {
       game_remove_cube(GameState.cube_under_cursor.index);
     }
   }

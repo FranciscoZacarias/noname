@@ -32,16 +32,6 @@ f_base:
 
 #include "main.h"
 
-global Program_State ProgramState;
-
-//~ Keyboard state
-global b32 F_KeyPreviousState = 1;
-global b32 F_KeyState = 0;
-global b32 G_KeyPreviousState = 1;
-global b32 G_KeyState = 0;
-global b32 R_KeyPreviousState = 1;
-global b32 R_KeyState = 0;
-
 global b32 LeftMouseButton = 0;
 
 internal void program_init();
@@ -50,7 +40,7 @@ internal void program_update(Mat4f32 view, Mat4f32 projection);
 internal void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 internal void process_input(GLFWwindow *window);
 internal void keyboard_callback(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods);
-internal void mouse_callback(GLFWwindow* window, f64 xpos, f64 ypos);
+internal void mouse_callback(GLFWwindow* window, f64 x_position, f64 y_position);
 
 int main(void) {
 	os_init();
@@ -87,7 +77,12 @@ int main(void) {
 	ProgramRenderer = renderer_init(&ProgramState);
   
   while(!glfwWindowShouldClose(window)) {
+    hotload_variables(&ProgramState);
+    hotload_shader_programs(&ProgramRenderer, ProgramState.current_time);
+    
     renderer_begin_frame(&ProgramRenderer, PALLETE_COLOR_D);
+    
+    camera_update(&ProgramState.camera, ProgramState.delta_time);
     
     //~ Perspective 
     Mat4f32 view = look_at_mat4f32(ProgramState.camera.position, add_vec3f32(ProgramState.camera.position, ProgramState.camera.front), ProgramState.camera.up);
@@ -97,11 +92,8 @@ int main(void) {
     process_input(window);
     program_update(view, projection);
     
-    hotload_variables(&ProgramState);
-    hotload_shader_programs(&ProgramRenderer, ProgramState.current_time);
-    
     //~ Game logic
-    game_update(&ProgramState.camera, ProgramState.raycast, F_KeyState, G_KeyState);
+    game_update(&ProgramState.camera, ProgramState.raycast);
     
     //~ Render
     renderer_update(GameState, &ProgramRenderer, view, projection);
@@ -140,16 +132,7 @@ internal void program_init() {
   ProgramState.near_plane = 0.1f;
   ProgramState.far_plane  = 100.f;
   
-  // Camera
   ProgramState.camera = camera_init();
-  
-  // Mouse
-  ProgramState.mouse.last_x = ProgramState.window_width / 2.0f;
-  ProgramState.mouse.last_y = ProgramState.window_height / 2.0f;
-  ProgramState.mouse.screen_space_x = ProgramState.mouse.last_x;
-  ProgramState.mouse.screen_space_y = ProgramState.mouse.last_y;
-  ProgramState.mouse.ndc_x = ProgramState.mouse.last_x;
-  ProgramState.mouse.ndc_y = ProgramState.mouse.last_y;
   
   ProgramState.raycast = vec3f32(F32_MAX, F32_MAX, F32_MAX);
 }
@@ -161,7 +144,10 @@ internal void program_update(Mat4f32 view, Mat4f32 projection) {
   
   // Update Raycast
   if (ProgramState.camera.mode == CameraMode_Select) {
-    Vec3f32 unproject_mouse = unproject_vec3f32(vec3f32(ProgramState.mouse.ndc_x, ProgramState.mouse.ndc_y, 1.0f), projection, view);
+    f32 mouse_x_ndc = (2.0f * InputState.mouse_current.screen_space_x) / ProgramState.window_width - 1.0f;
+    f32 mouse_y_ndc = 1.0f - (2.0f * InputState.mouse_current.screen_space_y) / ProgramState.window_height;
+    
+    Vec3f32 unproject_mouse = unproject_vec3f32(vec3f32(mouse_x_ndc, mouse_y_ndc, 1.0f), projection, view);
     ProgramState.raycast = normalize_vec3f32(sub_vec3f32(vec3f32(unproject_mouse.x, unproject_mouse.y, unproject_mouse.z), vec3f32(ProgramState.camera.position.x, ProgramState.camera.position.y, ProgramState.camera.position.z)));
   } else {
     ProgramState.raycast = vec3f32(F32_MAX, F32_MAX, F32_MAX);
@@ -192,73 +178,15 @@ internal void process_input(GLFWwindow *window) {
   if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
     if (ProgramState.camera.mode == CameraMode_Select) {
       ProgramState.camera.mode = CameraMode_Fly;
-      ProgramState.mouse.last_x = ProgramState.window_width/2;
-      ProgramState.mouse.last_y = ProgramState.window_height/2;
-      glfwSetCursorPos(window, ProgramState.mouse.last_x, ProgramState.mouse.last_y);
+      glfwSetCursorPos(window, InputState.mouse_previous.screen_space_x, InputState.mouse_previous.screen_space_y);
       glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     }
     
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-      camera_keyboard_callback(&ProgramState.camera, CameraMovement_Front, ProgramState.delta_time);
-    }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-      camera_keyboard_callback(&ProgramState.camera, CameraMovement_Back, ProgramState.delta_time);
-    }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-      camera_keyboard_callback(&ProgramState.camera, CameraMovement_Left, ProgramState.delta_time);
-    }
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-      camera_keyboard_callback(&ProgramState.camera, CameraMovement_Right, ProgramState.delta_time);
-    }
-    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-      camera_keyboard_callback(&ProgramState.camera, CameraMovement_Down, ProgramState.delta_time);
-    }
-    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
-      camera_keyboard_callback(&ProgramState.camera, CameraMovement_Up, ProgramState.delta_time);
-    }
   } else {
     if (ProgramState.camera.mode == CameraMode_Fly) {
       ProgramState.camera.mode = CameraMode_Select;
-      ProgramState.mouse.last_x = ProgramState.window_width/2;
-      ProgramState.mouse.last_y = ProgramState.window_height/2;
+      glfwSetCursorPos(window, InputState.mouse_previous.screen_space_x, InputState.mouse_previous.screen_space_y);
       glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-      glfwSetCursorPos(window, ProgramState.mouse.screen_space_x, ProgramState.mouse.screen_space_y);
-    }
-    
-    if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
-      if (G_KeyState == 0 && G_KeyPreviousState == 1) {
-        G_KeyPreviousState = 0;
-        G_KeyState = 1;
-      } else {
-        G_KeyState = 0;
-      }
-    } else {
-      G_KeyPreviousState = 1;
-      G_KeyState = 0;
-    }
-    
-    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
-      if (F_KeyState == 0 && F_KeyPreviousState == 1) {
-        F_KeyPreviousState = 0;
-        F_KeyState = 1;
-      } else {
-        F_KeyState = 0;
-      }
-    } else {
-      F_KeyPreviousState = 1;
-      F_KeyState = 0;
-    }
-    
-    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
-      if (R_KeyState == 0 && R_KeyPreviousState == 1) {
-        R_KeyPreviousState = 0;
-        R_KeyState = 1;
-      } else {
-        R_KeyState = 0;
-      }
-    } else {
-      R_KeyPreviousState = 1;
-      R_KeyState = 0;
     }
   }
 }
@@ -270,30 +198,17 @@ internal void keyboard_callback(GLFWwindow* window, s32 key, s32 scancode, s32 a
   }
 }
 
-internal void mouse_callback(GLFWwindow* window, f64 xposIn, f64 yposIn) {
+internal void mouse_callback(GLFWwindow* window, f64 x_position, f64 y_position) {
   local_persist b32 FirstMouse = 1;
   
   if (ProgramState.camera.mode == CameraMode_Fly) {
-    f32 xpos = (f32)xposIn;
-    f32 ypos = (f32)yposIn;
-    
-    if (FirstMouse == 1) {
-      ProgramState.mouse.last_x = xpos;
-      ProgramState.mouse.last_y = ypos;
-      FirstMouse = 0;
-    }
-    
-    f32 xoffset = xpos - ProgramState.mouse.last_x;
-    f32 yoffset = ProgramState.mouse.last_y - ypos;
-    ProgramState.mouse.last_x = xpos;
-    ProgramState.mouse.last_y = ypos;
-    
+    f32 xoffset = x_position - InputState.mouse_previous.screen_space_x;
+    f32 yoffset = InputState.mouse_previous.screen_space_y - y_position;
+    InputState.mouse_current.screen_space_x = x_position;
+    InputState.mouse_current.screen_space_y = y_position;
     camera_mouse_callback(&ProgramState.camera, xoffset, yoffset);
   } else {
-    ProgramState.mouse.screen_space_x = xposIn;
-    ProgramState.mouse.screen_space_y = yposIn;
-    
-    ProgramState.mouse.ndc_x = (2.0f * xposIn) / ProgramState.window_width - 1.0f;
-    ProgramState.mouse.ndc_y = 1.0f - (2.0f * yposIn) / ProgramState.window_height;
+    InputState.mouse_current.screen_space_x = x_position;
+    InputState.mouse_current.screen_space_y = y_position;
   }
 }

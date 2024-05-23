@@ -6,7 +6,7 @@
 
 internal void input_update() {
   MemoryCopy(&InputState.keyboard_previous, &InputState.keyboard_current, sizeof(Keyboard_State));
-  MemoryCopy(&InputState.mouse_previous, &InputState.mouse_current, sizeof(_Mouse_State));
+  MemoryCopy(&InputState.mouse_previous, &InputState.mouse_current, sizeof(Mouse_State));
 }
 
 internal void input_process_keyboard_key(Keyboard_Key key, b8 is_pressed) {

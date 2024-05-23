@@ -19,6 +19,43 @@ internal void print_camera(Camera camera) {
 	printf("camera.pitch = %.2ff;\ncamera.yaw = %.2ff;\n-------------\n", camera.pitch, camera.yaw);
 }
 
+internal void camera_update(Camera* camera, f32 delta_time) {
+  // TODO(fz): if (RIGHT_MOUSE_BUTTON == PRESSED) {
+  f32 camera_speed = (f32)(HotloadableCameraSpeed * delta_time);
+  
+  if (input_is_key_down(KeyboardKey_W)) {
+    Vec3f32 delta = scale_vec3f32(camera->front, camera_speed);
+    camera->position = add_vec3f32(camera->position, delta);
+  }
+  
+  if (input_is_key_down(KeyboardKey_S)) {
+    Vec3f32 delta = scale_vec3f32(camera->front, camera_speed);
+    camera->position = sub_vec3f32(camera->position, delta);
+  }
+  
+  if (input_is_key_down(KeyboardKey_A)) {
+    Vec3f32 cross = cross_vec3f32(camera->front, camera->up);
+    Vec3f32 delta = scale_vec3f32(cross, camera_speed);
+    camera->position = sub_vec3f32(camera->position, delta);
+  }
+  
+  if (input_is_key_down(KeyboardKey_D)) {
+    Vec3f32 cross = cross_vec3f32(camera->front, camera->up);
+    Vec3f32 delta = scale_vec3f32(cross, camera_speed);
+    camera->position = add_vec3f32(camera->position, delta);
+  }
+  
+  if (input_is_key_down(KeyboardKey_Q)) {
+    camera->position.y -= camera_speed;
+  }
+  
+  if (input_is_key_down(KeyboardKey_E)) {
+    camera->position.y += camera_speed;
+  }
+  
+  // TODO(fz): }
+}
+
 internal void camera_mouse_callback(Camera* camera, f64 x_pos, f64 y_pos) {
 	camera->yaw   += (x_pos * CAMERA_SENSITIVITY);
 	camera->pitch += (y_pos * CAMERA_SENSITIVITY);
@@ -29,41 +66,8 @@ internal void camera_mouse_callback(Camera* camera, f64 x_pos, f64 y_pos) {
 	_camera_update(camera);
 }
 
-internal void camera_keyboard_callback(Camera* camera, Camera_Movement movement, f32 delta_time) {
-	f32 cameraSpeed = (f32)(HotloadableCameraSpeed * delta_time);
-  
-  if (movement == CameraMovement_Front) {
-    Vec3f32 delta = scale_vec3f32(camera->front, cameraSpeed);
-    camera->position = add_vec3f32(camera->position, delta);
-  }
-  if (movement == CameraMovement_Back) {
-    Vec3f32 delta = scale_vec3f32(camera->front, cameraSpeed);
-    camera->position = sub_vec3f32(camera->position, delta);
-  }
-  if (movement == CameraMovement_Left) {
-    Vec3f32 cross = cross_vec3f32(camera->front, camera->up);
-    Vec3f32 delta = scale_vec3f32(cross, cameraSpeed);
-    camera->position = sub_vec3f32(camera->position, delta);
-  }
-  if (movement == CameraMovement_Right) {
-    Vec3f32 cross = cross_vec3f32(camera->front, camera->up);
-    Vec3f32 delta = scale_vec3f32(cross, cameraSpeed);
-    camera->position = add_vec3f32(camera->position, delta);
-  }
-  if (movement == CameraMovement_Down) {
-    camera->position.y -= cameraSpeed;
-  }
-  if (movement == CameraMovement_Up) {
-    camera->position.y += cameraSpeed;
-  }
-}
-
 internal void _camera_update(Camera* camera) {
-	Vec3f32 front = vec3f32(
-                          cos(Radians(camera->yaw)) * cos(Radians(camera->pitch)),
-                          sin(Radians(camera->pitch)),
-                          sin(Radians(camera->yaw)) * cos(Radians(camera->pitch))
-                          );
+	Vec3f32 front = vec3f32(cos(Radians(camera->yaw)) * cos(Radians(camera->pitch)),sin(Radians(camera->pitch)),sin(Radians(camera->yaw)) * cos(Radians(camera->pitch)));
   
 	camera->front = normalize_vec3f32(front);
 	Vec3f32 right = cross_vec3f32(camera->front, WORLD_UP);

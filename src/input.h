@@ -151,17 +151,17 @@ typedef struct Keyboard_State {
 } Keyboard_State;
 
 // TODO(fz): Replace the current Mouse_State with this _Mouse_State
-typedef struct _Mouse_State {
-  s32 x;
-  s32 y;
+typedef struct Mouse_State {
+  f32 screen_space_x;
+  f32 screen_space_y;
   b8 buttons[MouseButton_Count];
-} _Mouse_State;
+} Mouse_State;
 
 typedef struct Input_State {
   Keyboard_State keyboard_current;
   Keyboard_State keyboard_previous;
-  _Mouse_State   mouse_current;
-  _Mouse_State   mouse_previous;
+  Mouse_State   mouse_current;
+  Mouse_State   mouse_previous;
 } Input_State;
 
 global Input_State InputState = { 0 };
