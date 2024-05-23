@@ -11,7 +11,9 @@ global f32 HotloadableCameraSpeed = 8.0f;
 
 typedef enum Camera_Mode {
 	CameraMode_Select,
-	CameraMode_Fly
+	CameraMode_Fly,
+  
+  CameraMode_Disabled // NOTE(fz): As in, shouldn't respond to any input
 } Camera_Mode;
 
 typedef enum Camera_Movement {

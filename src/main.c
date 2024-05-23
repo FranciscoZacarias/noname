@@ -101,6 +101,9 @@ int main(void) {
     //~ Input
     input_update();
     
+    printf("\nMouse: Current (%.2f, %.2f)\n", InputState.mouse_current.screen_space_x, InputState.mouse_current.screen_space_y);
+    printf("Mouse: Previous (%.2f, %.2f)\n", InputState.mouse_previous.screen_space_x, InputState.mouse_previous.screen_space_y);
+    
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
