@@ -51,6 +51,20 @@ internal void game_update(Camera* camera, Vec3f32 raycast) {
       game_push_cube(cube_new(new_cube_center, PALLETE_COLOR_B, 0.05f));
     } else if (input_is_key_pressed(KeyboardKey_G)) {
       //~ NOTE(fz): Delete a cube
+      
+      for(u32 i = 0; i < GameState.total_selected_cubes; i += 1) {
+        if (GameState.cube_under_cursor.index == GameState.selected_cubes[i]) {
+          if (GameState.total_selected_cubes > 1) {
+            GameState.selected_cubes[i] = GameState.selected_cubes[GameState.total_selected_cubes-1];
+            GameState.selected_cubes[GameState.total_selected_cubes-1] = U32_MAX;
+            GameState.total_selected_cubes -= 1;
+          } else {
+            GameState.selected_cubes[0] = U32_MAX;
+            GameState.total_selected_cubes = 0;
+          }
+        }
+      }
+      
       game_remove_cube(GameState.cube_under_cursor.index);
     }
     

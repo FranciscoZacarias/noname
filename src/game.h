@@ -16,11 +16,13 @@ typedef struct Game_State {
   u32 total_cubes;
   u32 max_cubes;
   
-  u32* selected_cubes;
-  u32  total_selected_cubes;
-  
+  // These are to replace cubes in the arena, to remove fragmentation.
   u32* empty_cube_slots;
   u32 total_empty_cube_slots;
+  
+  // These are to know which cubes are selected.
+  u32* selected_cubes;
+  u32  total_selected_cubes;
   
   Cube_Under_Cursor cube_under_cursor;
 } Game_State;
