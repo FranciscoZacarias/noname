@@ -4,10 +4,10 @@
 global u64 Win32TicksOerSec = 1;
 global u32 Win32ThreadContextIndex;
 
-internal void os_init(void) {
+internal void os_init() {
   LARGE_INTEGER perf_freq = {0};
   if (QueryPerformanceFrequency(&perf_freq)) {
-      Win32TicksOerSec = ((u64)perf_freq.HighPart << 32) | perf_freq.LowPart;
+    Win32TicksOerSec = ((u64)perf_freq.HighPart << 32) | perf_freq.LowPart;
   }
   timeBeginPeriod(1);
 	Win32ThreadContextIndex = TlsAlloc();
@@ -101,22 +101,22 @@ internal OS_File os_file_load_entire_file(Arena* arena, String file_name) {
     printf("Error: os_file_load_entire_file failed because file %s doesn't exist\n", file_name.str);
     return os_file;
   }
-
+  
   HANDLE file_handle = _win32_get_file_handle(file_name);
   if (file_handle == NULL) {
     return os_file;
   }
-
+  
   u64 size = os_file_size(file_name);
   os_file.size = size;
   os_file.data = (u8*)arena_push(arena, size);
   MemoryZero(os_file.data, os_file.size);
-
+  
   if (!ReadFile(file_handle, os_file.data, size, NULL, NULL)) {
     DWORD error = GetLastError();  
     printf("Error: %lu in os_file_load_entire_file::ReadFile\n", error);
   }
-
+  
   CloseHandle(file_handle);
   return os_file;
 }

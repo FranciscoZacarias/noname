@@ -42,8 +42,9 @@
 
 //~ *.h
 #include "input.h"
-#include "cube.h"
 #include "camera.h"
+#include "core.h"
+#include "cube.h"
 #include "game.h"
 #include "renderer.h"
 #include "hotloadable.h"
@@ -56,8 +57,9 @@
 
 //~ *.c
 #include "input.c"
-#include "cube.c"
 #include "camera.c"
+#include "core.c"
+#include "cube.c"
 #include "game.c"
 #include "renderer.c"
 #include "hotloadable.c"
