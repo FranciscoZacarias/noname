@@ -12,19 +12,19 @@ internal void game_init() {
   GameState.empty_cube_slots = (u32*)PushArray(GameState.arena, u32, GameState.max_cubes);
   GameState.total_empty_cube_slots = 0;;
   
-  game_push_cube(cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A, 0.0));
-  game_push_cube(cube_new(vec3f32( 2.0f,  0.0f, -8.0f), PALLETE_COLOR_B, 0.5));
-  game_push_cube(cube_new(vec3f32( 4.0f,  2.0f, -8.0f), PALLETE_COLOR_B, 0.1));
-  game_push_cube(cube_new(vec3f32( 6.0f,  0.0f, -8.0f), PALLETE_COLOR_B, 0.1));
-  game_push_cube(cube_new(vec3f32( 0.0f,  0.0f, -8.0f), PALLETE_COLOR_B, 1.0));
-  game_push_cube(cube_new(vec3f32( 0.0f, -0.0f,  8.0f), PALLETE_COLOR_C, 0.1));
-  game_push_cube(cube_new(vec3f32( 0.0f,  8.0f,  0.0f), PALLETE_COLOR_C, 0.1));
-  game_push_cube(cube_new(vec3f32( 0.0f, -8.0f,  0.0f), PALLETE_COLOR_A, 0.1));
-  game_push_cube(cube_new(vec3f32( 8.0f,  0.0f,  0.0f), PALLETE_COLOR_B, 0.1));
-  game_push_cube(cube_new(vec3f32(-8.0f,  0.0f,  0.0f), PALLETE_COLOR_C, 0.1));
-  game_push_cube(cube_new(vec3f32( 8.0f,  8.0f,  8.0f), PALLETE_COLOR_C, 0.1));
-  game_push_cube(cube_new(vec3f32(-8.0f, -8.0f, -8.0f), PALLETE_COLOR_A, 0.1));
-  game_push_cube(cube_new(vec3f32( 8.0f, -8.0f, -8.0f), PALLETE_COLOR_B, 0.1));
+  game_push_cube(cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A, 0.05f));
+  game_push_cube(cube_new(vec3f32( 2.0f,  0.0f, -8.0f), PALLETE_COLOR_B, 0.05f));
+  game_push_cube(cube_new(vec3f32( 4.0f,  2.0f, -8.0f), PALLETE_COLOR_B, 0.05f));
+  game_push_cube(cube_new(vec3f32( 6.0f,  0.0f, -8.0f), PALLETE_COLOR_B, 0.05f));
+  game_push_cube(cube_new(vec3f32( 0.0f,  0.0f, -8.0f), PALLETE_COLOR_B, 0.05f));
+  game_push_cube(cube_new(vec3f32( 0.0f, -0.0f,  8.0f), PALLETE_COLOR_C, 0.05f));
+  game_push_cube(cube_new(vec3f32( 0.0f,  8.0f,  0.0f), PALLETE_COLOR_C, 0.05f));
+  game_push_cube(cube_new(vec3f32( 0.0f, -8.0f,  0.0f), PALLETE_COLOR_A, 0.05f));
+  game_push_cube(cube_new(vec3f32( 8.0f,  0.0f,  0.0f), PALLETE_COLOR_B, 0.05f));
+  game_push_cube(cube_new(vec3f32(-8.0f,  0.0f,  0.0f), PALLETE_COLOR_C, 0.05f));
+  game_push_cube(cube_new(vec3f32( 8.0f,  8.0f,  8.0f), PALLETE_COLOR_C, 0.05f));
+  game_push_cube(cube_new(vec3f32(-8.0f, -8.0f, -8.0f), PALLETE_COLOR_A, 0.05f));
+  game_push_cube(cube_new(vec3f32( 8.0f, -8.0f, -8.0f), PALLETE_COLOR_B, 0.05f));
 }
 
 // TODO(fz): Argument add_cube is a bit hacked
@@ -47,7 +47,7 @@ internal void game_update(Camera* camera, Vec3f32 raycast) {
       Vec3f32 direction = sub_vec3f32(quad_get_center(face), center);
       Vec3f32 new_cube_center = add_vec3f32(center, scale_vec3f32(direction, 2.0f));
       
-      game_push_cube(cube_new(new_cube_center, PALLETE_COLOR_B, 0.1f));
+      game_push_cube(cube_new(new_cube_center, PALLETE_COLOR_B, 0.05f));
     } else if (input_is_key_pressed(KeyboardKey_G)) {
       game_remove_cube(GameState.cube_under_cursor.index);
     }

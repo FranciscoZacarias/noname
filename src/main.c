@@ -8,13 +8,13 @@ noname:
 [x] - Replace GlobalArena with a either more specific arenas or just thread context scratch arenas
 [x] - Delete cubes
 [x] - MAX_TRIANGLES should be in allocated memory instead of a stack allocation
+[x] - Border thickness should be a cube attribute
 [ ] - Add directional light
 [ ] - Add phong light
 [ ] - Add logs to the screen that fade after 1 second or so.
 [ ] - Add more robust (generic)input system
 [ ] - Add way to save and load levels from files
 [ ] - Add undo system for the add/remove cubes
-[x] - Border thickness should be a cube attribute
 [ ] - For a selected cube, add a small UI to configure stuff about it (like colors) 
 [ ] - Be able to select a cube on click
 [ ] - Add translation gizmos to selected cube (xyz arrows) and (xy, xz, yz planes), that actually transform the cube each arrow

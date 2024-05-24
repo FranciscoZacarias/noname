@@ -56,7 +56,9 @@ global Cube_Vertices CubeVerticesLocalSpace = {
 typedef struct Cube {
   Mat4f32 transform;
   Vec4f32 color;
+  
   f32 border_thickness;
+  Vec4f32 border_color;
   
   b32 is_dead;
 } Cube;
