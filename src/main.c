@@ -28,6 +28,7 @@ bugs:
 [ ] - We should not push cubes into the renderer that are not visible on the frustum
 [ ] - Cubes are still being selected (in a weird way) when the camera is in fly mode.
 [ ] - Game crashes when it gets minimized to tray
+[ ] - Camera resets to previous position if you are pressing RMB, and then press the LMB without releasing RMB
 f_base:
 [x] - Add thread context module
 [ ] - Add windows window layer I.e. remove glfw dependency
@@ -100,7 +101,7 @@ int main(void) {
     }
     
     //~ Input
-    // NOTE(fz): Keep at the end! Otherwise the current 
+    // NOTE(fz): Keep at the end!
     input_update();
     
     glfwSwapBuffers(window);
