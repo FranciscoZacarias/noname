@@ -1,5 +1,6 @@
 /*
-noname:
+
+## noname:
 [x] - Add texture support to the renderer
 [x] - Put any kind of text to the screen
 [x] - Try rendering text directly to the screen program and be able to say (x,y) in pixels, where the bottom left of the string goes
@@ -9,27 +10,30 @@ noname:
 [x] - Delete cubes
 [x] - MAX_TRIANGLES should be in allocated memory instead of a stack allocation
 [x] - Border thickness should be a cube attribute
+[x] - Add more robust (generic)input system
+[x] - Be able to select a cube on click
+[x] - Be able to select multiple cubes
 [ ] - Add directional light
 [ ] - Add phong light
 [ ] - Add logs to the screen that fade after 1 second or so.
-[ ] - Add more robust (generic)input system
 [ ] - Add way to save and load levels from files
 [ ] - Add undo system for the add/remove cubes
 [ ] - For a selected cube, add a small UI to configure stuff about it (like colors) 
-[ ] - Be able to select a cube on click
 [ ] - Add translation gizmos to selected cube (xyz arrows) and (xy, xz, yz planes), that actually transform the cube each arrow
 [ ] - Moving cubes from gizmos must snap to the grid
 [ ] - Add some sort of post processing shake when loading variables from hotload, just to know it was loaded and feature creep
 [ ] - Stuff that is not glfw but core to the program, should be in like a program or core module. Like the Program_State stuff for example.
 [x] - Where should Program_State live? (Result: new module, core.h)
-bugs:
+
+## BUGS:
 [x] - When highlighting a cube, we get more triangles than we should have. We should have just the same 
 [ ] - Font rendering is not taking into account the aspect ratio of the screen
 [ ] - We should not push cubes into the renderer that are not visible on the frustum
 [ ] - Cubes are still being selected (in a weird way) when the camera is in fly mode.
 [ ] - Game crashes when it gets minimized to tray
 [ ] - Camera resets to previous position if you are pressing RMB, and then press the LMB without releasing RMB
-f_base:
+
+## F_BASE:
 [x] - Add thread context module
 [ ] - Add windows window layer I.e. remove glfw dependency
 */
