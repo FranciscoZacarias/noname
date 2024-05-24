@@ -13,6 +13,7 @@ typedef enum Mouse_Button {
 
 #define KeyboardKey(name, code) KeyboardKey_##name = code
 
+// NOTE(fz): These are Win32 VK codes
 typedef enum Keyboard_Key {
   KeyboardKey(BACKSPACE, 0x08),
   KeyboardKey(ENTER,     0x0D),

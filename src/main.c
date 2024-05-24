@@ -121,9 +121,13 @@ internal void framebuffer_size_callback(GLFWwindow* window, int width, int heigh
 }
 
 internal void keyboard_callback(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods) {
-  // NOTE(fz): ESC key in Win32 is 0x1b but for glfw is 256. Just glfw hacks.
-  if (key == 256) { 
-    key = 0x1B;
+  // NOTE(fz): Some key codes form GLFW don't map directly to Win32 VKs...
+  // So these are just quick hacks to make it work.
+  // TODO(fz): We really need to get rid of glfw
+  switch (key) {
+    case 256: key = 0x1B; break; // ESC
+    case 258: key = 0x09; break; // TAB
+    case 341: key = 0xA2; break; // LEFT CONTROL
   }
   
   if (key >= 0 && key <= KEYBOARD_STATE_SIZE) {

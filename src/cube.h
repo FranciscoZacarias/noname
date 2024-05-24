@@ -60,6 +60,7 @@ typedef struct Cube {
   f32 border_thickness;
   Vec4f32 border_color;
   
+  b32 is_selected;
   b32 is_dead;
 } Cube;
 

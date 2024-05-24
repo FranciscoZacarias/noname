@@ -5,6 +5,7 @@ internal Cube cube_new(Vec3f32 position, Vec4f32 color, f32 border_thickness) {
   result.color            = color;
   result.border_thickness = border_thickness;
   result.border_color     = Color_Black;
+  result.is_selected      = 0;
   result.is_dead          = 0;
   return result;
 }

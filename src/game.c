@@ -5,9 +5,14 @@ internal void game_init() {
   MemoryZeroStruct(&GameState);
   
   GameState.arena = arena_init();
+  
   GameState.max_cubes = Kilobytes(16);
   GameState.cubes = (Cube*)PushArray(GameState.arena, Cube, GameState.max_cubes);
   GameState.total_cubes = 0;
+  
+  GameState.selected_cubes =  (u32*)PushArray(GameState.arena, u32, GameState.max_cubes);
+  MemorySet(GameState.selected_cubes, U32_MAX, GameState.max_cubes);
+  GameState.total_selected_cubes = 0;
   
   GameState.empty_cube_slots = (u32*)PushArray(GameState.arena, u32, GameState.max_cubes);
   GameState.total_empty_cube_slots = 0;;
@@ -27,9 +32,6 @@ internal void game_init() {
   game_push_cube(cube_new(vec3f32( 8.0f, -8.0f, -8.0f), PALLETE_COLOR_B, 0.05f));
 }
 
-// TODO(fz): Argument add_cube is a bit hacked
-// This is a temporary thing until we have a more robust
-// input system
 internal void game_update(Camera* camera, Vec3f32 raycast) {
   
   //~ Find cube under cursor
@@ -37,10 +39,9 @@ internal void game_update(Camera* camera, Vec3f32 raycast) {
     GameState.cube_under_cursor.index = U32_MAX;
   }
   
-  // Add cube if add_cube pushed
   if (GameState.cube_under_cursor.index != U32_MAX) {
-    
     if (input_is_key_pressed(KeyboardKey_F)) {
+      //~ NOTE(fz): Add a cube
       Quad face = cube_get_local_space_face_quad(GameState.cube_under_cursor.hovered_face);
       face      = transform_quad(face, GameState.cubes[GameState.cube_under_cursor.index].transform);
       Vec3f32 center = cube_get_center(GameState.cubes[GameState.cube_under_cursor.index]);
@@ -49,8 +50,42 @@ internal void game_update(Camera* camera, Vec3f32 raycast) {
       
       game_push_cube(cube_new(new_cube_center, PALLETE_COLOR_B, 0.05f));
     } else if (input_is_key_pressed(KeyboardKey_G)) {
+      //~ NOTE(fz): Delete a cube
       game_remove_cube(GameState.cube_under_cursor.index);
     }
+    
+    if (input_is_button_pressed(MouseButton_Left)) {
+      b32 is_already_selected = 0;
+      for(u32 i = 0; i < GameState.total_selected_cubes; i += 1) {
+        if (GameState.cube_under_cursor.index == GameState.selected_cubes[i]) {
+          is_already_selected = 1;
+        }
+      }
+      
+      if (!is_already_selected) {
+        if (input_is_key_down(KeyboardKey_LEFT_CONTROL)) {
+          GameState.cubes[GameState.cube_under_cursor.index].is_selected = 1;
+          GameState.selected_cubes[GameState.total_selected_cubes] = GameState.cube_under_cursor.index;
+          GameState.total_selected_cubes += 1;
+        } else {
+          for(u32 i = 0; i < GameState.total_selected_cubes; i += 1) {
+            GameState.cubes[GameState.selected_cubes[i]].is_selected = 0;
+            GameState.selected_cubes[i] = U32_MAX;
+          }
+          GameState.cubes[GameState.cube_under_cursor.index].is_selected = 1;
+          GameState.selected_cubes[0] = GameState.cube_under_cursor.index;
+          GameState.total_selected_cubes = 1;
+        }
+      }
+    }
+  }
+  
+  if (input_is_key_pressed(KeyboardKey_TAB)) {
+    for(u32 i = 0; i < GameState.total_selected_cubes; i += 1) {
+      GameState.cubes[GameState.selected_cubes[i]].is_selected = 0;
+      GameState.selected_cubes[i] = U32_MAX;
+    }
+    GameState.total_selected_cubes = 0;
   }
 }
 
@@ -67,7 +102,6 @@ internal void game_push_cube(Cube cube) {
     GameState.cubes[GameState.total_cubes] = cube;
     GameState.total_cubes += 1;
   } 
-  
 }
 
 internal void game_remove_cube(u32 index) {

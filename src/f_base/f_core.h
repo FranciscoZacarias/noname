@@ -258,11 +258,12 @@
 #define IsPow2(x)          ((x)!=0 && ((x)&((x)-1))==0)
 #define IsPow2OrZero(x)    ((((x) - 1)&(x)) == 0)
 
-#define MemoryCopy(dest,value,size)  memmove((dest), (value), (size))
+#define MemoryCopy(dest,value,size)  memmove((dest),(value),(size))
 #define MemoryCopyStruct(dest,value) MemoryCopy((dest),(value), Min(sizeof(*(dest)), sizeof(*(size))))
-#define MemoryZero(s,z)       memset((s),0,(z))
-#define MemoryZeroStruct(s)   MemoryZero((s),sizeof(*(s)))
-#define MemoryMatch(a,b,z)   (memcmp((a),(b),(z)) == 0)
+#define MemoryZero(s,z)            memset((s),0,(z))
+#define MemoryZeroStruct(s)        MemoryZero((s),sizeof(*(s)))
+#define MemorySet(dest,value,size) memset((dest),(value),(size))
+#define MemoryMatch(a,b,z)        (memcmp((a),(b),(z)) == 0)
 
 #define local_persist static
 #define global        static

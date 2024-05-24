@@ -255,16 +255,23 @@ internal void renderer_update(Game_State game_state, Renderer* renderer, Mat4f32
   renderer_push_arrow(renderer, vec3f32(  0.0f,   0.0f, -size), vec3f32( 0.0f,  0.0f, size), Color_Blue, 0.5f);
   
   //~ Program State
-  for(u32 i = 0; i < game_state.total_cubes; i++) {
-    if (game_state.cubes[i].is_dead) {
+  for(u32 i = 0; i < game_state.total_cubes; i += 1) {
+    Cube cube = game_state.cubes[i];
+    
+    if (cube.is_dead) {
       continue;
+    }
+    
+    if (cube.is_selected) {
+      cube.border_thickness = 0.08;
+      cube.border_color = vec4f32(0.5+0.5*sin(5*ProgramState.current_time), 0.5+0.5*sin(5*ProgramState.current_time), 0.0f);
     }
     
     if (game_state.cube_under_cursor.index == i) {
       f32 highlight_scale = 0.8f;
-      renderer_push_cube_highlight_face(renderer, game_state.cubes[game_state.cube_under_cursor.index], game_state.cube_under_cursor.hovered_face, vec4f32(game_state.cubes[game_state.cube_under_cursor.index].color.x * highlight_scale, game_state.cubes[game_state.cube_under_cursor.index].color.y * highlight_scale, game_state.cubes[game_state.cube_under_cursor.index].color.z * highlight_scale));
+      renderer_push_cube_highlight_face(renderer, cube, game_state.cube_under_cursor.hovered_face, vec4f32(cube.color.x * highlight_scale, cube.color.y * highlight_scale, cube.color.z * highlight_scale));
     } else {
-      renderer_push_cube(renderer, game_state.cubes[i]);
+      renderer_push_cube(renderer, cube);
     }
   }
   
@@ -301,10 +308,7 @@ y_pos -= 0.05f; } while(0);
     AddStat("Cube Count: %d", cubs, game_cubes_alive_count());
     AddStat("Hovered Cube Index: %d", hovered, (game_state.cube_under_cursor.index == U32_MAX) ? -1 : game_state.cube_under_cursor.index);
     AddStat("Total empty slots: %u", emptyslots, game_state.total_empty_cube_slots);
-    AddStat("Cursor Current: %.2f, %.2f", cursorpos, InputState.mouse_current.screen_space_x, InputState.mouse_current.screen_space_y);
-    AddStat("Cursor Previous: %.2f, %.2f", cursorpos, InputState.mouse_previous.screen_space_x, InputState.mouse_previous.screen_space_y);
-    AddStat("Camera Front: %.2f, %.2f, %.2f", camerapos, ProgramState.camera.front.x, ProgramState.camera.front.y, ProgramState.camera.front.z);
-    AddStat("Camera Right: %.2f, %.2f, %.2f", camerapos, ProgramState.camera.right.x, ProgramState.camera.right.y, ProgramState.camera.right.z);
+    AddStat("Selected Cubes Count: %u", selectcubes, game_state.total_selected_cubes)
   }
   
   renderer_end_frame(renderer);

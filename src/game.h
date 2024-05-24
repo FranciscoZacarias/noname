@@ -11,9 +11,13 @@ typedef struct Cube_Under_Cursor {
 
 typedef struct Game_State {
   Arena* arena;
+  
   Cube* cubes;
   u32 total_cubes;
   u32 max_cubes;
+  
+  u32* selected_cubes;
+  u32  total_selected_cubes;
   
   u32* empty_cube_slots;
   u32 total_empty_cube_slots;
