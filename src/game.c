@@ -52,8 +52,8 @@ internal void game_update(Camera* camera, Vec3f32 raycast) {
     } else if (input_is_key_pressed(KeyboardKey_G)) {
       //~ NOTE(fz): Delete a cube
       
-      for(u32 i = 0; i < GameState.total_selected_cubes; i += 1) {
-        if (GameState.cube_under_cursor.index == GameState.selected_cubes[i]) {
+      for(u32 i = 0; i < GameState.total_selected_cubes ; i += 1) {
+        if (i == GameState.selected_cubes[i]) {
           if (GameState.total_selected_cubes > 1) {
             GameState.selected_cubes[i] = GameState.selected_cubes[GameState.total_selected_cubes-1];
             GameState.selected_cubes[GameState.total_selected_cubes-1] = U32_MAX;
@@ -62,6 +62,7 @@ internal void game_update(Camera* camera, Vec3f32 raycast) {
             GameState.selected_cubes[0] = U32_MAX;
             GameState.total_selected_cubes = 0;
           }
+          break;
         }
       }
       
@@ -94,9 +95,20 @@ internal void game_update(Camera* camera, Vec3f32 raycast) {
     }
   }
   
+  
+  // NOTE(fz): Unselect all cubes
   if (input_is_key_pressed(KeyboardKey_TAB)) {
     for(u32 i = 0; i < GameState.total_selected_cubes; i += 1) {
       GameState.cubes[GameState.selected_cubes[i]].is_selected = 0;
+      GameState.selected_cubes[i] = U32_MAX;
+    }
+    GameState.total_selected_cubes = 0;
+  }
+  
+  // NOTE(fz): Delete selected cubes
+  if (input_is_key_pressed(KeyboardKey_DELETE)) {
+    for(u32 i = 0; i < GameState.total_selected_cubes; i += 1) {
+      game_remove_cube(GameState.selected_cubes[i]);
       GameState.selected_cubes[i] = U32_MAX;
     }
     GameState.total_selected_cubes = 0;

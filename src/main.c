@@ -13,13 +13,14 @@
 [x] - Add more robust (generic)input system
 [x] - Be able to select a cube on click
 [x] - Be able to select multiple cubes
+[x] - Add translation gizmos to selected cube (xyz arrows) and (xy, xz, yz planes)
 [ ] - Add directional light
 [ ] - Add phong light
 [ ] - Add logs to the screen that fade after 1 second or so.
 [ ] - Add way to save and load levels from files
 [ ] - Add undo system for the add/remove cubes
 [ ] - For a selected cube, add a small UI to configure stuff about it (like colors) 
-[ ] - Add translation gizmos to selected cube (xyz arrows) and (xy, xz, yz planes), that actually transform the cube each arrow
+ [ ] - Gizmos should  actually transform the cube on each axis
 [ ] - Moving cubes from gizmos must snap to the grid
 [ ] - Add some sort of post processing shake when loading variables from hotload, just to know it was loaded and feature creep
 [ ] - Stuff that is not glfw but core to the program, should be in like a program or core module. Like the Program_State stuff for example.
@@ -132,6 +133,7 @@ internal void keyboard_callback(GLFWwindow* window, s32 key, s32 scancode, s32 a
     case 256: key = 0x1B; break; // ESC
     case 258: key = 0x09; break; // TAB
     case 341: key = 0xA2; break; // LEFT CONTROL
+    case 261: key = 0x2E; break; // DELETE
   }
   
   if (key >= 0 && key <= KEYBOARD_STATE_SIZE) {

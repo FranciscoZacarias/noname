@@ -1,7 +1,7 @@
 # Startup runs only once.
 \Startup
-window_width: 800
-window_height: 600
+window_width: 1280
+window_height: 720
 
 \Editor
 camera_speed: 16
