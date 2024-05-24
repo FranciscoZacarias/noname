@@ -21,7 +21,16 @@ internal void print_camera(Camera camera) {
 }
 
 internal void camera_update(Camera* camera, f32 delta_time) {
+  local_persist b32 was_right_mouse_button_down = 0;
+  
   if (input_is_button_down(MouseButton_Right)) {
+    if (!was_right_mouse_button_down) {
+			// Reset the previous mouse position to the current position
+			InputState.mouse_previous.screen_space_x = InputState.mouse_current.screen_space_x;
+			InputState.mouse_previous.screen_space_y = InputState.mouse_current.screen_space_y;
+			was_right_mouse_button_down = 1;
+		}
+    
     camera->mode = CameraMode_Fly;
     f32 camera_speed = (f32)(HotloadableCameraSpeed * delta_time);
     
@@ -62,6 +71,7 @@ internal void camera_update(Camera* camera, f32 delta_time) {
     _camera_update(camera);
   } else {
     camera->mode = CameraMode_Select;
+    was_right_mouse_button_down = 0;
   }
 }
 

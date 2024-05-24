@@ -290,7 +290,7 @@ y_pos -= 0.05f; } while(0);
     
     frame_count += 1;
     if (renderer->program_state->current_time - fps_last_time >= 0.1f) {
-      dt_fps= frame_count / (renderer->program_state->current_time - fps_last_time);
+      dt_fps = frame_count / (renderer->program_state->current_time - fps_last_time);
       frame_count  = 0;
       fps_last_time = renderer->program_state->current_time;
     }
@@ -301,6 +301,10 @@ y_pos -= 0.05f; } while(0);
     AddStat("Cube Count: %d", cubs, game_cubes_alive_count());
     AddStat("Hovered Cube Index: %d", hovered, (game_state.cube_under_cursor.index == U32_MAX) ? -1 : game_state.cube_under_cursor.index);
     AddStat("Total empty slots: %u", emptyslots, game_state.total_empty_cube_slots);
+    AddStat("Cursor Current: %.2f, %.2f", cursorpos, InputState.mouse_current.screen_space_x, InputState.mouse_current.screen_space_y);
+    AddStat("Cursor Previous: %.2f, %.2f", cursorpos, InputState.mouse_previous.screen_space_x, InputState.mouse_previous.screen_space_y);
+    AddStat("Camera Front: %.2f, %.2f, %.2f", camerapos, ProgramState.camera.front.x, ProgramState.camera.front.y, ProgramState.camera.front.z);
+    AddStat("Camera Right: %.2f, %.2f, %.2f", camerapos, ProgramState.camera.right.x, ProgramState.camera.right.y, ProgramState.camera.right.z);
   }
   
   renderer_end_frame(renderer);

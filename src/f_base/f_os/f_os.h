@@ -3,8 +3,7 @@
 
 internal void os_init(void);
 
-// Memory ---
-
+//~ Memory
 internal void* os_memory_reserve(u64 size);
 internal b32   os_memory_commit(void* memory, u64 size);
 internal void  os_memory_decommit(void* memory, u64 size);
@@ -12,8 +11,7 @@ internal void  os_memory_release(void* memory, u64 size);
 
 internal u64 os_memory_get_page_size();
 
-// Threading ---
-
+//~ Threading
 typedef u64 thread_func(void* context); 
 
 typedef struct OS_Thread {
@@ -25,8 +23,7 @@ internal void os_thread_wait_for_join(OS_Thread* other);
 internal void os_thread_wait_for_join_all(OS_Thread** threads, u32 count);
 internal void os_thread_wait_for_join_any(OS_Thread** threads, u32 count);
 
-// File handling --- 
-
+//~ File handling
 typedef struct OS_File {
 	u64 size;
 	u8* data;
@@ -37,8 +34,7 @@ internal b32 os_file_exists(String file_name);
 internal u32 os_file_size(String file_name);
 internal u64 os_file_get_last_modified_time(String file_name);
 
-// Logging ---
-
+//~ Logging
 internal void os_print_string(String string);
 
 #endif // F_OS_H

@@ -14,6 +14,7 @@ noname:
 [ ] - Add more robust (generic)input system
 [ ] - Add way to save and load levels from files
 [ ] - Add undo system for the add/remove cubes
+[ ] - Border thickness should be a cube attribute
 [ ] - For a selected cube, add a small UI to configure stuff about it (like colors) 
 [ ] - Be able to select a cube on click
 [ ] - Add translation gizmos to selected cube (xyz arrows) and (xy, xz, yz planes), that actually transform the cube each arrow
@@ -23,6 +24,7 @@ noname:
 [ ] - Where should Program_State live?
 bugs:
 [x] - When highlighting a cube, we get more triangles than we should have. We should have just the same 
+[ ] - We should introduce the concept of render targets to the renderer, like a linked list of render stages that the renderer goes through every gframe
 [ ] - Font rendering is not taking into account the aspect ratio of the screen
 [ ] - We should not push cubes into the renderer that are not visible on the frustum
 [ ] - Cubes are still being selected (in a weird way) when the camera is in fly mode.
@@ -37,7 +39,6 @@ internal void program_init();
 internal void program_update(Mat4f32 view, Mat4f32 projection);
 
 internal void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-internal void process_input(GLFWwindow *window);
 internal void keyboard_callback(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods);
 internal void mouse_cursor_callback(GLFWwindow* window, f64 x_position, f64 y_position);
 internal void mouse_button_callback(GLFWwindow* window, s32 button, s32 action, s32 mods);
