@@ -12,8 +12,6 @@
 // Each vertex number should correspond to an index
 // in any implementation logic for this Cube structure
 
-global f32 HotloadableCubeBorderThickness = 0.02f;
-
 typedef enum Cube_Face {
   CubeFace_Back,
   CubeFace_Front,
@@ -58,11 +56,12 @@ global Cube_Vertices CubeVerticesLocalSpace = {
 typedef struct Cube {
   Mat4f32 transform;
   Vec4f32 color;
+  f32 border_thickness;
   
   b32 is_dead;
 } Cube;
 
-internal Cube cube_new(Vec3f32 transform, Vec4f32 color);
+internal Cube cube_new(Vec3f32 position, Vec4f32 color, f32 border_thickness);
 internal Quad cube_get_local_space_face_quad(Cube_Face face);
 internal Vec3f32 cube_get_center(Cube cube);
 

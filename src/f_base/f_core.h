@@ -235,7 +235,7 @@
 #define Max(A,B) (((A)>(B))?(A):(B))
 #define ClampTop(A,X) Min(A,X)
 #define ClampBot(X,B) Max(X,B)
-#define Clamp(A,X,B) (((X)<(A))?(A):((X)>(B))?(B):(X))
+#define Clamp(min,val,max) (((val)<(min))?(min):((val)>(max))?(max):(val))
 
 #define IntFromPtr(p) (u64)((u8*)p - (u8*)0)
 #define PtrFromInt(i) (void*)((u8*)0 + (i))

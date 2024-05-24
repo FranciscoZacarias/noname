@@ -143,13 +143,6 @@ internal void hotload_variables(Program_State* program_state) {
 				continue;
 			}
 			HotloadableCameraSpeed = parsed_value;
-		} else if (strings_match(key, StringLiteral("cube_border_thickness"))) {
-			f32 parsed_value;
-			if (!cast_string_to_f32(value, &parsed_value)) {
-				printf("Error parsing f32. Line: %lu. Value: '%s' :: %s.\n \n", line_count, value.str, VARIABLES_TWEAK_FILE);
-				continue;
-			}
-			HotloadableCubeBorderThickness = parsed_value * 0.01;
 		} else if (strings_match(key, StringLiteral("wireframe_mode"))) {
 			b32 parsed_value;
 			if (!cast_string_to_b32(value, &parsed_value)) {

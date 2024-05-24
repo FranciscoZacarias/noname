@@ -818,7 +818,8 @@ internal void renderer_push_cube(Renderer* renderer, Cube cube, Vec4f32 border_c
 }
 
 internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, Vec4f32 border_color, Cube_Face highlight, Vec4f32 highlight_color) {
-  f32 scale = 1-HotloadableCubeBorderThickness;
+  f32 thickness = Clamp(0.0f, cube.border_thickness, 1.0f);
+  f32 scale     = 1 - (thickness);
   
   // On XY Plane
   {

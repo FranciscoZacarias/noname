@@ -14,20 +14,20 @@ noname:
 [ ] - Add more robust (generic)input system
 [ ] - Add way to save and load levels from files
 [ ] - Add undo system for the add/remove cubes
-[ ] - Border thickness should be a cube attribute
+[x] - Border thickness should be a cube attribute
 [ ] - For a selected cube, add a small UI to configure stuff about it (like colors) 
 [ ] - Be able to select a cube on click
 [ ] - Add translation gizmos to selected cube (xyz arrows) and (xy, xz, yz planes), that actually transform the cube each arrow
 [ ] - Moving cubes from gizmos must snap to the grid
 [ ] - Add some sort of post processing shake when loading variables from hotload, just to know it was loaded and feature creep
 [ ] - Stuff that is not glfw but core to the program, should be in like a program or core module. Like the Program_State stuff for example.
-[ ] - Where should Program_State live?
+[x] - Where should Program_State live? (Result: new module, core.h)
 bugs:
 [x] - When highlighting a cube, we get more triangles than we should have. We should have just the same 
-[ ] - We should introduce the concept of render targets to the renderer, like a linked list of render stages that the renderer goes through every gframe
 [ ] - Font rendering is not taking into account the aspect ratio of the screen
 [ ] - We should not push cubes into the renderer that are not visible on the frustum
 [ ] - Cubes are still being selected (in a weird way) when the camera is in fly mode.
+[ ] - Game crashes when it gets minimized to tray
 f_base:
 [x] - Add thread context module
 [ ] - Add windows window layer I.e. remove glfw dependency
@@ -92,7 +92,8 @@ int main(void) {
     //~ Render
     renderer_update(GameState, &ProgramRenderer, view, projection);
     
-    //~ Non-game and Non-renderer related 
+    //~ NOTE(fz): Not sure if it should be here. but I want all glfw code contained in main
+    // while we don't switch to using os for windowing and input/
     if (input_is_key_pressed(KeyboardKey_ESCAPE)) {
       printf("Program exited from pressing Escape!\n");
       glfwSetWindowShouldClose(window, 1);
