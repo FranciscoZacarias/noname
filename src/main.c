@@ -14,6 +14,7 @@
 [x] - Be able to select a cube on click
 [x] - Be able to select multiple cubes
 [x] - Add translation gizmos to selected cube (xyz arrows) and (xy, xz, yz planes)
+[x] - Where should Program_State live? (Result: new module, core.h)
 [ ] - Add directional light
 [ ] - Add phong light
 [ ] - Add logs to the screen that fade after 1 second or so.
@@ -24,13 +25,13 @@
 [ ] - Moving cubes from gizmos must snap to the grid
 [ ] - Add some sort of post processing shake when loading variables from hotload, just to know it was loaded and feature creep
 [ ] - Stuff that is not glfw but core to the program, should be in like a program or core module. Like the Program_State stuff for example.
-[x] - Where should Program_State live? (Result: new module, core.h)
+[ ] - We need a way to specify that some triangles will just be rendered in front of everything else (gizmos, for exmaple).
 
 ## BUGS:
 [x] - When highlighting a cube, we get more triangles than we should have. We should have just the same 
+[x] - Cubes are still being selected (in a weird way) when the camera is in fly mode.
 [ ] - Font rendering is not taking into account the aspect ratio of the screen
 [ ] - We should not push cubes into the renderer that are not visible on the frustum
-[ ] - Cubes are still being selected (in a weird way) when the camera is in fly mode.
 [ ] - Game crashes when it gets minimized to tray
 [ ] - Camera resets to previous position if you are pressing RMB, and then press the LMB without releasing RMB
 
