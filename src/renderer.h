@@ -95,8 +95,11 @@ internal void renderer_push_triangle_texture(Renderer* renderer, Vec3f32 a_posit
 internal void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color, f32 scale);
 internal void renderer_push_quad(Renderer* renderer, Quad quad, Vec4f32 color);
 internal void renderer_push_quad_texture(Renderer* renderer, Quad quad, u32 texture);
+
+//~ Push 3D structures to renderer
 internal void renderer_push_cube(Renderer* renderer, Cube cube);
 internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, Cube_Face highlight, Vec4f32 highlight_color);
+internal void renderer_push_translation_gizmo(Renderer* renderer, Vec3f32 position);
 
 //~ Push 2D to Renderer
 internal void renderer_push_string(Renderer* renderer, String text, Vec2f32 position, Vec4f32 color);

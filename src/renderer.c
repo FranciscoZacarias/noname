@@ -265,6 +265,10 @@ internal void renderer_update(Game_State game_state, Renderer* renderer, Mat4f32
     if (cube.is_selected) {
       cube.border_thickness = 0.08;
       cube.border_color = vec4f32(0.5+0.5*sin(5*ProgramState.current_time), 0.5+0.5*sin(5*ProgramState.current_time), 0.0f);
+      
+      if (game_state.total_selected_cubes == 1) {
+        renderer_push_translation_gizmo(renderer, cube_get_center(cube));
+      }
     }
     
     if (game_state.cube_under_cursor.index == i) {
@@ -1092,6 +1096,62 @@ internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, C
       renderer_push_quad(renderer, top_bottom_border, cube.border_color);
     }
   }
+}
+
+internal void renderer_push_translation_gizmo(Renderer* renderer, Vec3f32 position) {
+  f32 arrow_size = 3.0f;
+  f32 arrow_scale = 1.0f;
+  f32 drag_panel_scale = 0.5f;
+  f32 drag_panel_size  = 3.f;
+  f32 color_alpha = 1.0f;
+  
+  Vec3f32 x = add_vec3f32(position, vec3f32(drag_panel_size, 0.0f, 0.0f));
+  Vec3f32 y = add_vec3f32(position, vec3f32(0.0f, drag_panel_size, 0.0f));
+  Vec3f32 z = add_vec3f32(position, vec3f32(0.0f, 0.0f, drag_panel_size));
+  
+  //~ Panel XY
+  Quad xy = {
+    add_vec3f32(position,                      vec3f32( drag_panel_scale, drag_panel_scale, 0.0f)),
+    add_vec3f32(x,                             vec3f32(-drag_panel_scale, drag_panel_scale, 0.0f)),
+    add_vec3f32(vec3f32(x.x, y.y, position.z), vec3f32(-drag_panel_scale, -drag_panel_scale, 0.0f)),
+    add_vec3f32(y,                             vec3f32( drag_panel_scale, -drag_panel_scale, 0.0f)),
+  };
+  
+  Vec4f32 xy_color = vec4f32w(1.0f, 1.0f, 0.0f, color_alpha);
+  renderer_push_quad(renderer, xy, xy_color);
+  
+  //~ Panel YZ
+  Quad yz = {
+    add_vec3f32(position,                      vec3f32( 0.0f, drag_panel_scale, drag_panel_scale)),
+    add_vec3f32(z,                             vec3f32( 0.0f, drag_panel_scale, -drag_panel_scale)),
+    add_vec3f32(vec3f32(position.x, y.y, z.z), vec3f32( 0.0f, -drag_panel_scale, -drag_panel_scale)),
+    add_vec3f32(y,                             vec3f32( 0.0f, -drag_panel_scale, drag_panel_scale)),
+  };
+  
+  Vec4f32 yz_color = vec4f32w(0.0f, 1.0f, 1.0f, color_alpha);
+  renderer_push_quad(renderer, yz, yz_color);
+  
+  //~ Panel XZ
+  
+  Quad xz = {
+    add_vec3f32(position,                      vec3f32( drag_panel_scale, 0.0f,  drag_panel_scale)),
+    add_vec3f32(x,                             vec3f32(-drag_panel_scale, 0.0f,  drag_panel_scale)),
+    add_vec3f32(vec3f32(x.x, position.y, z.z), vec3f32(-drag_panel_scale, 0.0f, -drag_panel_scale)),
+    add_vec3f32(z,                             vec3f32( drag_panel_scale, 0.0f, -drag_panel_scale)),
+  };
+  
+  Vec4f32 xz_color = vec4f32w(1.0f, 0.0f, 1.0f, color_alpha);
+  renderer_push_quad(renderer, xz, xz_color);
+  
+  //~ Arrows
+  
+  x = add_vec3f32(position, vec3f32(arrow_size, 0.0f, 0.0f));
+  y = add_vec3f32(position, vec3f32(0.0f, arrow_size, 0.0f));
+  z = add_vec3f32(position, vec3f32(0.0f, 0.0f, arrow_size));
+  
+  renderer_push_arrow(renderer, position, x, Color_Red, arrow_scale);
+  renderer_push_arrow(renderer, position, y, Color_Green, arrow_scale);
+  renderer_push_arrow(renderer, position, z, Color_Blue, arrow_scale);
 }
 
 // NOTE(fz): Position should be in NDC
