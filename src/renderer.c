@@ -250,9 +250,9 @@ internal void renderer_update(Game_State game_state, Renderer* renderer, Mat4f32
   
   //~ Axis
   f32 size = 20.0f;
-  renderer_push_arrow(renderer, vec3f32(-size,   0.0f,   0.0f), vec3f32(size,  0.0f,  0.0f), Color_Red, 0.5f);
-  renderer_push_arrow(renderer, vec3f32(  0.0f, -size,   0.0f), vec3f32( 0.0f, size,  0.0f), Color_Green, 0.5f);
-  renderer_push_arrow(renderer, vec3f32(  0.0f,   0.0f, -size), vec3f32( 0.0f,  0.0f, size), Color_Blue, 0.5f);
+  renderer_push_arrow(renderer, vec3f32(-size,   0.0f,   0.0f), vec3f32(size,  0.0f,  0.0f), Color_Red, 0.1f);
+  renderer_push_arrow(renderer, vec3f32(  0.0f, -size,   0.0f), vec3f32( 0.0f, size,  0.0f), Color_Green, 0.1f);
+  renderer_push_arrow(renderer, vec3f32(  0.0f,   0.0f, -size), vec3f32( 0.0f,  0.0f, size), Color_Blue, 0.1f);
   
   //~ Program State
   for(u32 i = 0; i < game_state.total_cubes; i += 1) {
@@ -644,7 +644,8 @@ void renderer_end_frame(Renderer* renderer) {
   glDisable(GL_DEPTH_TEST);
   
   glUseProgram(renderer->screen_program);
-  glBindVertexArray(renderer->screen_vao);glActiveTexture(GL_TEXTURE0);
+  glBindVertexArray(renderer->screen_vao);
+  glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, renderer->screen_texture);
   renderer_set_uniform_s32(renderer->screen_program, "window_width", renderer->program_state->window_width);
   renderer_set_uniform_s32(renderer->screen_program, "window_height", renderer->program_state->window_height);
