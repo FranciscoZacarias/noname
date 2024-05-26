@@ -115,6 +115,7 @@ typedef struct Game_State {
   
   struct {
     GizmoTranslation selected_gizmo;
+    u32 total_gizmos;
   } editor;
   
   Cube_Under_Cursor cube_under_cursor;

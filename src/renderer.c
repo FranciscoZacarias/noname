@@ -556,13 +556,11 @@ internal void renderer_end_frame(Renderer* renderer, Mat4f32 view, Mat4f32 proje
       continue;
     }
     
+    // HACK(fz): This really should be done in game.c 
+    // But at least it's not doing core game logic. It's just a color hack
     if (cube.is_selected) {
       cube.border_thickness = 0.08;
       cube.border_color = vec4f32(0.5+0.5*sin(5*ProgramState.current_time), 0.5+0.5*sin(5*ProgramState.current_time), 0.0f);
-      
-      if (GameState.total_selected_cubes == 1) {
-        renderer_push_translation_gizmo(&ProgramRenderer, gizmo_translation_new(cube_get_center(cube), 1.0f, 1.0f), 1);
-      }
     }
     
     if (GameState.cube_under_cursor.index == i) {
@@ -571,6 +569,10 @@ internal void renderer_end_frame(Renderer* renderer, Mat4f32 view, Mat4f32 proje
     } else {
       renderer_push_cube(&ProgramRenderer, cube, 0);
     }
+  }
+  
+  for (u32 i = 0; i < GameState.editor.total_gizmos; i += 1) {
+    renderer_push_translation_gizmo(&ProgramRenderer, GameState.editor.selected_gizmo, 1);
   }
   
   //~ Render

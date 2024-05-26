@@ -84,6 +84,8 @@ y_pos -= 0.05f; } while(0);
   }
   
   if (GameState.cube_under_cursor.index != U32_MAX) {
+    
+    
     if (input_is_key_pressed(KeyboardKey_F)) {
       //~ NOTE(fz): Add a cube
       Quad face = cube_get_local_space_face_quad(GameState.cube_under_cursor.hovered_face);
@@ -139,6 +141,14 @@ y_pos -= 0.05f; } while(0);
     }
   }
   
+  if (GameState.total_selected_cubes == 1) {
+    u32 selected_cube_index = GameState.selected_cubes[0];
+    Cube* selected_cube = &GameState.cubes[selected_cube_index];
+    GameState.editor.selected_gizmo = gizmo_translation_new(cube_get_center(*selected_cube), 1.0f, 1.0f);
+    GameState.editor.total_gizmos = 1;
+  } else {
+    GameState.editor.total_gizmos = 0;
+  }
   
   // NOTE(fz): Unselect all cubes
   if (input_is_key_pressed(KeyboardKey_TAB)) {
