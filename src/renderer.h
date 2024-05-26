@@ -94,18 +94,19 @@ internal void renderer_end_frame(Renderer* renderer, Mat4f32 view, Mat4f32 proje
 
 //~ Push 3D to Renderer
 internal void renderer_push_triangle(Renderer* renderer, Vec3f32 a_position, Vec4f32 a_color, Vec3f32 b_position, Vec4f32 b_color, Vec3f32 c_position, Vec4f32 c_color, b32 bring_to_front);
-internal void renderer_push_triangle_texture(Renderer* renderer, Vec3f32 a_position, Vec2f32 a_uv, Vec3f32 b_position, Vec2f32 b_uv, Vec3f32 c_position, Vec2f32 c_uv, u32 texture);
-internal void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color, f32 scale, b32 bring_to_front);
+internal void renderer_push_triangle_texture(Renderer* renderer, Vec3f32 a_position, Vec2f32 a_uv, Vec3f32 b_position, Vec2f32 b_uv, Vec3f32 c_position, Vec2f32 c_uv, u32 texture, b32 bring_to_front);
+internal void renderer_push_arrow(Renderer* renderer, Arrow arrow, b32 bring_to_front);
 internal void renderer_push_quad(Renderer* renderer, Quad quad, Vec4f32 color, b32 bring_to_front);
-internal void renderer_push_quad_texture(Renderer* renderer, Quad quad, u32 texture);
+internal void renderer_push_quad_texture(Renderer* renderer, Quad quad, u32 texture, b32 bring_to_front);
 
 //~ Push 3D structures to renderer
 internal void renderer_push_cube(Renderer* renderer, Cube cube, b32 bring_to_front);
 internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, Cube_Face highlight, Vec4f32 highlight_color, b32 bring_to_front);
-internal void renderer_push_translation_gizmo(Renderer* renderer, Vec3f32 position, b32 bring_to_front);
+
+internal void renderer_push_translation_gizmo(Renderer* renderer, GizmoTranslation gizmo, b32 bring_to_front);
 
 //~ Push 2D to Renderer
-internal void renderer_push_string(Renderer* renderer, String text, Vec2f32 position, Vec4f32 color);
+internal void renderer_push_string(Renderer* renderer, String text, Vec2f32 position, Vec4f32 color, b32 bring_to_front);
 
 //~ Shader Uniforms
 internal void renderer_set_uniform_mat4fv(u32 program, const char* uniform, Mat4f32 mat);

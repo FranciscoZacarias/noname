@@ -3,7 +3,7 @@
 #ifndef GAME_H
 #define GAME_H
 
-//~ Cube
+//~ Game types
 
 //   3--------2
 //  /|       /|
@@ -71,14 +71,31 @@ internal Cube    cube_new(Vec3f32 position, Vec4f32 color, f32 border_thickness)
 internal Quad    cube_get_local_space_face_quad(Cube_Face face);
 internal Vec3f32 cube_get_center(Cube cube);
 
+typedef struct Arrow {
+  Vec3f32 base;
+  Vec3f32 points_to;
+  Vec4f32 color;
+  f32 scale;
+} Arrow;
+
+internal Arrow arrow_new(Vec3f32 base, Vec3f32 points_to, Vec4f32 color, f32 scale);
+
+typedef struct GizmoTranslation {
+  Vec3f32 position;
+  f32 arrow_scale;
+  f32 quad_scale;
+} GizmoTranslation; 
+
+internal GizmoTranslation gizmo_translation_new(Vec3f32 position, f32 arrow_scale, f32 quad_scale);
+
 //~ Game generic 
 typedef struct Cube_Under_Cursor {
-	Cube_Face hovered_face;
-	u32 index;
-	f32 distance_to_camera;
+  Cube_Face hovered_face;
+  u32 index;
+  f32 distance_to_camera;
 } Cube_Under_Cursor;
 
-internal b32  find_cube_under_cursor(Camera camera, Vec3f32 raycast, Cube_Under_Cursor* result);
+internal b32 find_cube_under_cursor(Camera camera, Vec3f32 raycast, Cube_Under_Cursor* result);
 
 //~ Game State
 typedef struct Game_State {
@@ -95,6 +112,10 @@ typedef struct Game_State {
   // These are to know which cubes are selected.
   u32* selected_cubes;
   u32  total_selected_cubes;
+  
+  struct {
+    GizmoTranslation selected_gizmo;
+  } editor;
   
   Cube_Under_Cursor cube_under_cursor;
 } Game_State;

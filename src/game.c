@@ -9,66 +9,37 @@ internal void game_init() {
   GameState.max_cubes = Kilobytes(16);
   GameState.cubes = (Cube*)PushArray(GameState.arena, Cube, GameState.max_cubes);
   GameState.total_cubes = 0;
+  GameState.empty_cube_slots = (u32*)PushArray(GameState.arena, u32, GameState.max_cubes);
+  GameState.total_empty_cube_slots = 0;;
   
   GameState.selected_cubes =  (u32*)PushArray(GameState.arena, u32, GameState.max_cubes);
   MemorySet(GameState.selected_cubes, U32_MAX, GameState.max_cubes);
   GameState.total_selected_cubes = 0;
   
-  GameState.empty_cube_slots = (u32*)PushArray(GameState.arena, u32, GameState.max_cubes);
-  GameState.total_empty_cube_slots = 0;;
+  MemoryZeroStruct(&GameState.cube_under_cursor);
   
-  game_push_cube(cube_new(vec3f32( 0.0f,  0.0f,  0.0f), PALLETE_COLOR_A, 0.05f));
-  game_push_cube(cube_new(vec3f32( 2.0f,  0.0f, -8.0f), PALLETE_COLOR_B, 0.05f));
-  game_push_cube(cube_new(vec3f32( 4.0f,  2.0f, -8.0f), PALLETE_COLOR_B, 0.05f));
-  game_push_cube(cube_new(vec3f32( 6.0f,  0.0f, -8.0f), PALLETE_COLOR_B, 0.05f));
-  game_push_cube(cube_new(vec3f32( 0.0f,  0.0f, -8.0f), PALLETE_COLOR_B, 0.05f));
-  game_push_cube(cube_new(vec3f32( 0.0f, -0.0f,  8.0f), PALLETE_COLOR_C, 0.05f));
-  game_push_cube(cube_new(vec3f32( 0.0f,  8.0f,  0.0f), PALLETE_COLOR_C, 0.05f));
-  game_push_cube(cube_new(vec3f32( 0.0f, -8.0f,  0.0f), PALLETE_COLOR_A, 0.05f));
-  game_push_cube(cube_new(vec3f32( 8.0f,  0.0f,  0.0f), PALLETE_COLOR_B, 0.05f));
-  game_push_cube(cube_new(vec3f32(-8.0f,  0.0f,  0.0f), PALLETE_COLOR_C, 0.05f));
-  game_push_cube(cube_new(vec3f32( 8.0f,  8.0f,  8.0f), PALLETE_COLOR_C, 0.05f));
-  game_push_cube(cube_new(vec3f32(-8.0f, -8.0f, -8.0f), PALLETE_COLOR_A, 0.05f));
-  game_push_cube(cube_new(vec3f32( 8.0f, -8.0f, -8.0f), PALLETE_COLOR_B, 0.05f));
+  // Sandbox cubes
+  for (f32 i = -5.0f; i < 6.0f; i += 2.0f) {
+    for (f32 j = -5.0f; j < 6.0f; j += 2.0f) {
+      Cube cube = cube_new(vec3f32((f32)i, -1.0f, (f32)j), PALLETE_COLOR_B, 0.05f);
+      game_push_cube(cube);
+    }
+  }
 }
 
 internal void game_update(Camera* camera, Vec3f32 raycast) {
+  //~ Axis
+  // NOTE(fz): Here I'm calling the renderer directly because these are static arrows that will never change.
+  // We either render them or not. So Im not gonna bother putting them in the game state.
+  f32 size = 20.0f;
+  renderer_push_arrow(&ProgramRenderer, arrow_new(vec3f32(-size,  0.0f,  0.0f), vec3f32(size,  0.0f,  0.0f), Color_Red,   0.1f), 0);
+  renderer_push_arrow(&ProgramRenderer, arrow_new(vec3f32( 0.0f, -size,  0.0f), vec3f32( 0.0f, size,  0.0f), Color_Green, 0.1f), 0);
+  renderer_push_arrow(&ProgramRenderer, arrow_new(vec3f32( 0.0f,  0.0f, -size), vec3f32( 0.0f,  0.0f, size), Color_Blue,  0.1f), 0);
   
   //- TODO(Fz): This section should be abstracted away from the renderer. Renderer should not know about arrows.
   //- We need to set this in the GameState and let the renderer work with that. This is just here
   //- While we refactor
   {
-    //~ Axis
-    f32 size = 20.0f;
-    renderer_push_arrow(&ProgramRenderer, vec3f32(-size,   0.0f,   0.0f), vec3f32(size,  0.0f,  0.0f), Color_Red, 0.1f, 0);
-    renderer_push_arrow(&ProgramRenderer, vec3f32(  0.0f, -size,   0.0f), vec3f32( 0.0f, size,  0.0f), Color_Green, 0.1f, 0);
-    renderer_push_arrow(&ProgramRenderer, vec3f32(  0.0f,   0.0f, -size), vec3f32( 0.0f,  0.0f, size), Color_Blue, 0.1f, 0);
-    
-    for(u32 i = 0; i < GameState.total_cubes; i += 1) {
-      Cube cube = GameState.cubes[i];
-      
-      if (cube.is_dead) {
-        continue;
-      }
-      
-      if (cube.is_selected) {
-        cube.border_thickness = 0.08;
-        cube.border_color = vec4f32(0.5+0.5*sin(5*ProgramState.current_time), 0.5+0.5*sin(5*ProgramState.current_time), 0.0f);
-        
-        if (GameState.total_selected_cubes == 1) {
-          // TODO(fz): gizmo should be a user level thing. renderer should not know what a gizmo is
-          renderer_push_translation_gizmo(&ProgramRenderer, cube_get_center(cube), 1);
-        }
-      }
-      
-      if (GameState.cube_under_cursor.index == i) {
-        f32 highlight_scale = 0.8f;
-        renderer_push_cube_highlight_face(&ProgramRenderer, cube, GameState.cube_under_cursor.hovered_face, vec4f32(cube.color.x * highlight_scale, cube.color.y * highlight_scale, cube.color.z * highlight_scale), 0);
-      } else {
-        renderer_push_cube(&ProgramRenderer, cube, 0);
-      }
-    }
-    
     if (ProgramRenderer.program_state->show_debug_stats) {
       String txt;
       s32 len;
@@ -81,7 +52,7 @@ char tag##_buffer[160] = {0}; \
 len = stbsp_sprintf(tag##_buffer, fmt, __VA_ARGS__); \
 txt.size = (u64)len; \
 txt.str  = (u8*)tag##_buffer; \
-renderer_push_string(&ProgramRenderer, txt, vec2f32(-0.998, y_pos), Color_Yellow); \
+renderer_push_string(&ProgramRenderer, txt, vec2f32(-0.998, y_pos), Color_Yellow, 1); \
 y_pos -= 0.05f; } while(0); 
       
       local_persist f64 fps_last_time = 0.0f;
@@ -240,7 +211,22 @@ internal b32 find_cube_under_cursor(Camera camera, Vec3f32 raycast, Cube_Under_C
   
   return match;
 }
+internal GizmoTranslation gizmo_translation_new(Vec3f32 position, f32 arrow_scale, f32 quad_scale) {
+  GizmoTranslation result = { 0 };
+  result.position    = position;
+  result.arrow_scale = arrow_scale;
+  result.quad_scale  = quad_scale;
+  return result;
+}
 
+internal Arrow arrow_new(Vec3f32 base, Vec3f32 points_to, Vec4f32 color, f32 scale) {
+  Arrow result = { 0 };
+  result.base = base;
+  result.points_to = points_to;
+  result.color = color;
+  result.scale = scale;
+  return result;
+}
 
 internal Cube cube_new(Vec3f32 position, Vec4f32 color, f32 border_thickness) {
   Cube result = { 0 };

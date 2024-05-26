@@ -40,6 +40,13 @@
 [x] - Add thread context module
 [ ] - Add windows window layer I.e. remove glfw dependency
 [ ] - Implement get memory usage in os_layer (for win32 should be like GetProcessMemoryInfo(), for example)
+
+## OVERALL NOTES:
+
+- Should be better to just typedef Vec4 to a Color. I'm always making the mistake of making a color a Vec3.
+- Just have the fucking vec4f32() function take the w. Eventhough its almost always 1.0f, I think its better to write the fucking 1.0f, rather than obfuscate it in the constructor
+- 
+
 */
 
 #include "main.h"
