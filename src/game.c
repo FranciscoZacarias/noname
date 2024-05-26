@@ -34,6 +34,79 @@ internal void game_init() {
 
 internal void game_update(Camera* camera, Vec3f32 raycast) {
   
+  //- TODO(Fz): This section should be abstracted away from the renderer. Renderer should not know about arrows.
+  //- We need to set this in the GameState and let the renderer work with that. This is just here
+  //- While we refactor
+  {
+    //~ Axis
+    f32 size = 20.0f;
+    renderer_push_arrow(&ProgramRenderer, vec3f32(-size,   0.0f,   0.0f), vec3f32(size,  0.0f,  0.0f), Color_Red, 0.1f, 0);
+    renderer_push_arrow(&ProgramRenderer, vec3f32(  0.0f, -size,   0.0f), vec3f32( 0.0f, size,  0.0f), Color_Green, 0.1f, 0);
+    renderer_push_arrow(&ProgramRenderer, vec3f32(  0.0f,   0.0f, -size), vec3f32( 0.0f,  0.0f, size), Color_Blue, 0.1f, 0);
+    
+    for(u32 i = 0; i < GameState.total_cubes; i += 1) {
+      Cube cube = GameState.cubes[i];
+      
+      if (cube.is_dead) {
+        continue;
+      }
+      
+      if (cube.is_selected) {
+        cube.border_thickness = 0.08;
+        cube.border_color = vec4f32(0.5+0.5*sin(5*ProgramState.current_time), 0.5+0.5*sin(5*ProgramState.current_time), 0.0f);
+        
+        if (GameState.total_selected_cubes == 1) {
+          // TODO(fz): gizmo should be a user level thing. renderer should not know what a gizmo is
+          renderer_push_translation_gizmo(&ProgramRenderer, cube_get_center(cube), 1);
+        }
+      }
+      
+      if (GameState.cube_under_cursor.index == i) {
+        f32 highlight_scale = 0.8f;
+        renderer_push_cube_highlight_face(&ProgramRenderer, cube, GameState.cube_under_cursor.hovered_face, vec4f32(cube.color.x * highlight_scale, cube.color.y * highlight_scale, cube.color.z * highlight_scale), 0);
+      } else {
+        renderer_push_cube(&ProgramRenderer, cube, 0);
+      }
+    }
+    
+    if (ProgramRenderer.program_state->show_debug_stats) {
+      String txt;
+      s32 len;
+      f32 y_pos = 0.95f;
+      
+      // TODO(Fz): We cant have shit like this
+      // NOTE(fz): This is a hack to have less friction just writing strings stats while we dont have better things to work with
+#define AddStat(fmt, tag, ...) do {\
+char tag##_buffer[160] = {0}; \
+len = stbsp_sprintf(tag##_buffer, fmt, __VA_ARGS__); \
+txt.size = (u64)len; \
+txt.str  = (u8*)tag##_buffer; \
+renderer_push_string(&ProgramRenderer, txt, vec2f32(-0.998, y_pos), Color_Yellow); \
+y_pos -= 0.05f; } while(0); 
+      
+      local_persist f64 fps_last_time = 0.0f;
+      local_persist s64 frame_count   = 0.0f;
+      local_persist u64 dt_fps        = 0.0f;
+      
+      frame_count += 1;
+      if (ProgramRenderer.program_state->current_time - fps_last_time >= 0.1f) {
+        dt_fps = frame_count / (ProgramRenderer.program_state->current_time - fps_last_time);
+        frame_count  = 0;
+        fps_last_time = ProgramRenderer.program_state->current_time;
+      }
+      
+      AddStat("FPS: %d", fps, dt_fps);
+      AddStat("Ms/Frame: %0.2f", msframe, (f32)ProgramRenderer.program_state->delta_time*1000);
+      AddStat("Triangles: %d/%d", trigs, ProgramRenderer.triangles_count, ProgramRenderer.triangles_max);
+      AddStat("Triangles Front: %d/%d", trigsfront, ProgramRenderer.triangles_front_count, ProgramRenderer.triangles_front_max);
+      AddStat("Cube Count: %d", cubs, game_cubes_alive_count());
+      AddStat("Hovered Cube Index: %d", hovered, (GameState.cube_under_cursor.index == U32_MAX) ? -1 : GameState.cube_under_cursor.index);
+      AddStat("Total empty slots: %u", emptyslots, GameState.total_empty_cube_slots);
+      AddStat("Selected Cubes Count: %u", selectcubes, GameState.total_selected_cubes)
+    }
+  }
+  //- End TODO(fz)
+  
   //~ Find cube under cursor
   if (!find_cube_under_cursor(*camera, raycast, &GameState.cube_under_cursor)) {
     GameState.cube_under_cursor.index = U32_MAX;

@@ -67,6 +67,10 @@ typedef struct Renderer {
   u32 triangles_count;
   u32 triangles_max;
   
+  Renderer_Vertex* triangles_front_data;
+  u32 triangles_front_count;
+  u32 triangles_front_max;
+  
 	u32* textures;
   u32 textures_count;
   u32 textures_max;
@@ -75,7 +79,6 @@ typedef struct Renderer {
 global Renderer ProgramRenderer;
 
 internal Renderer renderer_init(Program_State* program_state);
-internal void renderer_update(Game_State game_state, Renderer* renderer, Mat4f32 view, Mat4f32 projection);
 internal void renderer_free(Renderer* renderer);
 
 //~ Helpers
@@ -87,19 +90,19 @@ internal void renderer_recompile_screen_shader(Arena* arena, Renderer* renderer)
 internal b32  renderer_font_load(Renderer_Font_Info* font_info, String file_path, f32 font_size);
 internal u32  renderer_texture_load(String file_path);
 internal void renderer_begin_frame(Renderer* renderer, Vec4f32 background_color);
-internal void renderer_end_frame(Renderer* renderer);
+internal void renderer_end_frame(Renderer* renderer, Mat4f32 view, Mat4f32 projection);
 
 //~ Push 3D to Renderer
-internal void renderer_push_triangle(Renderer* renderer, Vec3f32 a_position, Vec4f32 a_color, Vec3f32 b_position, Vec4f32 b_color, Vec3f32 c_position, Vec4f32 c_color);
+internal void renderer_push_triangle(Renderer* renderer, Vec3f32 a_position, Vec4f32 a_color, Vec3f32 b_position, Vec4f32 b_color, Vec3f32 c_position, Vec4f32 c_color, b32 bring_to_front);
 internal void renderer_push_triangle_texture(Renderer* renderer, Vec3f32 a_position, Vec2f32 a_uv, Vec3f32 b_position, Vec2f32 b_uv, Vec3f32 c_position, Vec2f32 c_uv, u32 texture);
-internal void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color, f32 scale);
-internal void renderer_push_quad(Renderer* renderer, Quad quad, Vec4f32 color);
+internal void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color, f32 scale, b32 bring_to_front);
+internal void renderer_push_quad(Renderer* renderer, Quad quad, Vec4f32 color, b32 bring_to_front);
 internal void renderer_push_quad_texture(Renderer* renderer, Quad quad, u32 texture);
 
 //~ Push 3D structures to renderer
-internal void renderer_push_cube(Renderer* renderer, Cube cube);
-internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, Cube_Face highlight, Vec4f32 highlight_color);
-internal void renderer_push_translation_gizmo(Renderer* renderer, Vec3f32 position);
+internal void renderer_push_cube(Renderer* renderer, Cube cube, b32 bring_to_front);
+internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, Cube_Face highlight, Vec4f32 highlight_color, b32 bring_to_front);
+internal void renderer_push_translation_gizmo(Renderer* renderer, Vec3f32 position, b32 bring_to_front);
 
 //~ Push 2D to Renderer
 internal void renderer_push_string(Renderer* renderer, String text, Vec2f32 position, Vec4f32 color);

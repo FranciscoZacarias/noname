@@ -15,6 +15,8 @@
 [x] - Be able to select multiple cubes
 [x] - Add translation gizmos to selected cube (xyz arrows) and (xy, xz, yz planes)
 [x] - Where should Program_State live? (Result: new module, core.h)
+[x] - We need a way to specify that some triangles will just be rendered in front of everything else (gizmos, for exmaple).
+[x] - Stuff that is not glfw but core to the program, should be in like a program or core module. Like the Program_State stuff for example.
 [ ] - Add directional light
 [ ] - Add phong light
 [ ] - Add logs to the screen that fade after 1 second or so.
@@ -24,8 +26,7 @@
  [ ] - Gizmos should  actually transform the cube on each axis
 [ ] - Moving cubes from gizmos must snap to the grid
 [ ] - Add some sort of post processing shake when loading variables from hotload, just to know it was loaded and feature creep
-[ ] - Stuff that is not glfw but core to the program, should be in like a program or core module. Like the Program_State stuff for example.
-[ ] - We need a way to specify that some triangles will just be rendered in front of everything else (gizmos, for exmaple).
+[ ] - Remove renderer_update. Stuff should either belong to the renderer and be in end_frame, or belong to the game logic and be in game_update or higher.
 
 ## BUGS:
 [x] - When highlighting a cube, we get more triangles than we should have. We should have just the same 
@@ -38,6 +39,7 @@
 ## F_BASE:
 [x] - Add thread context module
 [ ] - Add windows window layer I.e. remove glfw dependency
+[ ] - Implement get memory usage in os_layer (for win32 should be like GetProcessMemoryInfo(), for example)
 */
 
 #include "main.h"
@@ -97,7 +99,7 @@ int main(void) {
     game_update(&ProgramState.camera, ProgramState.raycast);
     
     //~ Render
-    renderer_update(GameState, &ProgramRenderer, view, projection);
+    renderer_end_frame(&ProgramRenderer, view, projection);
     
     //~ NOTE(fz): Not sure if it should be here. but I want all glfw code contained in main
     // while we don't switch to using os for windowing and input/
