@@ -14,14 +14,18 @@ typedef struct Program_State {
   f32 near_plane;
   f32 far_plane;
   
+  Mat4f32 view;
+  Mat4f32 projection;
+  
   Camera camera;
   Vec3f32 raycast;
   
+  b32 program_is_running;
 } Program_State;
 
 global Program_State ProgramState;
 
 internal void program_init();
-internal void program_update(Mat4f32 view, Mat4f32 projection);
+internal void program_update();
 
 #endif //CORE_H

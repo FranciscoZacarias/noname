@@ -80,43 +80,28 @@ int main(void) {
   
   ProgramRenderer = renderer_init(&ProgramState);
   
-  while(!glfwWindowShouldClose(window)) {
+  while (ProgramState.program_is_running) {
     hotload_variables(&ProgramState);
     hotload_shader_programs(&ProgramRenderer, ProgramState.current_time);
     
     renderer_begin_frame(&ProgramRenderer, PALLETE_COLOR_D);
     
-    camera_update(&ProgramState.camera, ProgramState.delta_time);
-    
-    //~ Perspective 
-    Mat4f32 view = look_at_mat4f32(ProgramState.camera.position, add_vec3f32(ProgramState.camera.position, ProgramState.camera.front), ProgramState.camera.up);
-    Mat4f32 projection = perspective_mat4f32(Radians(45), ProgramState.window_width, ProgramState.window_height, ProgramState.near_plane, ProgramState.far_plane);
-    
     //~ Updates
-    program_update(view, projection);
+    program_update();
     
     //~ Game logic
     game_update(&ProgramState.camera, ProgramState.raycast);
     
     //~ Render
-    renderer_end_frame(&ProgramRenderer, view, projection);
+    renderer_end_frame(&ProgramRenderer, ProgramState.view, ProgramState.projection);
     
-    //~ NOTE(fz): Not sure if it should be here. but I want all glfw code contained in main
-    // while we don't switch to using os for windowing and input/
-    if (input_is_key_pressed(KeyboardKey_ESCAPE)) {
-      printf("Program exited from pressing Escape!\n");
-      glfwSetWindowShouldClose(window, 1);
-    }
-    
-    //~ Input
-    // NOTE(fz): Keep at the end!
+    //~ Input NOTE(fz): Keep at the end!
     input_update();
     
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
   
-  glfwTerminate();
   return 0;
 }
 
