@@ -44,8 +44,7 @@
 #include "input.h"
 #include "camera.h"
 #include "core.h"
-#include "cube.h"
-#include "game.h"
+#include "game.h" // NOTE(fz): The renderer will make assumptions on types that exist in game.h. Keep this on top
 #include "renderer.h"
 #include "hotloadable.h"
 
@@ -59,7 +58,6 @@
 #include "input.c"
 #include "camera.c"
 #include "core.c"
-#include "cube.c"
 #include "game.c"
 #include "renderer.c"
 #include "hotloadable.c"
