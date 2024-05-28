@@ -153,6 +153,11 @@ y_pos -= 0.05f; } while(0);
     b32 true_if_arrow_false_if_panel = 0;
     
     if (gizmo_arrow_result != Axis_None || gizmo_panel_result != Axis_None) {
+      if (input_is_button_down(MouseButton_Left)) {
+        glfwSetCursor(GlfwWindow, DragCursor);
+      } else {
+        glfwSetCursor(GlfwWindow, ArrowCursor);
+      }
       
       if (gizmo_arrow_result != Axis_None && gizmo_panel_result != Axis_None) {
         if (distance_arrow <= distance_panel) {

@@ -33,6 +33,10 @@
 #include <glad/glad.c>
 #include <GLFW/glfw3.h>
 
+GLFWwindow* GlfwWindow;
+GLFWcursor* ArrowCursor;
+GLFWcursor* DragCursor;
+
 //~ FLayer
 #include "f_includes.h"
 

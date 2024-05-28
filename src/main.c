@@ -17,6 +17,8 @@
 [x] - Where should Program_State live? (Result: new module, core.h)
 [x] - We need a way to specify that some triangles will just be rendered in front of everything else (gizmos, for exmaple).
 [x] - Stuff that is not glfw but core to the program, should be in like a program or core module. Like the Program_State stuff for example.
+[x] - Remove renderer_update. Stuff should either belong to the renderer and be in end_frame, or belong to the game logic and be in game_update or higher.
+[x] - Be able to select gizmos arrows and panels
 [ ] - Add directional light
 [ ] - Add phong light
 [ ] - Add logs to the screen that fade after 1 second or so.
@@ -26,7 +28,6 @@
  [ ] - Gizmos should  actually transform the cube on each axis
 [ ] - Moving cubes from gizmos must snap to the grid
 [ ] - Add some sort of post processing shake when loading variables from hotload, just to know it was loaded and feature creep
-[ ] - Remove renderer_update. Stuff should either belong to the renderer and be in end_frame, or belong to the game logic and be in game_update or higher.
 
 ## BUGS:
 [x] - When highlighting a cube, we get more triangles than we should have. We should have just the same 
@@ -71,14 +72,18 @@ int main(void) {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   
-	GLFWwindow* window = glfwCreateWindow(ProgramState.window_width, ProgramState.window_height, APP_NAME, NULL, NULL);
-	if (window == NULL) { printf("Failed to create GLFW window"); Assert(0); }
+  GlfwWindow = glfwCreateWindow(ProgramState.window_width, ProgramState.window_height, APP_NAME, NULL, NULL);
+	if (GlfwWindow == NULL) { printf("Failed to create GLFW window"); Assert(0); }
   
-	glfwMakeContextCurrent(window);
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-  glfwSetKeyCallback(window,             keyboard_callback);
-	glfwSetCursorPosCallback(window,       mouse_cursor_callback);
-  glfwSetMouseButtonCallback(window,     mouse_button_callback);
+	glfwMakeContextCurrent(GlfwWindow);
+	glfwSetFramebufferSizeCallback(GlfwWindow, framebuffer_size_callback);
+  glfwSetKeyCallback(GlfwWindow,             keyboard_callback);
+	glfwSetCursorPosCallback(GlfwWindow,       mouse_cursor_callback);
+  glfwSetMouseButtonCallback(GlfwWindow,     mouse_button_callback);
+  
+  ArrowCursor = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+  DragCursor  = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
+  glfwSetCursor(GlfwWindow, ArrowCursor);
   
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     printf("Failed to initialize GLAD");
@@ -105,7 +110,7 @@ int main(void) {
     //~ Input NOTE(fz): Keep at the end!
     input_update();
     
-    glfwSwapBuffers(window);
+    glfwSwapBuffers(GlfwWindow);
     glfwPollEvents();
   }
   
