@@ -560,7 +560,7 @@ internal void renderer_end_frame(Renderer* renderer, Mat4f32 view, Mat4f32 proje
     // But at least it's not doing core game logic. It's just a color hack
     if (cube.is_selected) {
       cube.border_thickness = 0.08;
-      cube.border_color = vec4f32(0.5+0.5*sin(5*ProgramState.current_time), 0.5+0.5*sin(5*ProgramState.current_time), 0.0f);
+      cube.border_color = vec4f32(0.5+0.5*sin(5*ProgramState.current_time), 0.0f, 0.5+0.5*sin(5*ProgramState.current_time));
     }
     
     if (GameState.cube_under_cursor.index == i) {
@@ -719,7 +719,6 @@ internal void renderer_push_triangle_texture(Renderer* renderer, Vec3f32 a_posit
   renderer_push_triangle_texture_color(renderer, a_position, a_uv, b_position, b_uv, c_position, c_uv, Color_White, texture, bring_to_front);
 }
 
-// internal void renderer_push_arrow(Renderer* renderer, Vec3f32 a, Vec3f32 b, Vec4f32 color, f32 scale, b32 bring_to_front) {
 internal void renderer_push_arrow(Renderer* renderer, Arrow arrow, b32 bring_to_front) {
   f32 scale = arrow.scale * 0.1; // Makes this scale factor less sensitive on user level
   Vec3f32 direction = normalize_vec3f32(sub_vec3f32(arrow.points_to, arrow.base));
@@ -1092,58 +1091,57 @@ internal void renderer_push_cube_highlight_face(Renderer* renderer, Cube cube, C
 }
 
 internal void renderer_push_translation_gizmo(Renderer* renderer, GizmoTranslation gizmo, b32 bring_to_front) {
-  f32 arrow_size       = 3.0f * gizmo.arrow_scale;
-  f32 arrow_scale      = 1.0f * gizmo.arrow_scale;
-  f32 drag_panel_scale = 0.7f * gizmo.quad_scale;
-  f32 drag_panel_size  = 3.0f * gizmo.quad_scale;
   f32 color_alpha = 0.3f;
   
   //~ Arrows
-  Arrow arrow_red = arrow_new(gizmo.position, add_vec3f32(gizmo.position, vec3f32(arrow_size, 0.0f, 0.0f)), Color_Red, arrow_scale);
+  Arrow arrow_red = arrow_new(gizmo.position, add_vec3f32(gizmo.position, vec3f32(gizmo.arrow_size, 0.0f, 0.0f)), gizmo.x_arrow_color, gizmo.arrow_scale);
   renderer_push_arrow(renderer, arrow_red, bring_to_front);
-  Arrow arrow_green = arrow_new(gizmo.position, add_vec3f32(gizmo.position, vec3f32(0.0f, arrow_size, 0.0f)), Color_Green, arrow_scale);
+  Arrow arrow_green = arrow_new(gizmo.position, add_vec3f32(gizmo.position, vec3f32(0.0f, gizmo.arrow_size, 0.0f)), gizmo.y_arrow_color, gizmo.arrow_scale);
   renderer_push_arrow(renderer, arrow_green, bring_to_front);
-  Arrow arrow_blue = arrow_new(gizmo.position, add_vec3f32(gizmo.position, vec3f32(0.0f, 0.0f, arrow_size)), Color_Blue, arrow_scale);
+  Arrow arrow_blue = arrow_new(gizmo.position, add_vec3f32(gizmo.position, vec3f32(0.0f, 0.0f, gizmo.arrow_size)), gizmo.z_arrow_color, gizmo.arrow_scale);
   renderer_push_arrow(renderer, arrow_blue, bring_to_front);
   
   //~ Panels
-  Vec3f32 x = add_vec3f32(gizmo.position, vec3f32(drag_panel_size, 0.0f, 0.0f));
-  Vec3f32 y = add_vec3f32(gizmo.position, vec3f32(0.0f, drag_panel_size, 0.0f));
-  Vec3f32 z = add_vec3f32(gizmo.position, vec3f32(0.0f, 0.0f, drag_panel_size));
+  Vec3f32 x = add_vec3f32(gizmo.position, vec3f32(gizmo.drag_panel_size, 0.0f, 0.0f));
+  Vec3f32 y = add_vec3f32(gizmo.position, vec3f32(0.0f, gizmo.drag_panel_size, 0.0f));
+  Vec3f32 z = add_vec3f32(gizmo.position, vec3f32(0.0f, 0.0f, gizmo.drag_panel_size));
   
   //~ Panel XY
   Quad xy = {
-    add_vec3f32(gizmo.position,                      vec3f32( drag_panel_scale, drag_panel_scale, 0.0f)),
-    add_vec3f32(x,                                   vec3f32(-drag_panel_scale, drag_panel_scale, 0.0f)),
-    add_vec3f32(vec3f32(x.x, y.y, gizmo.position.z), vec3f32(-drag_panel_scale, -drag_panel_scale, 0.0f)),
-    add_vec3f32(y,                                   vec3f32( drag_panel_scale, -drag_panel_scale, 0.0f)),
+    add_vec3f32(gizmo.position,                      vec3f32( gizmo.drag_panel_scale, gizmo.drag_panel_scale, 0.0f)),
+    add_vec3f32(x,                                   vec3f32(-gizmo.drag_panel_scale, gizmo.drag_panel_scale, 0.0f)),
+    add_vec3f32(vec3f32(x.x, y.y, gizmo.position.z), vec3f32(-gizmo.drag_panel_scale, -gizmo.drag_panel_scale, 0.0f)),
+    add_vec3f32(y,                                   vec3f32( gizmo.drag_panel_scale, -gizmo.drag_panel_scale, 0.0f)),
   };
   
-  Vec4f32 xy_color = vec4f32w(1.0f, 1.0f, 0.0f, color_alpha);
-  renderer_push_quad(renderer, xy, xy_color, bring_to_front);
+  renderer_push_quad(renderer, xy, gizmo.xy_panel_color, bring_to_front);
   
   //~ Panel YZ
   Quad yz = {
-    add_vec3f32(gizmo.position,                      vec3f32( 0.0f, drag_panel_scale, drag_panel_scale)),
-    add_vec3f32(z,                                   vec3f32( 0.0f, drag_panel_scale, -drag_panel_scale)),
-    add_vec3f32(vec3f32(gizmo.position.x, y.y, z.z), vec3f32( 0.0f, -drag_panel_scale, -drag_panel_scale)),
-    add_vec3f32(y,                                   vec3f32( 0.0f, -drag_panel_scale, drag_panel_scale)),
+    add_vec3f32(gizmo.position,                      vec3f32( 0.0f, gizmo.drag_panel_scale, gizmo.drag_panel_scale)),
+    add_vec3f32(z,                                   vec3f32( 0.0f, gizmo.drag_panel_scale, -gizmo.drag_panel_scale)),
+    add_vec3f32(vec3f32(gizmo.position.x, y.y, z.z), vec3f32( 0.0f, -gizmo.drag_panel_scale, -gizmo.drag_panel_scale)),
+    add_vec3f32(y,                                   vec3f32( 0.0f, -gizmo.drag_panel_scale, gizmo.drag_panel_scale)),
   };
   
-  Vec4f32 yz_color = vec4f32w(0.0f, 1.0f, 1.0f, color_alpha);
-  renderer_push_quad(renderer, yz, yz_color, bring_to_front);
+  renderer_push_quad(renderer, yz, gizmo.yz_panel_color, bring_to_front);
   
   //~ Panel XZ
   
   Quad xz = {
-    add_vec3f32(gizmo.position,                      vec3f32( drag_panel_scale, 0.0f,  drag_panel_scale)),
-    add_vec3f32(x,                                   vec3f32(-drag_panel_scale, 0.0f,  drag_panel_scale)),
-    add_vec3f32(vec3f32(x.x, gizmo.position.y, z.z), vec3f32(-drag_panel_scale, 0.0f, -drag_panel_scale)),
-    add_vec3f32(z,                                   vec3f32( drag_panel_scale, 0.0f, -drag_panel_scale)),
+    add_vec3f32(gizmo.position,                      vec3f32( gizmo.drag_panel_scale, 0.0f,  gizmo.drag_panel_scale)),
+    add_vec3f32(x,                                   vec3f32(-gizmo.drag_panel_scale, 0.0f,  gizmo.drag_panel_scale)),
+    add_vec3f32(vec3f32(x.x, gizmo.position.y, z.z), vec3f32(-gizmo.drag_panel_scale, 0.0f, -gizmo.drag_panel_scale)),
+    add_vec3f32(z,                                   vec3f32( gizmo.drag_panel_scale, 0.0f, -gizmo.drag_panel_scale)),
   };
   
-  Vec4f32 xz_color = vec4f32w(1.0f, 0.0f, 1.0f, color_alpha);
-  renderer_push_quad(renderer, xz, xz_color, bring_to_front);
+  renderer_push_quad(renderer, xz, gizmo.zx_panel_color, bring_to_front);
+  
+  //~ Center
+  Cube center = cube_new(gizmo.position, Color_White, 0.0f);
+  Mat4f32 scale = scale_mat4f32(0.1f, 0.1f, 0.1f);
+  center.transform = mul_mat4f32(scale, center.transform);
+  renderer_push_cube(renderer, center, 1);
 }
 
 // NOTE(fz): Position should be in NDC

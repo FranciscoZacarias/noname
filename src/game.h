@@ -80,13 +80,33 @@ typedef struct Arrow {
 
 internal Arrow arrow_new(Vec3f32 base, Vec3f32 points_to, Vec4f32 color, f32 scale);
 
+typedef enum Axis {
+  Axis_None,
+  Axis_X,
+  Axis_Y,
+  Axis_Z
+} Axis;
+
 typedef struct GizmoTranslation {
   Vec3f32 position;
+  
+  Vec4f32 x_arrow_color;
+  Vec4f32 y_arrow_color;
+  Vec4f32 z_arrow_color;
+  
+  Vec4f32 xy_panel_color;
+  Vec4f32 yz_panel_color;
+  Vec4f32 zx_panel_color;
+  
+  f32 arrow_size;
   f32 arrow_scale;
-  f32 quad_scale;
+  f32 drag_panel_size;
+  f32 drag_panel_scale;
 } GizmoTranslation; 
 
-internal GizmoTranslation gizmo_translation_new(Vec3f32 position, f32 arrow_scale, f32 quad_scale);
+internal GizmoTranslation gizmo_translation_new(Vec3f32 position);
+internal f32 find_gizmo_arrow_under_cursor(Camera camera, Vec3f32 raycast, Axis* axis);
+internal f32 find_gizmo_quad_under_cursor(Camera camera, Vec3f32 raycast, Axis* axis);
 
 //~ Game generic 
 typedef struct Cube_Under_Cursor {

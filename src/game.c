@@ -78,14 +78,18 @@ y_pos -= 0.05f; } while(0);
   }
   //- End TODO(fz)
   
-  //~ Find cube under cursor
-  if (!find_cube_under_cursor(*camera, raycast, &GameState.cube_under_cursor)) {
+  GameState.cube_under_cursor.index = U32_MAX;
+  
+  Axis gizmo_arrow_result = Axis_None;
+  f32 distance_arrow = find_gizmo_arrow_under_cursor(*camera, raycast, &gizmo_arrow_result);
+  Axis gizmo_panel_result = Axis_None;
+  f32 distance_panel = find_gizmo_quad_under_cursor(*camera, raycast, &gizmo_panel_result);
+  
+  if (gizmo_arrow_result == Axis_None &&  gizmo_panel_result == Axis_None && !find_cube_under_cursor(*camera, raycast, &GameState.cube_under_cursor)) {
     GameState.cube_under_cursor.index = U32_MAX;
   }
   
   if (GameState.cube_under_cursor.index != U32_MAX) {
-    
-    
     if (input_is_key_pressed(KeyboardKey_F)) {
       //~ NOTE(fz): Add a cube
       Quad face = cube_get_local_space_face_quad(GameState.cube_under_cursor.hovered_face);
@@ -144,8 +148,56 @@ y_pos -= 0.05f; } while(0);
   if (GameState.total_selected_cubes == 1) {
     u32 selected_cube_index = GameState.selected_cubes[0];
     Cube* selected_cube = &GameState.cubes[selected_cube_index];
-    GameState.editor.selected_gizmo = gizmo_translation_new(cube_get_center(*selected_cube), 1.0f, 1.0f);
+    GameState.editor.selected_gizmo = gizmo_translation_new(cube_get_center(*selected_cube));
     GameState.editor.total_gizmos = 1;
+    b32 true_if_arrow_false_if_panel = 0;
+    
+    if (gizmo_arrow_result != Axis_None || gizmo_panel_result != Axis_None) {
+      
+      if (gizmo_arrow_result != Axis_None && gizmo_panel_result != Axis_None) {
+        if (distance_arrow <= distance_panel) {
+          true_if_arrow_false_if_panel = 1;
+        } else {
+          true_if_arrow_false_if_panel = 0;
+        }
+      } else if (gizmo_arrow_result != Axis_None) {
+        true_if_arrow_false_if_panel = 1;
+      } else if (gizmo_panel_result != Axis_None) {
+        true_if_arrow_false_if_panel = 0;
+      }
+      
+      if (true_if_arrow_false_if_panel) {
+        switch (gizmo_arrow_result) {
+          case Axis_X: {
+            GameState.editor.selected_gizmo.x_arrow_color = Color_Yellow;
+          } break;
+          case Axis_Y: {
+            GameState.editor.selected_gizmo.y_arrow_color = Color_Yellow;
+          } break;
+          case Axis_Z: {
+            GameState.editor.selected_gizmo.z_arrow_color = Color_Yellow;
+          } break;
+        }
+      } else if (gizmo_panel_result != Axis_None) {
+        switch (gizmo_panel_result) {
+          case Axis_X: {
+            GameState.editor.selected_gizmo.xy_panel_color.w = 0.7f;
+            GameState.editor.selected_gizmo.x_arrow_color = Color_Yellow;
+            GameState.editor.selected_gizmo.y_arrow_color = Color_Yellow;
+          } break;
+          case Axis_Y: {
+            GameState.editor.selected_gizmo.yz_panel_color.w = 0.7f;
+            GameState.editor.selected_gizmo.y_arrow_color = Color_Yellow;
+            GameState.editor.selected_gizmo.z_arrow_color = Color_Yellow;
+          } break;
+          case Axis_Z: {
+            GameState.editor.selected_gizmo.zx_panel_color.w = 0.7f;
+            GameState.editor.selected_gizmo.x_arrow_color = Color_Yellow;
+            GameState.editor.selected_gizmo.z_arrow_color = Color_Yellow;
+          } break;
+        }
+      }
+    }
   } else {
     GameState.editor.total_gizmos = 0;
   }
@@ -221,11 +273,23 @@ internal b32 find_cube_under_cursor(Camera camera, Vec3f32 raycast, Cube_Under_C
   
   return match;
 }
-internal GizmoTranslation gizmo_translation_new(Vec3f32 position, f32 arrow_scale, f32 quad_scale) {
+
+internal GizmoTranslation gizmo_translation_new(Vec3f32 position) {
   GizmoTranslation result = { 0 };
+  
+  result.x_arrow_color = Color_Red;
+  result.y_arrow_color = Color_Green;
+  result.z_arrow_color = Color_Blue;
+  
+  result.xy_panel_color = vec4f32w(1.0f, 1.0f, 0.0f, 0.3);
+  result.yz_panel_color = vec4f32w(0.0f, 1.0f, 1.0f, 0.3);
+  result.zx_panel_color = vec4f32w(1.0f, 0.0f, 1.0f, 0.3);
+  
   result.position    = position;
-  result.arrow_scale = arrow_scale;
-  result.quad_scale  = quad_scale;
+  result.arrow_size  = 3.0f;
+  result.arrow_scale = 1.0f;
+  result.drag_panel_size  = 3.0f;
+  result.drag_panel_scale = 0.7f;
   return result;
 }
 
@@ -236,6 +300,155 @@ internal Arrow arrow_new(Vec3f32 base, Vec3f32 points_to, Vec4f32 color, f32 sca
   result.color = color;
   result.scale = scale;
   return result;
+}
+
+internal f32 find_gizmo_arrow_under_cursor(Camera camera, Vec3f32 raycast, Axis* axis) {
+  if (GameState.total_selected_cubes != 1) {
+    return 0;
+  }
+  
+  Axis result = Axis_None;
+  f32 axis_distance = F32_MAX;
+  
+  //~ Try arrow X
+  {
+    Cube cube = cube_new(GameState.editor.selected_gizmo.position, vec4f32w(0.0f, 0.0f, 0.0f, 0.0f), 0.3f);
+    Mat4f32 scale = scale_mat4f32(1.5f, 0.1f, 0.1f);
+    Mat4f32 translate = translate_mat4f32(1.5f, 0.0f, 0.0f);
+    cube.transform = mul_mat4f32(translate, cube.transform);
+    cube.transform = mul_mat4f32(scale, cube.transform);
+    for(u32 j = 0; j < 6; j++) {
+      Quad face = transform_quad(cube_get_local_space_face_quad(j), cube.transform);
+      Vec3f32 intersection = intersect_line_with_plane(linef32(camera.position, raycast), face.p0, face.p1, face.p2);
+      if (is_vector_inside_rectangle(intersection, face.p0, face.p1, face.p2)) {
+        // NOTE(fz): Because it's an arrow, we just care about matching once.
+        result = Axis_X;
+        axis_distance = distance_vec3f32(intersection, camera.position);
+      }
+    }
+  }
+  
+  //~ Try arrow Y
+  {
+    Cube cube = cube_new(GameState.editor.selected_gizmo.position, vec4f32w(0.0f, 0.0f, 0.0f, 0.0f), 0.3f);
+    Mat4f32 scale = scale_mat4f32(0.1f, 1.5f, 0.1f);
+    Mat4f32 translate = translate_mat4f32(0.0f, 1.5f, 0.0f);
+    cube.transform = mul_mat4f32(translate, cube.transform);
+    cube.transform = mul_mat4f32(scale, cube.transform);
+    for(u32 j = 0; j < 6; j++) {
+      Quad face = transform_quad(cube_get_local_space_face_quad(j), cube.transform);
+      Vec3f32 intersection = intersect_line_with_plane(linef32(camera.position, raycast), face.p0, face.p1, face.p2);
+      if (is_vector_inside_rectangle(intersection, face.p0, face.p1, face.p2)) {
+        // NOTE(fz): Because it's an arrow, we just care about matching once.
+        f32 distance = distance_vec3f32(intersection, camera.position);
+        if (axis_distance >= distance) {
+          result = Axis_Y;
+          axis_distance = distance;
+        }
+      }
+    }
+  }
+  
+  //~ Try arrow Z
+  {
+    Cube cube = cube_new(GameState.editor.selected_gizmo.position, vec4f32w(0.0f, 0.0f, 0.0f, 0.0f), 0.3f);
+    Mat4f32 scale = scale_mat4f32(0.1f, 0.1f, 1.5f);
+    Mat4f32 translate = translate_mat4f32(0.0f, 0.0f, 1.5f);
+    cube.transform = mul_mat4f32(translate, cube.transform);
+    cube.transform = mul_mat4f32(scale, cube.transform);
+    for(u32 j = 0; j < 6; j++) {
+      Quad face = transform_quad(cube_get_local_space_face_quad(j), cube.transform);
+      Vec3f32 intersection = intersect_line_with_plane(linef32(camera.position, raycast), face.p0, face.p1, face.p2);
+      if (is_vector_inside_rectangle(intersection, face.p0, face.p1, face.p2)) {
+        // NOTE(fz): Because it's an arrow, we just care about matching once.
+        f32 distance = distance_vec3f32(intersection, camera.position);
+        if (axis_distance >= distance) {
+          result = Axis_Z;
+          axis_distance = distance;
+        }
+      }
+    }
+  }
+  
+  if (result != Axis_None) {
+    *axis = result;
+    return axis_distance;
+  }
+  
+  return 0;
+}
+
+internal f32 find_gizmo_quad_under_cursor(Camera camera, Vec3f32 raycast, Axis* axis) {
+  // NOTE(fz): For the resutl axis, let's say X is XY plane, Y is YZ plane and Z is ZX plane.
+  if (GameState.total_selected_cubes != 1) {
+    return 0;
+  }
+  
+  Axis result = Axis_None;
+  f32 axis_distance = F32_MAX;
+  
+  Vec3f32 x = add_vec3f32(GameState.editor.selected_gizmo.position, vec3f32(GameState.editor.selected_gizmo.drag_panel_size, 0.0f, 0.0f));
+  Vec3f32 y = add_vec3f32(GameState.editor.selected_gizmo.position, vec3f32(0.0f, GameState.editor.selected_gizmo.drag_panel_size, 0.0f));
+  Vec3f32 z = add_vec3f32(GameState.editor.selected_gizmo.position, vec3f32(0.0f, 0.0f, GameState.editor.selected_gizmo.drag_panel_size));
+  
+  //~ Try panel XY
+  {
+    Quad xy = {
+      add_vec3f32(GameState.editor.selected_gizmo.position,                      vec3f32( GameState.editor.selected_gizmo.drag_panel_scale, GameState.editor.selected_gizmo.drag_panel_scale, 0.0f)),
+      add_vec3f32(x,                                   vec3f32(-GameState.editor.selected_gizmo.drag_panel_scale, GameState.editor.selected_gizmo.drag_panel_scale, 0.0f)),
+      add_vec3f32(vec3f32(x.x, y.y, GameState.editor.selected_gizmo.position.z), vec3f32(-GameState.editor.selected_gizmo.drag_panel_scale, -GameState.editor.selected_gizmo.drag_panel_scale, 0.0f)),
+      add_vec3f32(y,                                   vec3f32( GameState.editor.selected_gizmo.drag_panel_scale, -GameState.editor.selected_gizmo.drag_panel_scale, 0.0f)),
+    };
+    Vec3f32 intersection = intersect_line_with_plane(linef32(camera.position, raycast), xy.p0, xy.p1, xy.p2);
+    if (is_vector_inside_rectangle(intersection, xy.p0, xy.p1, xy.p2)) {
+      result = Axis_X;
+      axis_distance = distance_vec3f32(intersection, camera.position);
+    }
+  }
+  
+  //~ Try panel YZ
+  {
+    Quad yz = {
+      add_vec3f32(GameState.editor.selected_gizmo.position,                      vec3f32( 0.0f, GameState.editor.selected_gizmo.drag_panel_scale, GameState.editor.selected_gizmo.drag_panel_scale)),
+      add_vec3f32(z,                                   vec3f32( 0.0f, GameState.editor.selected_gizmo.drag_panel_scale, -GameState.editor.selected_gizmo.drag_panel_scale)),
+      add_vec3f32(vec3f32(GameState.editor.selected_gizmo.position.x, y.y, z.z), vec3f32( 0.0f, -GameState.editor.selected_gizmo.drag_panel_scale, -GameState.editor.selected_gizmo.drag_panel_scale)),
+      add_vec3f32(y,                                   vec3f32( 0.0f, -GameState.editor.selected_gizmo.drag_panel_scale, GameState.editor.selected_gizmo.drag_panel_scale)),
+    };
+    Vec3f32 intersection = intersect_line_with_plane(linef32(camera.position, raycast), yz.p0, yz.p1, yz.p2);
+    if (is_vector_inside_rectangle(intersection, yz.p0, yz.p1, yz.p2)) {
+      f32 distance = distance_vec3f32(intersection, camera.position);
+      if (axis_distance >= distance) {
+        result = Axis_Y;
+        axis_distance = distance_vec3f32(intersection, camera.position);
+      }
+    }
+  }
+  
+  //~ Try panel ZX
+  {
+    Quad zx = {
+      add_vec3f32(GameState.editor.selected_gizmo.position,                      vec3f32( GameState.editor.selected_gizmo.drag_panel_scale, 0.0f,  GameState.editor.selected_gizmo.drag_panel_scale)),
+      add_vec3f32(x,                                   vec3f32(-GameState.editor.selected_gizmo.drag_panel_scale, 0.0f,  GameState.editor.selected_gizmo.drag_panel_scale)),
+      add_vec3f32(vec3f32(x.x, GameState.editor.selected_gizmo.position.y, z.z), vec3f32(-GameState.editor.selected_gizmo.drag_panel_scale, 0.0f, -GameState.editor.selected_gizmo.drag_panel_scale)),
+      add_vec3f32(z,                                   vec3f32( GameState.editor.selected_gizmo.drag_panel_scale, 0.0f, -GameState.editor.selected_gizmo.drag_panel_scale)),
+    };
+    
+    Vec3f32 intersection = intersect_line_with_plane(linef32(camera.position, raycast), zx.p0, zx.p1, zx.p2);
+    if (is_vector_inside_rectangle(intersection, zx.p0, zx.p1, zx.p2)) {
+      f32 distance = distance_vec3f32(intersection, camera.position);
+      if (axis_distance >= distance) {
+        result = Axis_Z;
+        axis_distance = distance_vec3f32(intersection, camera.position);
+      }
+    }
+  }
+  
+  if (result != Axis_None) {
+    *axis = result;
+    return axis_distance;
+  }
+  
+  return 0;
 }
 
 internal Cube cube_new(Vec3f32 position, Vec4f32 color, f32 border_thickness) {
@@ -250,30 +463,30 @@ internal Cube cube_new(Vec3f32 position, Vec4f32 color, f32 border_thickness) {
 }
 
 internal Quad cube_get_local_space_face_quad(Cube_Face face) {
-	Quad result = { 0 };
+  Quad result = { 0 };
   
-	switch(face) {
-		case CubeFace_Back: {
-			result = (Quad){ CubeVerticesLocalSpace.p0, CubeVerticesLocalSpace.p1, CubeVerticesLocalSpace.p2, CubeVerticesLocalSpace.p3 };
-		} break;
-		case CubeFace_Front: {
-			result = (Quad){ CubeVerticesLocalSpace.p6, CubeVerticesLocalSpace.p5, CubeVerticesLocalSpace.p4, CubeVerticesLocalSpace.p7 };;
-		} break;
-		case CubeFace_Left: {
-			result = (Quad){ CubeVerticesLocalSpace.p0, CubeVerticesLocalSpace.p3, CubeVerticesLocalSpace.p7, CubeVerticesLocalSpace.p4 };
-		} break;
-		case CubeFace_Right: {
-			result = (Quad){ CubeVerticesLocalSpace.p5, CubeVerticesLocalSpace.p6, CubeVerticesLocalSpace.p2, CubeVerticesLocalSpace.p1 };
-		} break;
-		case CubeFace_Bottom: {
-			result = (Quad){ CubeVerticesLocalSpace.p4, CubeVerticesLocalSpace.p5, CubeVerticesLocalSpace.p1, CubeVerticesLocalSpace.p0 };
-		} break;
-		case CubeFace_Top: {
-			result = (Quad){ CubeVerticesLocalSpace.p3, CubeVerticesLocalSpace.p2, CubeVerticesLocalSpace.p6, CubeVerticesLocalSpace.p7 };
-		} break;
-	}
+  switch(face) {
+    case CubeFace_Back: {
+      result = (Quad){ CubeVerticesLocalSpace.p0, CubeVerticesLocalSpace.p1, CubeVerticesLocalSpace.p2, CubeVerticesLocalSpace.p3 };
+    } break;
+    case CubeFace_Front: {
+      result = (Quad){ CubeVerticesLocalSpace.p6, CubeVerticesLocalSpace.p5, CubeVerticesLocalSpace.p4, CubeVerticesLocalSpace.p7 };;
+    } break;
+    case CubeFace_Left: {
+      result = (Quad){ CubeVerticesLocalSpace.p0, CubeVerticesLocalSpace.p3, CubeVerticesLocalSpace.p7, CubeVerticesLocalSpace.p4 };
+    } break;
+    case CubeFace_Right: {
+      result = (Quad){ CubeVerticesLocalSpace.p5, CubeVerticesLocalSpace.p6, CubeVerticesLocalSpace.p2, CubeVerticesLocalSpace.p1 };
+    } break;
+    case CubeFace_Bottom: {
+      result = (Quad){ CubeVerticesLocalSpace.p4, CubeVerticesLocalSpace.p5, CubeVerticesLocalSpace.p1, CubeVerticesLocalSpace.p0 };
+    } break;
+    case CubeFace_Top: {
+      result = (Quad){ CubeVerticesLocalSpace.p3, CubeVerticesLocalSpace.p2, CubeVerticesLocalSpace.p6, CubeVerticesLocalSpace.p7 };
+    } break;
+  }
   
-	return result;
+  return result;
 }
 
 internal Vec3f32 cube_get_center(Cube cube) {
