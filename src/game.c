@@ -152,55 +152,74 @@ y_pos -= 0.05f; } while(0);
     GameState.editor.total_gizmos = 1;
     b32 true_if_arrow_false_if_panel = 0;
     
+    f32 delta = 0.0f;
     if (gizmo_arrow_result != Axis_None || gizmo_panel_result != Axis_None) {
-      if (input_is_button_down(MouseButton_Left)) {
-        glfwSetCursor(GlfwWindow, DragCursor);
+      glfwSetCursor(GlfwWindow, DragCursor);
+    } else {
+      glfwSetCursor(GlfwWindow, ArrowCursor);
+    }
+    
+    if (input_is_button_pressed(MouseButton_Left)) {
+      if (input_is_key_down(KeyboardKey_LEFT_SHIFT)) {
+        delta -= 2.0f;
       } else {
-        glfwSetCursor(GlfwWindow, ArrowCursor);
+        delta += 2.0f;
       }
-      
-      if (gizmo_arrow_result != Axis_None && gizmo_panel_result != Axis_None) {
-        if (distance_arrow <= distance_panel) {
-          true_if_arrow_false_if_panel = 1;
-        } else {
-          true_if_arrow_false_if_panel = 0;
-        }
-      } else if (gizmo_arrow_result != Axis_None) {
+    }
+    
+    if (gizmo_arrow_result != Axis_None && gizmo_panel_result != Axis_None) {
+      if (distance_arrow <= distance_panel) {
         true_if_arrow_false_if_panel = 1;
-      } else if (gizmo_panel_result != Axis_None) {
+      } else {
         true_if_arrow_false_if_panel = 0;
       }
-      
-      if (true_if_arrow_false_if_panel) {
-        switch (gizmo_arrow_result) {
-          case Axis_X: {
-            GameState.editor.selected_gizmo.x_arrow_color = Color_Yellow;
-          } break;
-          case Axis_Y: {
-            GameState.editor.selected_gizmo.y_arrow_color = Color_Yellow;
-          } break;
-          case Axis_Z: {
-            GameState.editor.selected_gizmo.z_arrow_color = Color_Yellow;
-          } break;
-        }
-      } else if (gizmo_panel_result != Axis_None) {
-        switch (gizmo_panel_result) {
-          case Axis_X: {
-            GameState.editor.selected_gizmo.xy_panel_color.w = 0.7f;
-            GameState.editor.selected_gizmo.x_arrow_color = Color_Yellow;
-            GameState.editor.selected_gizmo.y_arrow_color = Color_Yellow;
-          } break;
-          case Axis_Y: {
-            GameState.editor.selected_gizmo.yz_panel_color.w = 0.7f;
-            GameState.editor.selected_gizmo.y_arrow_color = Color_Yellow;
-            GameState.editor.selected_gizmo.z_arrow_color = Color_Yellow;
-          } break;
-          case Axis_Z: {
-            GameState.editor.selected_gizmo.zx_panel_color.w = 0.7f;
-            GameState.editor.selected_gizmo.x_arrow_color = Color_Yellow;
-            GameState.editor.selected_gizmo.z_arrow_color = Color_Yellow;
-          } break;
-        }
+    } else if (gizmo_arrow_result != Axis_None) {
+      true_if_arrow_false_if_panel = 1;
+    } else if (gizmo_panel_result != Axis_None) {
+      true_if_arrow_false_if_panel = 0;
+    }
+    
+    if (true_if_arrow_false_if_panel) {
+      switch (gizmo_arrow_result) {
+        case Axis_X: {
+          GameState.editor.selected_gizmo.x_arrow_color = Color_Yellow;
+          Mat4f32 translate = translate_mat4f32(delta, 0.0f, 0.0f);
+          selected_cube->transform = mul_mat4f32(translate, selected_cube->transform);
+        } break;
+        case Axis_Y: {
+          GameState.editor.selected_gizmo.y_arrow_color = Color_Yellow;
+          Mat4f32 translate = translate_mat4f32(0.0f, delta, 0.0f);
+          selected_cube->transform = mul_mat4f32(translate, selected_cube->transform);
+        } break;
+        case Axis_Z: {
+          GameState.editor.selected_gizmo.z_arrow_color = Color_Yellow;
+          Mat4f32 translate = translate_mat4f32(0.0f, 0.0f, delta);
+          selected_cube->transform = mul_mat4f32(translate, selected_cube->transform);
+        } break;
+      }
+    } else if (gizmo_panel_result != Axis_None) {
+      switch (gizmo_panel_result) {
+        case Axis_X: {
+          GameState.editor.selected_gizmo.xy_panel_color.w = 0.7f;
+          GameState.editor.selected_gizmo.x_arrow_color = Color_Yellow;
+          GameState.editor.selected_gizmo.y_arrow_color = Color_Yellow;
+          Mat4f32 translate = translate_mat4f32(delta, delta, 0.0f);
+          selected_cube->transform = mul_mat4f32(translate, selected_cube->transform);
+        } break;
+        case Axis_Y: {
+          GameState.editor.selected_gizmo.yz_panel_color.w = 0.7f;
+          GameState.editor.selected_gizmo.y_arrow_color = Color_Yellow;
+          GameState.editor.selected_gizmo.z_arrow_color = Color_Yellow;
+          Mat4f32 translate = translate_mat4f32(0.0f, delta, delta);
+          selected_cube->transform = mul_mat4f32(translate, selected_cube->transform);
+        } break;
+        case Axis_Z: {
+          GameState.editor.selected_gizmo.zx_panel_color.w = 0.7f;
+          GameState.editor.selected_gizmo.x_arrow_color = Color_Yellow;
+          GameState.editor.selected_gizmo.z_arrow_color = Color_Yellow;
+          Mat4f32 translate = translate_mat4f32(delta, 0.0f, delta);
+          selected_cube->transform = mul_mat4f32(translate, selected_cube->transform);
+        } break;
       }
     }
   } else {

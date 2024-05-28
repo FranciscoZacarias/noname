@@ -97,6 +97,31 @@ internal Vec2f32 vec2f32(f32 x, f32 y) {
 	return result;
 }
 
+internal f32 distance_vec2f32(Vec2f32 a, Vec2f32 b) {
+  f32 result = 0.0f;
+	f32 dx = b.x - a.x;
+	f32 dy = b.y - a.y;
+	result = sqrtf(dx*dx + dy*dy);
+	return result;
+}
+
+internal f32 signed_distance_vec2f32(Vec2f32 a, Vec2f32 b, Vec2f32 reference) {
+  f32 result = 0.0f;
+  f32 dx = b.x - a.x;
+  f32 dy = b.y - a.y;
+  f32 distance = sqrtf(dx*dx + dy*dy);
+  
+  f32 sign = (reference.x - a.x) * dy - (reference.y - a.y) * dx;
+  
+  if (sign < 0) {
+    result = -distance;
+  } else {
+    result = distance;
+  }
+  
+  return result;
+}
+
 internal Vec3f32 vec3f32(f32 x, f32 y, f32 z) {
 	Vec3f32 result = {x, y, z};
 	return result;

@@ -87,6 +87,8 @@ typedef struct Linef32 {
 internal Linef32 linef32(Vec3f32 point, Vec3f32 direction);
 
 internal Vec2f32 vec2f32(f32 x, f32 y);
+internal f32 distance_vec2f32(Vec2f32 a, Vec2f32 b);
+internal f32 signed_distance_vec2f32(Vec2f32 a, Vec2f32 b, Vec2f32 reference);
 
 internal Vec3f32 vec3f32(f32 x, f32 y, f32 z);
 internal Vec3f32 vec3f32_from_vec4f32(Vec4f32 v); /* Discards the w value */

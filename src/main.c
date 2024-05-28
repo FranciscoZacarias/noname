@@ -19,14 +19,13 @@
 [x] - Stuff that is not glfw but core to the program, should be in like a program or core module. Like the Program_State stuff for example.
 [x] - Remove renderer_update. Stuff should either belong to the renderer and be in end_frame, or belong to the game logic and be in game_update or higher.
 [x] - Be able to select gizmos arrows and panels
-[ ] - Add directional light
+ [x] - Gizmos should  actually transform the cube on each axis
+[x] - Moving cubes from gizmos must snap to the grid
 [ ] - Add phong light
 [ ] - Add logs to the screen that fade after 1 second or so.
 [ ] - Add way to save and load levels from files
 [ ] - Add undo system for the add/remove cubes
 [ ] - For a selected cube, add a small UI to configure stuff about it (like colors) 
- [ ] - Gizmos should  actually transform the cube on each axis
-[ ] - Moving cubes from gizmos must snap to the grid
 [ ] - Add some sort of post processing shake when loading variables from hotload, just to know it was loaded and feature creep
 
 ## BUGS:
@@ -47,7 +46,6 @@
 - Should be better to just typedef Vec4 to a Color. I'm always making the mistake of making a color a Vec3.
 - Just have the fucking vec4f32() function take the w. Eventhough its almost always 1.0f, I think its better to write the fucking 1.0f, rather than obfuscate it in the constructor
 - Just add the true or false macros... It's even ambiguos dealing with 0 and 1 for bools.
-
 */
 
 #include "main.h"
@@ -134,6 +132,7 @@ internal void keyboard_callback(GLFWwindow* window, s32 key, s32 scancode, s32 a
     case 258: key = 0x09; break; // TAB
     case 341: key = 0xA2; break; // LEFT CONTROL
     case 261: key = 0x2E; break; // DELETE
+    case 340: key = 0xA0; break; // LEFT SHIFT
   }
   
   if (key >= 0 && key <= KEYBOARD_STATE_SIZE) {

@@ -153,8 +153,13 @@ typedef struct Keyboard_State {
 
 // TODO(fz): Replace the current Mouse_State with this _Mouse_State
 typedef struct Mouse_State {
-  f32 screen_space_x;
-  f32 screen_space_y;
+  union {
+    struct {
+      f32 screen_space_x;
+      f32 screen_space_y;
+    };
+    Vec2f32 screen_space;
+  };
   b8 buttons[MouseButton_Count];
 } Mouse_State;
 
