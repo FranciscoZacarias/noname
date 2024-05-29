@@ -25,10 +25,10 @@
  [x] - Gizmos should  actually transform the cube on each axis
 [x] - Moving cubes from gizmos must snap to the grid
 [x] - Use F keys to switch selected cube colors
-[-] - For a selected cube, add a small UI to configure stuff about it (like colors) 
+[x] - Add way to save and load levels from files
 [ ] - Add phong light
+[-] - For a selected cube, add a small UI to configure stuff about it (like colors) 
 [-] - Add logs to the screen that fade after 1 second or so.
-[ ] - Add way to save and load levels from files
 [-] - Add undo system for the add/remove cubes
 [-] - Add some sort of post processing shake when loading variables from hotload, just to know it was loaded and feature creep
 
@@ -50,7 +50,7 @@
 
 [x] - SCRATCH. I will think about it further. Right now, no... Should be better to just typedef Vec4 to a Color. I'm always making the mistake of making a color a Vec3.
 [x] - Just have the fucking vec4f32() function take the w. Eventhough its almost always 1.0f, I think its better to write the fucking 1.0f, rather than obfuscate it in the constructor
-- Just add the true or false macros... It's even ambiguos dealing with 0 and 1 for bools.
+[x] - Just add the true or false macros... It's even ambiguos dealing with 0 and 1 for bools.
 */
 
 #include "main.h"
@@ -115,6 +115,11 @@ int main(void) {
     while (offset < save_file.size) {
       Cube cube;
       MemoryCopy(&cube, save_file.data+offset, sizeof(Cube));
+      if (cube.is_dead) {
+        offset += sizeof(Cube);
+        continue;
+      }
+      cube.is_selected = 0;
       game_push_cube(cube);
       offset += sizeof(Cube);
     }
