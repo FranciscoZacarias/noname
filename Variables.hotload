@@ -4,7 +4,7 @@ window_width: 1280
 window_height: 720
 
 \Editor
-camera_speed: 8
+camera_speed: 16
 show_stats: true
 near_plane: 0.1
 far_plane: 100.0

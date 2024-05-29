@@ -200,6 +200,9 @@
 ////////////////////////////////
 // Core
 
+#define true  1
+#define false 0
+
 #define Stringify_(S) #S
 #define Stringify(S) Stringify_(S)
 #define Glue_(A,B) A##B

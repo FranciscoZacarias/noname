@@ -305,9 +305,9 @@ internal GizmoTranslation gizmo_translation_new(Vec3f32 position) {
   result.y_arrow_color = Color_Green;
   result.z_arrow_color = Color_Blue;
   
-  result.xy_panel_color = vec4f32w(1.0f, 1.0f, 0.0f, 0.3);
-  result.yz_panel_color = vec4f32w(0.0f, 1.0f, 1.0f, 0.3);
-  result.zx_panel_color = vec4f32w(1.0f, 0.0f, 1.0f, 0.3);
+  result.xy_panel_color = vec4f32(1.0f, 1.0f, 0.0f, 0.3);
+  result.yz_panel_color = vec4f32(0.0f, 1.0f, 1.0f, 0.3);
+  result.zx_panel_color = vec4f32(1.0f, 0.0f, 1.0f, 0.3);
   
   result.position    = position;
   result.arrow_size  = 3.0f;
@@ -336,7 +336,7 @@ internal f32 find_gizmo_arrow_under_cursor(Camera camera, Vec3f32 raycast, Axis*
   
   //~ Try arrow X
   {
-    Cube cube = cube_new(GameState.editor.selected_gizmo.position, vec4f32w(0.0f, 0.0f, 0.0f, 0.0f), 0.3f);
+    Cube cube = cube_new(GameState.editor.selected_gizmo.position, vec4f32(0.0f, 0.0f, 0.0f, 0.0f), 0.3f);
     Mat4f32 scale = scale_mat4f32(1.5f, 0.1f, 0.1f);
     Mat4f32 translate = translate_mat4f32(1.5f, 0.0f, 0.0f);
     cube.transform = mul_mat4f32(translate, cube.transform);
@@ -354,7 +354,7 @@ internal f32 find_gizmo_arrow_under_cursor(Camera camera, Vec3f32 raycast, Axis*
   
   //~ Try arrow Y
   {
-    Cube cube = cube_new(GameState.editor.selected_gizmo.position, vec4f32w(0.0f, 0.0f, 0.0f, 0.0f), 0.3f);
+    Cube cube = cube_new(GameState.editor.selected_gizmo.position, vec4f32(0.0f, 0.0f, 0.0f, 0.0f), 0.3f);
     Mat4f32 scale = scale_mat4f32(0.1f, 1.5f, 0.1f);
     Mat4f32 translate = translate_mat4f32(0.0f, 1.5f, 0.0f);
     cube.transform = mul_mat4f32(translate, cube.transform);
@@ -375,7 +375,7 @@ internal f32 find_gizmo_arrow_under_cursor(Camera camera, Vec3f32 raycast, Axis*
   
   //~ Try arrow Z
   {
-    Cube cube = cube_new(GameState.editor.selected_gizmo.position, vec4f32w(0.0f, 0.0f, 0.0f, 0.0f), 0.3f);
+    Cube cube = cube_new(GameState.editor.selected_gizmo.position, vec4f32(0.0f, 0.0f, 0.0f, 0.0f), 0.3f);
     Mat4f32 scale = scale_mat4f32(0.1f, 0.1f, 1.5f);
     Mat4f32 translate = translate_mat4f32(0.0f, 0.0f, 1.5f);
     cube.transform = mul_mat4f32(translate, cube.transform);

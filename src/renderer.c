@@ -560,12 +560,12 @@ internal void renderer_end_frame(Renderer* renderer, Mat4f32 view, Mat4f32 proje
     // But at least it's not doing core game logic. It's just a color hack
     if (cube.is_selected) {
       cube.border_thickness = 0.08;
-      cube.border_color = vec4f32(0.5+0.5*sin(5*ProgramState.current_time), 0.0f, 0.5+0.5*sin(5*ProgramState.current_time));
+      cube.border_color = vec4f32(0.5+0.5*sin(5*ProgramState.current_time), 0.0f, 0.5+0.5*sin(5*ProgramState.current_time), 1.0f);
     }
     
     if (GameState.cube_under_cursor.index == i) {
       f32 highlight_scale = 0.8f;
-      renderer_push_cube_highlight_face(&ProgramRenderer, cube, GameState.cube_under_cursor.hovered_face, vec4f32(cube.color.x * highlight_scale, cube.color.y * highlight_scale, cube.color.z * highlight_scale), 0);
+      renderer_push_cube_highlight_face(&ProgramRenderer, cube, GameState.cube_under_cursor.hovered_face, vec4f32(cube.color.x * highlight_scale, cube.color.y * highlight_scale, cube.color.z * highlight_scale, 1.0f), 0);
     } else {
       renderer_push_cube(&ProgramRenderer, cube, 0);
     }

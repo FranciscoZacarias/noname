@@ -43,8 +43,8 @@
 
 ## OVERALL NOTES:
 
-- Should be better to just typedef Vec4 to a Color. I'm always making the mistake of making a color a Vec3.
-- Just have the fucking vec4f32() function take the w. Eventhough its almost always 1.0f, I think its better to write the fucking 1.0f, rather than obfuscate it in the constructor
+[x] - SCRATCH. I will think about it further. Right now, no... Should be better to just typedef Vec4 to a Color. I'm always making the mistake of making a color a Vec3.
+[x] - Just have the fucking vec4f32() function take the w. Eventhough its almost always 1.0f, I think its better to write the fucking 1.0f, rather than obfuscate it in the constructor
 - Just add the true or false macros... It's even ambiguos dealing with 0 and 1 for bools.
 */
 

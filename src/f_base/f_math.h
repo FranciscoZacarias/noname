@@ -51,7 +51,6 @@ typedef struct Mat4f32 {
   };
 } Mat4f32;
 
-
 //~ Quad
 typedef struct Quad {
   Vec3f32 p0;
@@ -83,7 +82,6 @@ typedef struct Linef32 {
   Vec3f32 direction;
 } Linef32;
 
-
 internal Linef32 linef32(Vec3f32 point, Vec3f32 direction);
 
 internal Vec2f32 vec2f32(f32 x, f32 y);
@@ -114,8 +112,7 @@ internal f32 length_vec3f32(Vec3f32 v);
 internal f32 distance_vec3f32(Vec3f32 a, Vec3f32 b);
 internal f32 angle_vec3f32(Vec3f32 a, Vec3f32 b);
 
-internal Vec4f32 vec4f32 (f32 x, f32 y, f32 z);
-internal Vec4f32 vec4f32w(f32 x, f32 y, f32 z, f32 w);
+internal Vec4f32 vec4f32 (f32 x, f32 y, f32 z, f32 w);
 internal Vec4f32 vec4f32_from_vec3f32(Vec3f32 v);
 
 internal Vec4f32 add_vec4f32(Vec4f32 a, Vec4f32 b);
