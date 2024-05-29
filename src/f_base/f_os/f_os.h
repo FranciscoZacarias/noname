@@ -31,7 +31,9 @@ typedef struct OS_File {
 
 internal b32 os_file_create(String file_name);
 internal b32 os_file_exists(String file_name);
+internal u32 os_file_write(String file_name, u8* data, u64 data_size);
 internal u32 os_file_size(String file_name);
+internal OS_File os_file_load_entire_file(Arena* arena, String file_name);
 internal u64 os_file_get_last_modified_time(String file_name);
 
 //~ Logging

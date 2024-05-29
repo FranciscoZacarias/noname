@@ -5,6 +5,7 @@
 #define APP_NAME "noname"
 #define ENABLE_HOTLOAD_VARIABLES 1
 #define ENABLE_ASSERT 1
+#define SAVE_FILE_PATH StringLiteral("D:\\work\\noname\\saves\\savefile.bin")
 
 //~ Colors
 #define Color_White vec4f32(1.0f, 1.0f, 1.0f, 1.0f)
@@ -21,11 +22,16 @@
 # define PALLETE_COLOR_B vec4f32(0.686f, 0.510f, 0.376f, 1.0f)
 # define PALLETE_COLOR_C vec4f32(0.502f, 0.239f, 0.231f, 1.0f)
 # define PALLETE_COLOR_D vec4f32(0.196f, 0.176f, 0.169f, 1.0f)
-#else
+#elif 0
 # define PALLETE_COLOR_A vec4f32(0.278f, 0.576f, 0.686f, 1.0f)
 # define PALLETE_COLOR_B vec4f32(1.0f, 0.769f, 0.439f, 1.0f)
 # define PALLETE_COLOR_C vec4f32(0.867f, 0.341f, 0.275f, 1.0f)
 # define PALLETE_COLOR_D vec4f32(0.545f, 0.196f, 0.173f, 1.0f)
+#else
+# define PALLETE_COLOR_A Color_Red
+# define PALLETE_COLOR_B Color_Green
+# define PALLETE_COLOR_C Color_Blue
+# define PALLETE_COLOR_D Color_Yellow
 #endif
 
 //~ Opengl(Glad) and GLFW Includes

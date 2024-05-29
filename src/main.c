@@ -1,4 +1,7 @@
 /*
+[ ] - noted but nothing done about it
+[x] - done
+[-] - won't do anything about it
 
 ## noname:
 [x] - Add texture support to the renderer
@@ -21,25 +24,27 @@
 [x] - Be able to select gizmos arrows and panels
  [x] - Gizmos should  actually transform the cube on each axis
 [x] - Moving cubes from gizmos must snap to the grid
+[x] - Use F keys to switch selected cube colors
+[-] - For a selected cube, add a small UI to configure stuff about it (like colors) 
 [ ] - Add phong light
-[ ] - Add logs to the screen that fade after 1 second or so.
+[-] - Add logs to the screen that fade after 1 second or so.
 [ ] - Add way to save and load levels from files
-[ ] - Add undo system for the add/remove cubes
-[ ] - For a selected cube, add a small UI to configure stuff about it (like colors) 
-[ ] - Add some sort of post processing shake when loading variables from hotload, just to know it was loaded and feature creep
+[-] - Add undo system for the add/remove cubes
+[-] - Add some sort of post processing shake when loading variables from hotload, just to know it was loaded and feature creep
 
 ## BUGS:
 [x] - When highlighting a cube, we get more triangles than we should have. We should have just the same 
 [x] - Cubes are still being selected (in a weird way) when the camera is in fly mode.
-[ ] - Font rendering is not taking into account the aspect ratio of the screen
-[ ] - We should not push cubes into the renderer that are not visible on the frustum
-[ ] - Game crashes when it gets minimized to tray
-[ ] - Camera resets to previous position if you are pressing RMB, and then press the LMB without releasing RMB
+[-] - Font rendering is not taking into account the aspect ratio of the screen
+[-] - We should not push cubes into the renderer that are not visible on the frustum
+[-] - Game crashes when it gets minimized to tray
+[-] - Camera resets to previous position if you are pressing RMB, and then press the LMB without releasing RMB
 
 ## F_BASE:
 [x] - Add thread context module
+[ ] - os_file_load_entire_file should return a bool and output OS_File from out arg
 [ ] - Add windows window layer I.e. remove glfw dependency
-[ ] - Implement get memory usage in os_layer (for win32 should be like GetProcessMemoryInfo(), for example)
+[ ] - Add a close file function.
 
 ## OVERALL NOTES:
 
@@ -90,6 +95,31 @@ int main(void) {
   
   ProgramRenderer = renderer_init(&ProgramState);
   
+  //~ Try to load save
+  os_file_create(SAVE_FILE_PATH);
+  OS_File save_file = os_file_load_entire_file(GameState.arena, SAVE_FILE_PATH);
+  if (save_file.size == 0) {
+    printf("Unable to load save file.\n");
+    
+    // Dummy data because no save file!
+    for (f32 i = -5.0f; i < 6.0f; i += 2.0f) {
+      for (f32 j = -5.0f; j < 6.0f; j += 2.0f) {
+        Cube cube = cube_new(vec3f32((f32)i, -1.0f, (f32)j), PALLETE_COLOR_B, 0.05f);
+        game_push_cube(cube);
+      }
+    }
+  } else {
+    // Load save file data.
+    MemoryCopy(&ProgramState.camera, save_file.data, sizeof(Camera));
+    s32 offset = sizeof(Camera);
+    while (offset < save_file.size) {
+      Cube cube;
+      MemoryCopy(&cube, save_file.data+offset, sizeof(Cube));
+      game_push_cube(cube);
+      offset += sizeof(Cube);
+    }
+  }
+  
   while (ProgramState.program_is_running) {
     hotload_variables(&ProgramState);
     hotload_shader_programs(&ProgramRenderer, ProgramState.current_time);
@@ -133,6 +163,10 @@ internal void keyboard_callback(GLFWwindow* window, s32 key, s32 scancode, s32 a
     case 341: key = 0xA2; break; // LEFT CONTROL
     case 261: key = 0x2E; break; // DELETE
     case 340: key = 0xA0; break; // LEFT SHIFT
+    case 290: key = 0x70; break; // F1
+    case 291: key = 0x71; break; // F2
+    case 292: key = 0x72; break; // F3
+    case 293: key = 0x73; break; // F4
   }
   
   if (key >= 0 && key <= KEYBOARD_STATE_SIZE) {

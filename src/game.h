@@ -145,6 +145,7 @@ global Game_State GameState;
 
 internal void game_init();
 internal void game_update(Camera* camera, Vec3f32 raycast);
+internal void game_save();
 
 internal void game_push_cube(Cube cube);
 internal void game_remove_cube(u32 index);

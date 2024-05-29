@@ -17,14 +17,6 @@ internal void game_init() {
   GameState.total_selected_cubes = 0;
   
   MemoryZeroStruct(&GameState.cube_under_cursor);
-  
-  // Sandbox cubes
-  for (f32 i = -5.0f; i < 6.0f; i += 2.0f) {
-    for (f32 j = -5.0f; j < 6.0f; j += 2.0f) {
-      Cube cube = cube_new(vec3f32((f32)i, -1.0f, (f32)j), PALLETE_COLOR_B, 0.05f);
-      game_push_cube(cube);
-    }
-  }
 }
 
 internal void game_update(Camera* camera, Vec3f32 raycast) {
@@ -243,6 +235,53 @@ y_pos -= 0.05f; } while(0);
     }
     GameState.total_selected_cubes = 0;
   }
+  
+  if (input_is_key_pressed(KeyboardKey_F1)) {
+    for(u32 i = 0; i < GameState.total_selected_cubes; i += 1) {
+      GameState.cubes[GameState.selected_cubes[i]].color = PALLETE_COLOR_A;
+    }
+  } else if (input_is_key_pressed(KeyboardKey_F2)) {
+    for(u32 i = 0; i < GameState.total_selected_cubes; i += 1) {
+      GameState.cubes[GameState.selected_cubes[i]].color = PALLETE_COLOR_B;
+    }
+  } else if (input_is_key_pressed(KeyboardKey_F3)) {
+    for(u32 i = 0; i < GameState.total_selected_cubes; i += 1) {
+      GameState.cubes[GameState.selected_cubes[i]].color = PALLETE_COLOR_C;
+    }
+  } else if (input_is_key_pressed(KeyboardKey_F4)) {
+    for(u32 i = 0; i < GameState.total_selected_cubes; i += 1) {
+      GameState.cubes[GameState.selected_cubes[i]].color = PALLETE_COLOR_D;
+    }
+  }
+  
+  if (input_is_key_down(KeyboardKey_LEFT_CONTROL)) {
+    if (input_is_key_pressed(KeyboardKey_S)) {
+      game_save();
+    }
+  }
+}
+
+internal void game_save() {
+  // To save:
+  // [] Camera 
+  // [] Cubes
+  
+  Arena_Temp scratch = scratch_begin(0, 0);
+  
+  u32 save_game_size = sizeof(Camera) + (sizeof(Cube)*GameState.total_cubes);
+  u32 offset = 0;
+  u8* save_game_data = (u8*)PushArray(scratch.arena, u8, save_game_size);
+  MemoryCopy(save_game_data, &ProgramState.camera, sizeof(Camera));
+  offset += sizeof(Camera);
+  for(u32 i = 0; i < GameState.total_cubes; i += 1) {
+    MemoryCopy(save_game_data + offset, &GameState.cubes[i], sizeof(Cube));
+    offset += sizeof(Cube);
+  }
+  
+  os_file_write(SAVE_FILE_PATH, save_game_data, save_game_size);
+  
+  scratch_end(&scratch);
+  printf("Saved!\n");
 }
 
 internal u32 game_cubes_alive_count() {

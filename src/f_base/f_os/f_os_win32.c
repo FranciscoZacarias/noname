@@ -37,7 +37,9 @@ internal u64 os_memory_get_page_size() {
   return(sysinfo.dwPageSize);
 }
 
-internal HANDLE _win32_get_file_handle(String file_name) {
+//~ File handling
+
+internal HANDLE _win32_get_file_handle_read(String file_name) {
   HANDLE file_handle = CreateFileA(file_name.str, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
   if (file_handle == INVALID_HANDLE_VALUE) {
     DWORD error = GetLastError();
@@ -46,6 +48,18 @@ internal HANDLE _win32_get_file_handle(String file_name) {
   }
   return file_handle;
 }
+
+
+internal HANDLE _win32_get_file_handle_write(String file_name) {
+  HANDLE file_handle = CreateFileA(file_name.str, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+  if (file_handle == INVALID_HANDLE_VALUE) {
+    DWORD error = GetLastError();
+    printf("Error: Failed to open file %s. Error: %lu\n", file_name.str, error);
+    return NULL;
+  }
+  return file_handle;
+}
+
 
 internal b32 os_file_create(String file_name) {
   b32 result = 0;
@@ -82,6 +96,17 @@ internal b32 os_file_exists(String file_name) {
   return result;
 }
 
+internal u32 os_file_write(String file_name, u8* data, u64 data_size) {
+  s32 bytes_written = 0;
+  HANDLE file_handle = _win32_get_file_handle_write(file_name);
+  
+  if (!WriteFile(file_handle, data, data_size, &bytes_written, NULL)) {
+    printf("WriteFile failed (error %d)\n", GetLastError());
+  }
+  
+  return bytes_written;
+}
+
 internal u32 os_file_size(String file_name) {
   u32 result = 0;
   if (!os_file_exists(file_name)) {
@@ -102,7 +127,7 @@ internal OS_File os_file_load_entire_file(Arena* arena, String file_name) {
     return os_file;
   }
   
-  HANDLE file_handle = _win32_get_file_handle(file_name);
+  HANDLE file_handle = _win32_get_file_handle_read(file_name);
   if (file_handle == NULL) {
     return os_file;
   }
