@@ -39,6 +39,17 @@
 - Shader is compiled at runtime and uploaded it do the GPU. If compilation fails, prints the shader error string and shader is not uploaded but the program keeps running.
 
 ![Shader_Hotload](readme.res/shader_hotload.gif)
+### Save file
+- There's a save file that keeps the relevant Game_State on disk. CTRL+S saves the level (Camera and cubes). There is no visual feedback for saving, just look at the terminal! Only one save file is supported.
+- On startup, it loads the save game. If it fails, just has some default cube data.
+- Format is literally a Memory Copy of the camera structure into the file and then Memory Copy of all the cubes. There is no other information. Load first bytes as the sizeof(Camera) and then load sizeof(Cubes) until you reach EOF.
+
+### Anti Aliasing 
+- Program is rendered into a MSAA offscreen FBO that aplies anti aliasing. Then this is copied into a intermidiate FBO that applies post processing (No post processing is happening in the program though). Then it is rendered into texture quad, which is the actual screen.
+
+### Font rendering.
+- I use stb_truetype.h to load the font data into a struct and save the atlas. Then I've implemented culling and rendering the flipped texture.
+- Program contains, on top left, stats about the current state of the program. 
 
 ## My personal thoughts on this project.
 ### Goal
@@ -57,9 +68,10 @@ Overall, I still think I need a lot more experience on the balance between who's
 ### Renderer
 I do not like how the renderer turned out at all. I'm not even sure what I would change without tearing everything down and making a new one. The idea was never to make a generic purpose renderer, so I don't particularly mind the renderer knowing about higher level objects (like cubes and arrows) but that does create problems:
 
+There are no meshes. Cubes, arrows and quads (which are all the rendered objects in this program) are defined mathematically and the renderer has enough context to know how to render them. Not sure if that actually complicates things or not, since I had to be very careful defining how the renderer interpretes data from the Game_State, and it was a weird relationship when the Game_State needed to know how objects where rendered in worldspace (to to mouse picking, for example), so this whole thing felt a bit hacked from the beginning.
+
 I found it hard to understand the balance between the application layer and the renderer. Especially if I wanted worldspace information about the object I'm rendering. 
   - For example, I specify an arrow in user space with 2 vectors, a base and a points_to. I pass this information to the renderer and the renderer just build the triangles from that information. This became a problem when I actually wanted to mouse pick an arrow because my application layer had no information about how the renderer was building the arrow. And while I could bring the logic that build the arrow one layer up, I'm not sure if the aplication layer should've known about triangles or quads. For this specific case though, that might've been the best option. The implementation of arrow picking now is a hack. I just create a temporary invisible cube on top of the arrow (scaled manually with hardcoded values to fit an arrow) and the cube gets picked, not the arrow.
 
 Also, the renderer was being cleared and updated with the game state every frame. So there is a `renderer_begin_frame` which clears the primitives data and on `renderer_end_frame` it updates itself again with the updates game data, that happened in during that frame. The idea was to have one source of truth, as in, only the Game_State holds data and the renderer just updates itself with it. If I were to keep the triangle data persistent in the renderer, then that means I have duplicate state. I'm not really concerned about the memory footprint of the program (for the context of what I'm trying to do), but I am concerned about having having to make sure the Game_State and the Renderer are now being properly synced every frame. 
   - E.g. In my current implementation, there is no synchronization because there is only one state `Game_State` and the renderer updates itself every frame with it. On an implementation where the renderer keeps a persistant frame, I would have to keep track of all data that was changed and apply that change on the renderer at `renderer_end_frame`. Like, most frames the state is not updated (maybe the camera transform but that's updated every frame either way by the `Program_State`) so it wouldn't be reasonable to check every object for an updated state (which would actually defeat the purpose of a persistant renderer state). The most naieve thing I can imagine is just flagging every object that was changed and having the renderer loop through a flag changed objects thing and update it. That's something that might be good to explore further.
-
