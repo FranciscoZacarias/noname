@@ -39,10 +39,13 @@
 - Shader is compiled at runtime and uploaded it do the GPU. If compilation fails, prints the shader error string and shader is not uploaded but the program keeps running.
 
 ![Shader_Hotload](readme.res/shader_hotload.gif)
+
 ### Save file
 - There's a save file that keeps the relevant Game_State on disk. CTRL+S saves the level (Camera and cubes). There is no visual feedback for saving, just look at the terminal! Only one save file is supported.
 - On startup, it loads the save game. If it fails, just has some default cube data.
 - Format is literally a Memory Copy of the camera structure into the file and then Memory Copy of all the cubes. There is no other information. Load first bytes as the sizeof(Camera) and then load sizeof(Cubes) until you reach EOF.
+
+![Save_State](readme.res/save_state.gif)
 
 ### Anti Aliasing 
 - Program is rendered into a MSAA offscreen FBO that aplies anti aliasing. Then this is copied into a intermidiate FBO that applies post processing (No post processing is happening in the program though). Then it is rendered into texture quad, which is the actual screen.
