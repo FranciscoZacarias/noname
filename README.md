@@ -1,7 +1,7 @@
 # OpenGL in C
 
 ### Usage
-- Download source code
+- Download source code (All dependencies are included in the project, no need to download anything other than the compiler, which is MSVC's cl compiler).
 - Change directory into the project directory
 - Ensure terminal environment contains cl compiler. Call `"C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvarsall.bat" x64`
 - Run build.bat
