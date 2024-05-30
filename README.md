@@ -1,5 +1,12 @@
 # OpenGL in C
 
+### Usage
+- Download source code
+- Change directory into the project directory
+- Ensure terminal environment contains cl compiler (Call (change path to where MSVC is installed) "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvarsall.bat" x64)
+- Run build.bat
+- Run run.bat
+
 ### Program
 - Unity build (All code is compiled as one translation unit)
 - Minimal external dependencies: GLFW, stb_image.h and stb_truetype.h
