@@ -36,10 +36,12 @@
 - On startup, it loads the save game. If it fails, just has some default cube data.
 - Format is literally a Memory Copy of the camera structure into the file and then Memory Copy of all the cubes. There is no other information. Load first bytes as the sizeof(Camera) and then load sizeof(Cubes) until you reach EOF.
 
-### Renderer 
-- There are no meshes. Cubes, arrows and quads (which are all the rendered objects in this program) are defined mathematically and the renderer has enough context to know how to render them.
+### Anti Aliasing 
 - Program is rendered into a MSAA offscreen FBO that aplies anti aliasing. Then this is copied into a intermidiate FBO that applies post processing (No post processing is happening in the program though). Then it is rendered into texture quad, which is the actual screen.
-- Font rendering. I use stb_truetype.h to load the font data into a struct and save the atlas. Then I've implemented culling and rendering the flipped texture.
+
+### Font rendering.
+- I use stb_truetype.h to load the font data into a struct and save the atlas. Then I've implemented culling and rendering the flipped texture.
+- Program contains, on top left, stats about the current state of the program. 
 
 ## My personal thoughts on this project.
 ### Goal
@@ -57,6 +59,8 @@ Overall, I still think I need a lot more experience on the balance between who's
 
 ### Renderer
 I do not like how the renderer turned out at all. I'm not even sure what I would change without tearing everything down and making a new one. The idea was never to make a generic purpose renderer, so I don't particularly mind the renderer knowing about higher level objects (like cubes and arrows) but that does create problems:
+
+There are no meshes. Cubes, arrows and quads (which are all the rendered objects in this program) are defined mathematically and the renderer has enough context to know how to render them. Not sure if that actually complicates things or not, since I had to be very careful defining how the renderer interpretes data from the Game_State, and it was a weird relationship when the Game_State needed to know how objects where rendered in worldspace (to to mouse picking, for example), so this whole thing felt a bit hacked from the beginning.
 
 I found it hard to understand the balance between the application layer and the renderer. Especially if I wanted worldspace information about the object I'm rendering. 
   - For example, I specify an arrow in user space with 2 vectors, a base and a points_to. I pass this information to the renderer and the renderer just build the triangles from that information. This became a problem when I actually wanted to mouse pick an arrow because my application layer had no information about how the renderer was building the arrow. And while I could bring the logic that build the arrow one layer up, I'm not sure if the aplication layer should've known about triangles or quads. For this specific case though, that might've been the best option. The implementation of arrow picking now is a hack. I just create a temporary invisible cube on top of the arrow (scaled manually with hardcoded values to fit an arrow) and the cube gets picked, not the arrow.
