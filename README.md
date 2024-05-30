@@ -14,11 +14,6 @@
 - This is not a very good program, it was me learning opengl and writing a renderer from scratch, without external sources or research. Failing was the goal.
 - Because I'm (mostly) not using external cross-platform dependencies, this application is windows only, since the os layer of my base cose only has Win32 code implemented (even though this is opengl).
 
-### Renderer 
-- There are no meshes. Cubes, arrows and quads (which are all the rendered objects in this program) are defined mathematically and the renderer has enough context to know how to render them.
-- Program is rendered into a MSAA offscreen FBO that aplies anti aliasing. Then this is copied into a intermidiate FBO that applies post processing (No post processing is happening in the program though). Then it is rendered into texture quad, which is the actual screen.
-- Font rendering. I use stb_truetype.h to load the font data into a struct and save the atlas. Then I've implemented culling and rendering the flipped texture.
-
 ### Adding, removing and selecting
 - Hover cubes, highlight hovered face and `ADD` adjacent cube or `REMOVE` hovered cube.
 - Select one ore more cubes.
@@ -35,6 +30,16 @@
 #### Shader programs
 - Edit, compile and upload shader programs at runtime just by opening the file, editing the code and saving it.
 - Shader is compiled at runtime and uploaded it do the GPU. If compilation fails, prints the shader error string and shader is not uploaded but the program keeps running.
+
+### Save file
+- There's a save file that keeps the relevant Game_State on disk. CTRL+S saves the level (Camera and cubes). There is no visual feedback for saving, just look at the terminal! Only one save file is supported.
+- On startup, it loads the save game. If it fails, just has some default cube data.
+- Format is literally a Memory Copy of the camera structure into the file and then Memory Copy of all the cubes. There is no other information. Load first bytes as the sizeof(Camera) and then load sizeof(Cubes) until you reach EOF.
+
+### Renderer 
+- There are no meshes. Cubes, arrows and quads (which are all the rendered objects in this program) are defined mathematically and the renderer has enough context to know how to render them.
+- Program is rendered into a MSAA offscreen FBO that aplies anti aliasing. Then this is copied into a intermidiate FBO that applies post processing (No post processing is happening in the program though). Then it is rendered into texture quad, which is the actual screen.
+- Font rendering. I use stb_truetype.h to load the font data into a struct and save the atlas. Then I've implemented culling and rendering the flipped texture.
 
 ## My personal thoughts on this project.
 ### Goal
