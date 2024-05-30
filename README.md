@@ -3,19 +3,14 @@
 - Unity build (All code is compiled as one translation unit)
 - Minimal external dependencies: GLFW, stb_image.h and stb_truetype.h
 - Custom core library at `src/f_base/*` which includes math, arena allocator, file I/O, strings and thread context.
-- This is not a very good program, it was me learning opengl and writing a renderer from scratch, without external sources or research. Failing was the goal.
 - Because I'm (mostly) not using external cross-platform dependencies, this application is windows only, since the os layer of my base cose only has Win32 code implemented (even though this is opengl).
-
-### Renderer 
-- There are no meshes. Cubes, arrows and quads (which are all the rendered objects in this program) are defined mathematically and the renderer has enough context to know how to render them.
-- Program is rendered into a MSAA offscreen FBO that aplies anti aliasing. Then this is copied into a intermidiate FBO that applies post processing (No post processing is happening in the program though). Then it is rendered into texture quad, which is the actual screen.
-- Font rendering. I use stb_truetype.h to load the font data into a struct and save the atlas. Then I've implemented culling and rendering the flipped texture.
 
 ### Adding, removing and selecting
 - Hover cubes, highlight hovered face and `ADD` adjacent cube or `REMOVE` hovered cube.
 - Select one ore more cubes.
-- 
+ 
 ![Hover_Add_Remove](readme.res/hover_add_remove.gif)
+
 - Selecting 1 cube spawn a translation gizmo.
 - Translation gizmo contains 1 arrow for each axis and one panel for each plane.
 - Each arrow and plane can be clicked to translate the cube 1 unit in the appropriate direction.
@@ -59,7 +54,9 @@
 It's by no means what I would consider a finished or clean program. The point was always to learn and do things I think would be interesting, not necessairly usefull.
 - E.g. For the context of this program, it makes no sense to have a translation gizmo instead of a more friendly way of moving things around, I just really wanted to do that.
 
-I set a todo list for myself for things I wanted to implement (which can be found at the beginning of `main.c`). So, I don't see this as another unfinished, but more of a "I got most of what I wanted out of this already" and I want to move on to other projects. I feel like there's more to gain for me if I start a new project or a new exercise, rather than continuing here.
+This is not a very good program, it was me learning opengl and writing a renderer from scratch, without external sources or research. Failing was the goal.
+
+I set a todo list for myself for things I wanted to implement (which can be found at the beginning of `main.c`). So, I don't see this as another unfinished, but more of a "I got most of what I wanted out of this already" and I want to move on to other projects.
 
 ### Structure
 I'm not really sure how I feel about the way I structured the whole thing. The idea that I had in mind started with: `Application Layer -> Renderer`
