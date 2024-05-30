@@ -3,7 +3,7 @@
 ### Usage
 - Download source code
 - Change directory into the project directory
-- Ensure terminal environment contains cl compiler (Call (change path to where MSVC is installed) "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvarsall.bat" x64)
+- Ensure terminal environment contains cl compiler. Call `"C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvarsall.bat" x64`
 - Run build.bat
 - Run run.bat
 
