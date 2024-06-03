@@ -5,6 +5,15 @@
 - Custom core library at `src/f_base/*` which includes math, arena allocator, file I/O, strings and thread context.
 - Because I'm (mostly) not using external cross-platform dependencies, this application is windows only, since the os layer of my base cose only has Win32 code implemented (even though this is opengl).
 
+### Video showcase
+https://www.youtube.com/watch?v=EnGcnkr7cwQ
+
+### Build instructions
+- Download project and `cd` into project's directory
+- Make sure the CLI has the `cl` compiler environment. (Call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" x64)
+- Run `build.bat`
+- Run `run.bat`
+
 ### Adding, removing and selecting
 - Hover cubes, highlight hovered face and `ADD` adjacent cube or `REMOVE` hovered cube.
 - Select one ore more cubes.
