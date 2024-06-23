@@ -3,7 +3,7 @@
 - Unity build (All code is compiled as one translation unit)
 - Minimal external dependencies: GLFW, stb_image.h and stb_truetype.h
 - Custom core library at `src/f_base/*` which includes math, arena allocator, file I/O, strings and thread context.
-- Because I'm (mostly) not using external cross-platform dependencies, this application is windows only, since the os layer of my base cose only has Win32 code implemented (even though this is opengl).
+- Because I'm (mostly) not using external cross-platform dependencies, this application is windows only, since the os layer of my base code only has Win32 code implemented (even though this is opengl).
 
 ### Video showcase
 https://www.youtube.com/watch?v=EnGcnkr7cwQ
